@@ -5,7 +5,7 @@ mod graphics;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use conf::ConfigPlugin;
-use graphics::trash::TrashExperimentPlugin;
+use graphics::{atlases::AtlasesPlugin, trash::TrashExperimentPlugin};
 // use game::train::TrainPlugin;
 // use graphics::{
 //     cam::setup_camera,
@@ -18,6 +18,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(ConfigPlugin)
+        .add_plugins(AtlasesPlugin)
         .add_plugins(TrashExperimentPlugin)
         // .add_plugins(TrainPlugin)
         // .add_systems(Startup, (setup_camera, ui::setup))
