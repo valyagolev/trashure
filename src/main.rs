@@ -6,10 +6,7 @@ use bevy::{asset::AssetMetaCheck, diagnostic::FrameTimeDiagnosticsPlugin, prelud
 use bevy_debug_text_overlay::OverlayPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use conf::ConfigPlugin;
-use graphics::{
-    animated::AnimatedPlugin, atlases::AtlasesPlugin, camera::CameraPlugin,
-    positions::GridPositionedPlugin, trash::TrashExperimentPlugin,
-};
+use graphics::{animated::AnimatedPlugin, atlases::AtlasesPlugin, camera::CameraPlugin};
 // use game::train::TrainPlugin;
 // use graphics::{
 //     cam::setup_camera,
@@ -31,9 +28,10 @@ fn main() {
         .add_plugins(ConfigPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(AtlasesPlugin)
-        .add_plugins(TrashExperimentPlugin)
+        // .add_plugins(TrashExperimentPlugin)
         .add_plugins(AnimatedPlugin)
-        .add_plugins(GridPositionedPlugin)
+        .add_plugins(graphics::voxels::VoxelsPlugin)
+        // .add_plugins(graphics::positions::IntegerPositionedPlugin)
         // .add_plugins(TrainPlugin)
         // .add_systems(Startup, (setup_camera, ui::setup))
         // .add_systems(Update, (mouse_button_input, ui::check_config_changed))

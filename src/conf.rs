@@ -67,7 +67,8 @@ fn setup(mut commands: Commands) {
 
     commands.insert_resource(Configuration {
         camera_scale: 2.5,
-        grid_size: 300.0,
+        // grid_size: 300.0,
+        grid_size: 50.0,
         shadow_tint: 0.5,
     });
     // commands.insert_resource(pers);
