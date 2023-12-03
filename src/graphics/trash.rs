@@ -4,7 +4,10 @@ use rand::{seq::IteratorRandom, Rng};
 
 use crate::conf::Configuration;
 
-use super::atlases::{AtlasesPluginState, Emojis};
+use super::{
+    animated::MovingToPosition,
+    atlases::{AtlasesPluginState, Emojis},
+};
 
 pub struct TrashExperimentPlugin;
 impl Plugin for TrashExperimentPlugin {
@@ -79,18 +82,21 @@ fn rewrite_layers(
                 commands.entity(*ent).despawn();
             }
         }
-        println!("pile {:?}", pile);
+        // println!("pile {:?}", pile);
 
         for (pos, (emoji, ent)) in pile.iter_with_coords() {
             // println!("{} {} {}", x, y, emoji);
+
             // tighter
             let pos = pos * 0.5;
             // let pos = pos * 0.9;
+
             if let Some(ent) = ent {
-                // let (t, _) = q_sprites.get(*ent).unwrap();
-                commands
-                    .entity(*ent)
-                    .insert(Transform::from_translation(pos));
+                commands.entity(*ent).insert(MovingToPosition {
+                    target: pos,
+                    speed: 4.0,
+                });
+                // .insert(Transform::from_translation(pos));
             } else {
                 let e =
                     commands
@@ -99,6 +105,7 @@ fn rewrite_layers(
                             ..emojis.as_ref().unwrap().sbundle(emoji).unwrap()
                         })
                         .id();
+
                 commands.entity(pile_id).push_children(&[e]);
 
                 *ent = Some(e);
