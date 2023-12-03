@@ -1,7 +1,12 @@
 use std::path::PathBuf;
 
-use bevy::{asset::LoadedFolder, prelude::*, utils::HashMap};
+use bevy::{
+    asset::{LoadState, LoadedFolder, UntypedAssetId},
+    prelude::*,
+    utils::HashMap,
+};
 use bevy_common_assets::json::{self, JsonAssetPlugin};
+use bevy_inspector_egui::egui::TextBuffer;
 use itertools::Itertools;
 use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
@@ -11,9 +16,7 @@ pub struct AtlasesPlugin;
 impl Plugin for AtlasesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((JsonAssetPlugin::<Atlas>::new(&["atlas.json"]),))
-            // insert_resource(Configuration::default())
-            //     // .insert_resource(Persistent::<Configuration>::n())
-            // .add_systems(Startup, load_textures);
+            .insert_resource(AtlasesFolder::default())
             .add_state::<AtlasesPluginState>()
             .add_systems(OnEnter(AtlasesPluginState::Setup), load_textures)
             .add_systems(
@@ -36,18 +39,67 @@ pub enum AtlasesPluginState {
 }
 
 #[derive(Resource, Default)]
-struct AtlasesFolder(Handle<LoadedFolder>);
+struct AtlasesFolder(
+    Vec<(&'static str, Handle<Image>)>,
+    Vec<(&'static str, Handle<Atlas>)>,
+);
+
+fn load_textures(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut folder: ResMut<AtlasesFolder>,
+) {
+    warn!("load_textures");
+    let imgs = [(
+        "activities-00",
+        asset_server.load("atlases/activities-00.png") as Handle<Image>,
+    )];
+    let jsons = [(
+        "activities-00",
+        asset_server.load("atlases/activities-00.atlas.json") as Handle<Atlas>,
+    )];
+
+    for i in imgs {
+        folder.0.push((i.0, i.1));
+    }
+    for j in jsons {
+        folder.1.push((j.0, j.1));
+    }
+}
 
 fn check_textures(
     mut next_state: ResMut<NextState<AtlasesPluginState>>,
-    rpg_sprite_folder: ResMut<AtlasesFolder>,
-    mut events: EventReader<AssetEvent<LoadedFolder>>,
+    atlases_folder: ResMut<AtlasesFolder>,
+    // asset_server: Res<AssetServer>,
+    atlas_descriptions: Res<Assets<Atlas>>,
+    images: Res<Assets<Image>>,
 ) {
-    // Advance the `AtlasesPluginState` once all sprite handles have been loaded by the `AssetServer`
-    for event in events.read() {
-        if event.is_loaded_with_dependencies(&rpg_sprite_folder.0) {
-            next_state.set(AtlasesPluginState::Loaded);
-        }
+    let loaded_textures = atlases_folder.0.iter().all(|e| {
+        // asset_server
+        //     .get_load_state(e.1.id())
+        //     .map(|x| {
+        //         warn!("load state: {e:?} {x:?}");
+        //         x == LoadState::Loaded
+        //     })
+        //     .unwrap_or(true)
+        images.get(e.1.id()).is_some()
+    });
+
+    let loaded_jsons = atlases_folder.1.iter().all(|e| {
+        // asset_server
+        //     .get_load_state(e.1)
+        //     .map(|x| {
+        //         warn!("load state: {e:?} {x:?}");
+        //         x == LoadState::Loaded
+        //     })
+        //     .unwrap_or(true)
+        atlas_descriptions.get(e.1.id()).is_some()
+    });
+
+    warn!("loaded: {:?} {:?}", loaded_textures, loaded_jsons);
+
+    if loaded_textures && loaded_jsons {
+        next_state.set(AtlasesPluginState::Loaded);
     }
 }
 
@@ -71,14 +123,14 @@ struct Atlas {
 
 #[derive(Resource)]
 pub struct Emojis {
-    pub atlases: HashMap<PathBuf, Handle<TextureAtlas>>,
-    pub emoji_positions: HashMap<String, (PathBuf, usize)>,
+    pub atlases: HashMap<&'static str, Handle<TextureAtlas>>,
+    pub emoji_positions: HashMap<String, (&'static str, usize)>,
 }
 
 impl Emojis {
     fn from(
-        atlases: HashMap<PathBuf, Handle<TextureAtlas>>,
-        map: &HashMap<PathBuf, &Atlas>,
+        atlases: HashMap<&'static str, Handle<TextureAtlas>>,
+        map: &HashMap<&'static str, &Atlas>,
     ) -> Self {
         Self {
             atlases,
@@ -93,11 +145,11 @@ impl Emojis {
         }
     }
 
-    pub fn lookup(&self, emoji: &str) -> Option<(&PathBuf, usize)> {
-        self.emoji_positions.get(emoji).map(|(k, v)| (k, *v))
+    pub fn lookup(&self, emoji: &str) -> Option<(&'static str, usize)> {
+        self.emoji_positions.get(emoji).map(|(k, v)| (*k, *v))
     }
 
-    pub fn sprite(&self, emoji: &str) -> Option<(&PathBuf, TextureAtlasSprite)> {
+    pub fn sprite(&self, emoji: &str) -> Option<(&'static str, TextureAtlasSprite)> {
         let (k, index) = self.lookup(emoji)?;
 
         let atlas = self.atlases.get(k).unwrap();
@@ -129,58 +181,55 @@ impl Emojis {
     }
 }
 
-fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // load multiple, individual sprites from a folder
-    commands.insert_resource(AtlasesFolder(asset_server.load_folder("atlases")));
-}
-
 fn setup(
     mut commands: Commands,
     atlases_handlers: Res<AtlasesFolder>,
-    // asset_server: Res<AssetServer>,
+    atlas_folder: Res<AtlasesFolder>,
+    asset_server: Res<AssetServer>,
     mut next_state: ResMut<NextState<AtlasesPluginState>>,
-    loaded_folders: Res<Assets<LoadedFolder>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut textures: ResMut<Assets<Image>>,
+
+    images: Res<Assets<Image>>,
     atlas_descriptions: Res<Assets<Atlas>>,
 ) {
     // let mut texture_atlas_builder = TextureAtlasBuilder::default();
-    let loaded_folder: &LoadedFolder = loaded_folders.get(&atlases_handlers.0).unwrap();
+    // let loaded_folder: &LoadedFolder = loaded_folders.get(&atlases_handlers.0).unwrap();
 
     let mut textures_handles = HashMap::new();
     let mut textures_positions = HashMap::new();
 
-    for handle in loaded_folder.handles.iter() {
-        let path = handle.path().unwrap();
+    for (path, handle) in atlas_folder.0.iter() {
+        // let handle = images.get(*id).unwrap();
 
-        match &*path.get_full_extension().unwrap() {
-            "atlas.json" => {
-                let pure_path = path.path().with_extension("").with_extension("");
+        // let path = handle.path().unwrap();
 
-                let dataid = handle.id().typed_unchecked::<Atlas>();
+        warn!("path: {:?}", path);
 
-                let data = atlas_descriptions.get(dataid).unwrap();
+        // let Some(texture) = textures.get(id) else {
+        //     warn!(
+        //         "{:?} did not resolve to an `Image` asset.",
+        //         handle.path().unwrap()
+        //     );
+        //     continue;
+        // };
 
-                textures_positions.insert(pure_path, data);
-            }
-            "png" => {
-                let pure_path = path.path().with_extension("");
+        textures_handles.insert(*path, handle);
+    }
 
-                let id = handle.id().typed_unchecked::<Image>();
-                // let Some(texture) = textures.get(id) else {
-                //     warn!(
-                //         "{:?} did not resolve to an `Image` asset.",
-                //         handle.path().unwrap()
-                //     );
-                //     continue;
-                // };
+    for (path, id) in atlas_folder.1.iter() {
+        // let handle = asset_server.get_id_handle(*id).unwrap();
 
-                textures_handles.insert(pure_path, handle.clone().typed_unchecked::<Image>());
-            }
-            _ => {
-                warn!("Unknown file: {path:?}");
-            }
-        }
+        // let path = handle.path().unwrap();
+
+        warn!("path: {:?}", path);
+
+        // let pure_path = path.path().with_extension("").with_extension("");
+
+        // let dataid = handle.id();
+
+        let data = atlas_descriptions.get(id.id()).unwrap();
+
+        textures_positions.insert(*path, data);
     }
 
     let mut atlases = HashMap::new();

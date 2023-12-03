@@ -80,6 +80,7 @@ fn rewrite_layers(
     // q_sprites: Query<(&Transform, &TextureAtlasSprite)>,
     emojis: Option<Res<Emojis>>,
 ) {
+    // warn!("trash::rewrite_layers");
     for (pile_id, mut pile) in q_pile.iter_mut() {
         if !pile.to_drop.is_empty() {
             commands.entity(pile_id).remove_children(&pile.to_drop);
@@ -102,13 +103,16 @@ fn rewrite_layers(
                 });
                 // .insert(Transform::from_translation(pos));
             } else {
-                let e =
-                    commands
-                        .spawn(SpriteSheetBundle {
-                            transform: Transform::from_translation(pos),
-                            ..emojis.as_ref().unwrap().sbundle(emoji).unwrap()
-                        })
-                        .id();
+                let e = commands
+                    .spawn(SpriteSheetBundle {
+                        transform: Transform::from_translation(pos),
+                        ..emojis
+                            .as_ref()
+                            .expect("emojis didn't load")
+                            .sbundle(emoji)
+                            .expect("couldn't find emoji?")
+                    })
+                    .id();
 
                 commands.entity(pile_id).push_children(&[e]);
 
@@ -144,6 +148,7 @@ fn handle_debug_keyboard(
 }
 
 fn setup(mut commands: Commands, emojis: Res<Emojis>) {
+    warn!("trash::setup");
     commands.spawn((
         Pile {
             layers: vec![
