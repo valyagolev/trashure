@@ -1,4 +1,7 @@
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    prelude::*,
+    utils::{HashMap, HashSet},
+};
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
@@ -31,6 +34,7 @@ impl Plugin for VoxelsPlugin {
 pub struct Voxel {
     emoji: String,
     shade: bool,
+    tight_at: Option<IVec3>,
 }
 
 pub fn spawn_sprites(
@@ -77,6 +81,7 @@ fn handle_debug_keyboard(
             Voxel {
                 emoji: emojis.random_emoji().to_owned(),
                 shade: false,
+                tight_at: None,
             },
             Transform::from_translation(transform_to_voxel_grid(&conf, pos)),
             MovingToPosition::new(pos, 40000.0),
@@ -93,6 +98,7 @@ pub fn setup(mut commands: Commands, emojis: Res<Emojis>, conf: Res<Configuratio
                 Voxel {
                     emoji: emojis.random_emoji().to_owned(),
                     shade: false,
+                    tight_at: None,
                 },
                 Transform::from_translation(transform_to_voxel_grid(&conf, p)),
                 MovingToPosition::new(p, 40.0),
@@ -111,6 +117,14 @@ static PUSH_DIRECTIONS: &[IVec3] = &[
     IVec3::new(0, 1, 0),
     IVec3::new(0, -1, 0),
     IVec3::new(0, 0, 1),
+    // &IVec3::new(0, 0, -1),
+];
+
+static DROP_DIRECTIONS: &[IVec3] = &[
+    IVec3::new(1, 0, 0),
+    IVec3::new(-1, 0, 0),
+    IVec3::new(0, 1, 0),
+    IVec3::new(0, -1, 0),
     // &IVec3::new(0, 0, -1),
 ];
 
@@ -139,13 +153,13 @@ fn find_available_cell(
 
 fn disambiguate_entities(
     mut entities_pos: ResMut<EntitiesPos>,
-    mut q_voxels: Query<(Entity, &mut MovingToPosition)>,
+    mut q_voxels: Query<(Entity, &mut MovingToPosition, &mut Voxel)>,
 ) {
     entities_pos.0.clear();
 
     let mut entities = HashMap::<IVec3, Vec<_>>::new();
 
-    for (entity, pos) in q_voxels.iter() {
+    for (entity, pos, _) in q_voxels.iter() {
         entities.entry(pos.target).or_default().push(entity);
     }
 
@@ -172,9 +186,60 @@ fn disambiguate_entities(
         }
     }
 
+    // now we're dropping some
+    let mut to_drop = vec![];
+    let mut taken = HashSet::new();
+    for (k, entity) in &entities_pos.0 {
+        if k.z <= 0 {
+            continue;
+        }
+
+        let (_, _, mut voxel) = q_voxels.get_mut(*entity).unwrap();
+
+        let below = *k - IVec3::new(0, 0, 1);
+
+        if !entities_pos.0.contains_key(&below) && !taken.contains(&below) {
+            to_drop.push((*k, below, *entity));
+            taken.insert(below);
+            continue;
+        }
+
+        if voxel.tight_at == Some(*k) {
+            continue;
+        }
+
+        let empties_below = DROP_DIRECTIONS
+            .iter()
+            .map(|d| below + *d)
+            .filter(|p| !entities_pos.0.contains_key(p) && !taken.contains(p))
+            .collect_vec();
+
+        // either nothing is below; or we're not tight then there's a probability of drop
+
+        if empties_below.len() == 0 || {
+            let mut rng = rand::thread_rng();
+            rng.gen_range(0..4) > empties_below.len()
+        } {
+            voxel.tight_at = Some(*k);
+            continue;
+        }
+
+        let pos = empties_below.choose(rng).unwrap();
+
+        to_drop.push((*k, *pos, *entity));
+        taken.insert(*pos);
+    }
+
     for (entity, cell) in changes {
-        let (_, mut pos) = q_voxels.get_mut(entity).unwrap();
+        let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
         pos.target = cell;
+    }
+
+    for (from, to, entity) in to_drop {
+        let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
+        pos.target = to;
+        entities_pos.0.insert(to, entity);
+        entities_pos.0.remove(&from);
     }
 }
 
@@ -204,5 +269,7 @@ fn shade_voxels(
         } else {
             Color::WHITE
         };
+
+        spr.color += Color::rgba(0.0, 0.0, (0.05 * (pos.target.z as f32)).min(0.5), 0.0);
     }
 }
