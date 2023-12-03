@@ -13,10 +13,13 @@ impl Plugin for AtlasesPlugin {
             // insert_resource(Configuration::default())
             //     // .insert_resource(Persistent::<Configuration>::n())
             // .add_systems(Startup, load_textures);
-            .add_state::<AppState>()
-            .add_systems(OnEnter(AppState::Setup), load_textures)
-            .add_systems(Update, check_textures.run_if(in_state(AppState::Setup)))
-            .add_systems(OnEnter(AppState::Finished), setup);
+            .add_state::<AtlasesPluginState>()
+            .add_systems(OnEnter(AtlasesPluginState::Setup), load_textures)
+            .add_systems(
+                Update,
+                check_textures.run_if(in_state(AtlasesPluginState::Setup)),
+            )
+            .add_systems(OnEnter(AtlasesPluginState::Loaded), setup);
         // .add_systems(Update, on_modify_configuration);
         //     .register_type::<Configuration>() // you need to register your type to display it
         //     .add_plugins(ResourceInspectorPlugin::<Configuration>::default());
@@ -24,9 +27,10 @@ impl Plugin for AtlasesPlugin {
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, States)]
-enum AppState {
+pub enum AtlasesPluginState {
     #[default]
     Setup,
+    Loaded,
     Finished,
 }
 
@@ -34,25 +38,25 @@ enum AppState {
 struct AtlasesFolder(Handle<LoadedFolder>);
 
 fn check_textures(
-    mut next_state: ResMut<NextState<AppState>>,
+    mut next_state: ResMut<NextState<AtlasesPluginState>>,
     rpg_sprite_folder: ResMut<AtlasesFolder>,
     mut events: EventReader<AssetEvent<LoadedFolder>>,
 ) {
-    // Advance the `AppState` once all sprite handles have been loaded by the `AssetServer`
+    // Advance the `AtlasesPluginState` once all sprite handles have been loaded by the `AssetServer`
     for event in events.read() {
         if event.is_loaded_with_dependencies(&rpg_sprite_folder.0) {
-            next_state.set(AppState::Finished);
+            next_state.set(AtlasesPluginState::Loaded);
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Emoji {
-    pub emoji: String,
+struct Emoji {
+    emoji: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ImagePos {
+struct ImagePos {
     pub emoji: Emoji,
     pub top: usize,
     pub left: usize,
@@ -60,33 +64,61 @@ pub struct ImagePos {
 }
 
 #[derive(Serialize, Deserialize, Debug, bevy::asset::Asset, bevy::reflect::TypePath)]
-pub struct Atlas {
+struct Atlas {
     pub emojis: Vec<ImagePos>,
 }
 
-impl Atlas {
-    fn lookup(&self, emoji: &str) -> Option<TextureAtlasSprite> {
-        let em = self.emojis.iter().find(|x| x.emoji.emoji == emoji)?;
-
-        Some(TextureAtlasSprite {
-            index: em.index,
-            ..Default::default()
-        })
-    }
+#[derive(Resource)]
+pub struct Emojis {
+    pub atlases: HashMap<PathBuf, Handle<TextureAtlas>>,
+    pub emoji_positions: HashMap<String, (PathBuf, usize)>,
 }
 
-fn lookup_atlases<'a, K>(
-    atlases: &'a HashMap<K, &Atlas>,
-    emoji: &str,
-) -> Option<(&'a K, TextureAtlasSprite)> {
-    let (k, tas) =
-        atlases
-            .iter()
-            .filter_map(|(k, a)| Some((k, a.lookup(emoji)?)))
-            .exactly_one()
-            .ok()?;
+impl Emojis {
+    fn from(
+        atlases: HashMap<PathBuf, Handle<TextureAtlas>>,
+        map: &HashMap<PathBuf, &Atlas>,
+    ) -> Self {
+        Self {
+            atlases,
+            emoji_positions: map
+                .iter()
+                .flat_map(|(&ref k, v)| {
+                    v.emojis
+                        .iter()
+                        .map(|x| (x.emoji.emoji.clone(), (k.clone(), x.index)))
+                })
+                .collect(),
+        }
+    }
 
-    Some((k, tas))
+    pub fn lookup(&self, emoji: &str) -> Option<(&PathBuf, usize)> {
+        self.emoji_positions.get(emoji).map(|(k, v)| (k, *v))
+    }
+
+    pub fn sprite(&self, emoji: &str) -> Option<(&PathBuf, TextureAtlasSprite)> {
+        let (k, index) = self.lookup(emoji)?;
+
+        let atlas = self.atlases.get(k).unwrap();
+
+        Some((k, TextureAtlasSprite::new(index)))
+    }
+
+    pub fn sbundle(
+        &self,
+        emoji: &str,
+        // atlases: &Assets<TextureAtlas>,
+    ) -> Option<SpriteSheetBundle> {
+        let (k, sprite) = self.sprite(emoji)?;
+
+        let atlas = self.atlases.get(k)?;
+
+        Some(SpriteSheetBundle {
+            sprite,
+            texture_atlas: atlas.clone(),
+            ..default()
+        })
+    }
 }
 
 fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -97,7 +129,8 @@ fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn setup(
     mut commands: Commands,
     atlases_handlers: Res<AtlasesFolder>,
-    asset_server: Res<AssetServer>,
+    // asset_server: Res<AssetServer>,
+    mut next_state: ResMut<NextState<AtlasesPluginState>>,
     loaded_folders: Res<Assets<LoadedFolder>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut textures: ResMut<Assets<Image>>,
@@ -119,8 +152,6 @@ fn setup(
                 let dataid = handle.id().typed_unchecked::<Atlas>();
 
                 let data = atlas_descriptions.get(dataid).unwrap();
-
-                dbg!(&data);
 
                 textures_positions.insert(pure_path, data);
             }
@@ -162,23 +193,27 @@ fn setup(
             None,
             None,
         );
-        atlases.insert(k, texture_atlases.add(atlas));
+        atlases.insert(k.clone(), texture_atlases.add(atlas));
     }
 
-    let (k, sprite) = lookup_atlases(&textures_positions, "🎁").unwrap();
+    commands.insert_resource(Emojis::from(atlases, &textures_positions));
 
-    commands.spawn(Camera2dBundle::default());
+    next_state.set(AtlasesPluginState::Finished);
 
-    commands.spawn(SpriteSheetBundle {
-        transform: Transform {
-            translation: Vec3::new(150.0, 0.0, 0.0),
-            scale: Vec3::splat(1.0),
-            ..default()
-        },
-        sprite,
-        texture_atlas: atlases[k].clone(),
-        ..default()
-    });
+    // let (k, sprite) = lookup_atlases(&textures_positions, "🎁").unwrap();
+
+    // commands.spawn(Camera2dBundle::default());
+
+    // commands.spawn(SpriteSheetBundle {
+    //     transform: Transform {
+    //         translation: Vec3::new(150.0, 0.0, 0.0),
+    //         scale: Vec3::splat(1.0),
+    //         ..default()
+    //     },
+    //     sprite,
+    //     texture_atlas: atlases[k].clone(),
+    //     ..default()
+    // });
     // draw the atlas itself
     // commands.spawn(SpriteBundle {
     //     texture: texture_atlas_texture,
