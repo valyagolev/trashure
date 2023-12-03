@@ -77,8 +77,8 @@ impl Pile {
 fn rewrite_layers(
     mut commands: Commands,
     mut q_pile: Query<(Entity, &mut Pile), Changed<Pile>>,
-    // q_sprites: Query<(&Transform, &TextureAtlasSprite)>,
     emojis: Option<Res<Emojis>>,
+    conf: Res<Configuration>,
 ) {
     // warn!("trash::rewrite_layers");
     for (pile_id, mut pile) in q_pile.iter_mut() {
@@ -96,23 +96,29 @@ fn rewrite_layers(
             let pos = pos * 0.5;
             // let pos = pos * 0.9;
 
+            let mut sbundle = emojis
+                .as_ref()
+                .expect("emojis didn't load")
+                .sbundle(emoji)
+                .expect("couldn't find emoji?");
+
+            if pos.x < 0.0 {
+                sbundle.sprite.color =
+                    Color::rgb(conf.shadow_tint, conf.shadow_tint, conf.shadow_tint);
+            };
+
             if let Some(ent) = ent {
-                commands.entity(*ent).insert(MovingToPosition {
-                    target: pos,
-                    speed: 30.0,
-                });
-                // .insert(Transform::from_translation(pos));
-            } else {
-                let e = commands
-                    .spawn(SpriteSheetBundle {
-                        transform: Transform::from_translation(pos),
-                        ..emojis
-                            .as_ref()
-                            .expect("emojis didn't load")
-                            .sbundle(emoji)
-                            .expect("couldn't find emoji?")
+                commands
+                    .entity(*ent)
+                    .insert(MovingToPosition {
+                        target: pos,
+                        speed: 30.0,
                     })
-                    .id();
+                    .insert(sbundle.sprite);
+            } else {
+                sbundle.transform = Transform::from_translation(pos);
+
+                let e = commands.spawn(sbundle).id();
 
                 commands.entity(pile_id).push_children(&[e]);
 
@@ -182,22 +188,4 @@ fn setup(mut commands: Commands, emojis: Res<Emojis>) {
         },
         GridPositioned(IVec2::new(1, 1)),
     ));
-
-    // commands.spawn(SpriteSheetBundle {
-    //     transform: Transform {
-    //         translation: Vec3::new(150.0, 0.0, 0.0),
-    //         scale: Vec3::splat(1.0),
-    //         ..default()
-    //     },
-    //     ..emojis.sbundle("🎁").unwrap()
-    // });
-
-    // commands.spawn(SpriteSheetBundle {
-    //     transform: Transform {
-    //         translation: Vec3::new(200.0, 0.0, 0.0),
-    //         scale: Vec3::splat(1.0),
-    //         ..default()
-    //     },
-    //     ..emojis.sbundle("🎑").unwrap()
-    // });
 }

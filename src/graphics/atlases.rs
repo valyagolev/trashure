@@ -152,7 +152,7 @@ impl Emojis {
     pub fn sprite(&self, emoji: &str) -> Option<(&'static str, TextureAtlasSprite)> {
         let (k, index) = self.lookup(emoji)?;
 
-        let atlas = self.atlases.get(k).unwrap();
+        // let atlas = self.atlases.get(k).unwrap();
 
         Some((k, TextureAtlasSprite::new(index)))
     }
