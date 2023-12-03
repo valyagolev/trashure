@@ -23,9 +23,10 @@ fn camera_setup(
 
 fn setup(mut commands: Commands, conf: Res<Configuration>) {
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 1.0),
+        transform: Transform::from_xyz(0.0, 0.0, 1000.0),
         projection: OrthographicProjection {
             scale: conf.camera_scale,
+            far: 1000000.0,
             ..default()
         },
         ..default()

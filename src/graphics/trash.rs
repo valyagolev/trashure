@@ -4,7 +4,10 @@ use bevy::{
 };
 use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::egui::Key;
-use rand::{seq::IteratorRandom, Rng};
+use rand::{
+    seq::{IteratorRandom, SliceRandom},
+    Rng,
+};
 
 use crate::{conf::Configuration, graphics::positions::GridPositioned};
 
@@ -154,38 +157,41 @@ fn handle_debug_keyboard(
 }
 
 fn setup(mut commands: Commands, emojis: Res<Emojis>) {
-    warn!("trash::setup");
-    commands.spawn((
-        Pile {
-            layers: vec![],
-            to_drop: vec![],
-        },
-        SpatialBundle {
-            visibility: Visibility::Visible,
-            ..default()
-        },
-        GridPositioned(IVec2::new(0, 0)),
-    ));
-    commands.spawn((
-        Pile {
-            layers: vec![],
-            to_drop: vec![],
-        },
-        SpatialBundle {
-            visibility: Visibility::Visible,
-            ..default()
-        },
-        GridPositioned(IVec2::new(0, 1)),
-    ));
-    commands.spawn((
-        Pile {
-            layers: vec![],
-            to_drop: vec![],
-        },
-        SpatialBundle {
-            visibility: Visibility::Visible,
-            ..default()
-        },
-        GridPositioned(IVec2::new(1, 1)),
-    ));
+    let mut piles = vec![];
+    for i in -20..20 {
+        for j in -20..20 {
+            if i == 0 && j == 0 {
+                continue;
+            }
+
+            piles.push((
+                Pile {
+                    layers: vec![],
+                    to_drop: vec![],
+                },
+                SpatialBundle {
+                    visibility: Visibility::Visible,
+                    ..default()
+                },
+                GridPositioned(IVec2::new(i, j)),
+            ));
+        }
+    }
+
+    let rand = &mut rand::thread_rng();
+    // for _ in 0..1000000 {
+    //     let pile = &mut piles.choose_mut(rand).unwrap().0;
+
+    //     pile.add_top(emojis.random_emoji());
+    // }
+
+    for mut p in piles {
+        let cnt = rand.gen_range(1..300);
+
+        for _ in 0..cnt {
+            p.0.add_top(emojis.random_emoji());
+        }
+
+        commands.spawn(p);
+    }
 }
