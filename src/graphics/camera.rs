@@ -15,9 +15,7 @@ fn camera_setup(
     mut camera: Query<(&mut OrthographicProjection, With<Camera2d>)>,
 ) {
     if conf.is_changed() {
-        println!("camera_setup changed");
         for (mut proj, _) in camera.iter_mut() {
-            print!("chanign camera scale to {}", conf.camera_scale);
             proj.scale = conf.camera_scale;
         }
     }

@@ -26,7 +26,7 @@ fn main() {
             ..default()
         })
         .add_plugins(FrameTimeDiagnosticsPlugin)
-        // .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(WorldInspectorPlugin::new())
         // mine
         .add_plugins(ConfigPlugin)
         .add_plugins(CameraPlugin)

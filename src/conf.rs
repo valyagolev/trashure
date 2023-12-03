@@ -25,6 +25,9 @@ pub struct Configuration {
     // pub track_point_scale: f32,
     #[inspector(min = 0.0, max = 2000.0)]
     pub camera_scale: f32,
+
+    #[inspector(min = 0.0, max = 200000.0)]
+    pub grid_size: f32,
 }
 
 // fn on_modify_configuration(
@@ -59,6 +62,9 @@ fn setup(mut commands: Commands) {
     //     .build()
     //     .expect("failed to initialize ");
 
-    commands.insert_resource(Configuration { camera_scale: 2.5 });
+    commands.insert_resource(Configuration {
+        camera_scale: 2.5,
+        grid_size: 300.0,
+    });
     // commands.insert_resource(pers);
 }

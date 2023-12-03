@@ -6,7 +6,7 @@ use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::egui::Key;
 use rand::{seq::IteratorRandom, Rng};
 
-use crate::conf::Configuration;
+use crate::{conf::Configuration, graphics::positions::GridPositioned};
 
 use super::{
     animated::MovingToPosition,
@@ -23,7 +23,7 @@ impl Plugin for TrashExperimentPlugin {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Reflect)]
 struct Pile {
     layers: Vec<Vec<(String, Option<Entity>)>>,
     to_drop: Vec<Entity>,
@@ -141,7 +141,7 @@ fn handle_debug_keyboard(
 ) {
     if keys.pressed(KeyCode::A) {
         let emojis = emojis.unwrap();
-        let mut pile = q_pile.single_mut();
+        let mut pile = q_pile.iter_mut().choose(&mut rand::thread_rng()).unwrap();
 
         pile.add_top(emojis.random_emoji());
     }
@@ -151,34 +151,36 @@ fn setup(mut commands: Commands, emojis: Res<Emojis>) {
     warn!("trash::setup");
     commands.spawn((
         Pile {
-            layers: vec![
-                vec![
-                    ("🎑".to_string(), None),
-                    ("🎐".to_string(), None),
-                    ("🎉".to_string(), None),
-                    ("🎑".to_string(), None),
-                    ("🎐".to_string(), None),
-                    ("🎉".to_string(), None),
-                ],
-                vec![
-                    ("🎑".to_string(), None),
-                    ("🎐".to_string(), None),
-                    ("🎉".to_string(), None),
-                    ("🎑".to_string(), None),
-                    ("🎐".to_string(), None),
-                ],
-            ],
+            layers: vec![],
             to_drop: vec![],
         },
         SpatialBundle {
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, 0.0),
-                // scale: Vec3::splat(1.0),
-                ..default()
-            },
             visibility: Visibility::Visible,
             ..default()
         },
+        GridPositioned(IVec2::new(0, 0)),
+    ));
+    commands.spawn((
+        Pile {
+            layers: vec![],
+            to_drop: vec![],
+        },
+        SpatialBundle {
+            visibility: Visibility::Visible,
+            ..default()
+        },
+        GridPositioned(IVec2::new(0, 1)),
+    ));
+    commands.spawn((
+        Pile {
+            layers: vec![],
+            to_drop: vec![],
+        },
+        SpatialBundle {
+            visibility: Visibility::Visible,
+            ..default()
+        },
+        GridPositioned(IVec2::new(1, 1)),
     ));
 
     // commands.spawn(SpriteSheetBundle {

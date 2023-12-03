@@ -256,25 +256,4 @@ fn setup(
     commands.insert_resource(Emojis::from(atlases, &textures_positions));
 
     next_state.set(AtlasesPluginState::Finished);
-
-    // let (k, sprite) = lookup_atlases(&textures_positions, "🎁").unwrap();
-
-    // commands.spawn(Camera2dBundle::default());
-
-    // commands.spawn(SpriteSheetBundle {
-    //     transform: Transform {
-    //         translation: Vec3::new(150.0, 0.0, 0.0),
-    //         scale: Vec3::splat(1.0),
-    //         ..default()
-    //     },
-    //     sprite,
-    //     texture_atlas: atlases[k].clone(),
-    //     ..default()
-    // });
-    // draw the atlas itself
-    // commands.spawn(SpriteBundle {
-    //     texture: texture_atlas_texture,
-    //     transform: Transform::from_xyz(-300.0, 0.0, 0.0),
-    //     ..default()
-    // });
 }
