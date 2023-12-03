@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use bevy::{asset::LoadedFolder, prelude::*, utils::HashMap};
 use bevy_common_assets::json::{self, JsonAssetPlugin};
 use itertools::Itertools;
+use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
 
 pub struct AtlasesPlugin;
@@ -118,6 +119,13 @@ impl Emojis {
             texture_atlas: atlas.clone(),
             ..default()
         })
+    }
+
+    pub fn random_emoji(&self) -> &str {
+        self.emoji_positions
+            .keys()
+            .choose(&mut rand::thread_rng())
+            .unwrap()
     }
 }
 

@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::egui::Key;
+use rand::{seq::IteratorRandom, Rng};
 
 use crate::conf::Configuration;
 
@@ -8,7 +10,8 @@ pub struct TrashExperimentPlugin;
 impl Plugin for TrashExperimentPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AtlasesPluginState::Finished), setup)
-            .add_systems(Update, rewrite_layers);
+            .add_systems(Update, rewrite_layers)
+            .add_systems(Update, handle_debug_keyboard);
     }
 }
 
@@ -30,18 +33,43 @@ impl Pile {
                 let x = (col_n as f32 - row_mid) * 72.0;
                 let y = row_n as f32 * 72.0 * 0.9 + (row_mid - col_n as f32).abs() * 0.3 * 72.0;
 
-                print!("row_size: {row_size}, row_mid: {row_mid}, col_n: {col_n}, x: {x}, y: {y} ");
+                // print!("row_size: {row_size}, row_mid: {row_mid}, col_n: {col_n}, x: {x}, y: {y} ");
 
                 (Vec3::new(x, y, -(row_n as f32)), s)
             })
         })
+    }
+
+    pub fn add_top(&mut self, emoji: &str) {
+        self.layers.push(vec![(emoji.to_string(), None)]);
+        self.rebalance();
+    }
+
+    pub fn rebalance(&mut self) {
+        let rand = &mut rand::thread_rng();
+
+        for i in (1..self.layers.len()).rev() {
+            while self.layers[i].len() >= self.layers[i - 1].len() {
+                let itomove = (0..self.layers[i].len()).choose(rand).unwrap();
+
+                let el = self.layers[i].remove(itomove);
+
+                let ix = itomove + rand.gen_range(0..=1);
+
+                self.layers[i - 1].insert(ix, el);
+            }
+
+            if self.layers[i].is_empty() {
+                self.layers.remove(i);
+            }
+        }
     }
 }
 
 fn rewrite_layers(
     mut commands: Commands,
     mut q_pile: Query<(Entity, &mut Pile), Changed<Pile>>,
-    q_sprites: Query<(&Transform, &TextureAtlasSprite)>,
+    // q_sprites: Query<(&Transform, &TextureAtlasSprite)>,
     emojis: Option<Res<Emojis>>,
 ) {
     for (pile_id, mut pile) in q_pile.iter_mut() {
@@ -57,22 +85,39 @@ fn rewrite_layers(
             // println!("{} {} {}", x, y, emoji);
             // tighter
             let pos = pos * 0.5;
+            // let pos = pos * 0.9;
             if let Some(ent) = ent {
                 // let (t, _) = q_sprites.get(*ent).unwrap();
                 commands
                     .entity(*ent)
                     .insert(Transform::from_translation(pos));
             } else {
-                let ent =
+                let e =
                     commands
                         .spawn(SpriteSheetBundle {
                             transform: Transform::from_translation(pos),
                             ..emojis.as_ref().unwrap().sbundle(emoji).unwrap()
                         })
                         .id();
-                commands.entity(pile_id).push_children(&[ent]);
+                commands.entity(pile_id).push_children(&[e]);
+
+                *ent = Some(e);
             }
         }
+    }
+}
+
+fn handle_debug_keyboard(
+    keys: Res<Input<KeyCode>>,
+    mut q_pile: Query<&mut Pile>,
+    emojis: Option<Res<Emojis>>,
+) {
+    if keys.just_released(KeyCode::A) {
+        println!("A");
+        let emojis = emojis.unwrap();
+        let mut pile = q_pile.single_mut();
+
+        pile.add_top(emojis.random_emoji());
     }
 }
 
