@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
+    prelude::*,
+};
+use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::egui::Key;
 use rand::{seq::IteratorRandom, Rng};
 
@@ -14,7 +18,8 @@ impl Plugin for TrashExperimentPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AtlasesPluginState::Finished), setup)
             .add_systems(Update, rewrite_layers)
-            .add_systems(Update, handle_debug_keyboard);
+            .add_systems(Update, handle_debug_keyboard)
+            .add_systems(Update, fps_text_update_system);
     }
 }
 
@@ -82,7 +87,6 @@ fn rewrite_layers(
                 commands.entity(*ent).despawn();
             }
         }
-        // println!("pile {:?}", pile);
 
         for (pos, (emoji, ent)) in pile.iter_with_coords() {
             // println!("{} {} {}", x, y, emoji);
@@ -94,7 +98,7 @@ fn rewrite_layers(
             if let Some(ent) = ent {
                 commands.entity(*ent).insert(MovingToPosition {
                     target: pos,
-                    speed: 4.0,
+                    speed: 30.0,
                 });
                 // .insert(Transform::from_translation(pos));
             } else {
@@ -114,13 +118,24 @@ fn rewrite_layers(
     }
 }
 
+fn fps_text_update_system(diagnostics: Res<DiagnosticsStore>, q_piles: Query<&Pile>) {
+    let entities_cnt = q_piles
+        .iter()
+        .map(|pile| pile.layers.iter().map(|row| row.len()).sum::<usize>())
+        .sum::<usize>();
+
+    screen_print!("Entities: {}", entities_cnt);
+    if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+        screen_print!("FPS: {:.2}", fps.value().unwrap_or(0.0));
+    }
+}
+
 fn handle_debug_keyboard(
     keys: Res<Input<KeyCode>>,
     mut q_pile: Query<&mut Pile>,
     emojis: Option<Res<Emojis>>,
 ) {
-    if keys.just_released(KeyCode::A) {
-        println!("A");
+    if keys.pressed(KeyCode::A) {
         let emojis = emojis.unwrap();
         let mut pile = q_pile.single_mut();
 

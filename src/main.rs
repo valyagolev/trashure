@@ -2,7 +2,8 @@ mod conf;
 // mod game;
 mod graphics;
 
-use bevy::prelude::*;
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy_debug_text_overlay::OverlayPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use conf::ConfigPlugin;
 use graphics::{
@@ -19,12 +20,17 @@ fn main() {
     App::new()
         // .insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
         .add_plugins(DefaultPlugins)
+        .add_plugins(OverlayPlugin {
+            font_size: 23.0,
+            ..default()
+        })
         .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(ConfigPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(AtlasesPlugin)
         .add_plugins(TrashExperimentPlugin)
         .add_plugins(AnimatedPlugin)
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         // .add_plugins(TrainPlugin)
         // .add_systems(Startup, (setup_camera, ui::setup))
         // .add_systems(Update, (mouse_button_input, ui::check_config_changed))
