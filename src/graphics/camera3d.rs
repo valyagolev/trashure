@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::bevy_egui::EguiContext;
 
 use crate::conf::Configuration;
@@ -27,14 +27,15 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
     // ambient light
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.06,
+        brightness: 0.1,
     });
 
     commands
         .spawn(Camera3dBundle {
             projection: OrthographicProjection {
-                scale: 3.0,
+                scale: 20.0,
                 scaling_mode: ScalingMode::FixedVertical(2.0),
+                near: -1000.0,
                 ..default()
             }
             .into(),
@@ -43,17 +44,45 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
         })
         .with_children(|b| {
             b.spawn(PointLightBundle {
-                transform: Transform::from_xyz(4.0, 4.0, -6.0),
+                point_light: PointLight {
+                    intensity: 6000.0,
+                    range: 800.0,
+                    ..default()
+                },
+                transform: Transform::from_xyz(10.0, 14.0, -1.0),
                 ..default()
             });
         });
+
+    // commands.spawn(Camera2dBundle {
+    //     // transform: Transform::from_xyz(0.0, 0.0, 1000.0),
+    //     projection: OrthographicProjection {
+    //         // scale: conf.camera_scale,
+    //         // far: 1000000.0,
+    //         ..default()
+    //     },
+    //     camera: Camera {
+    //         order: 1,
+    //         ..default()
+    //     },
+    //     camera_2d: Camera2d {
+    //         clear_color: ClearColorConfig::None,
+    //         ..default()
+    //     },
+
+    //     ..default()
+    // });
 }
 
-static KEY_TO_DIRECTION: [(KeyCode, Vec2); 4] = [
-    (KeyCode::Up, Vec2::Y),
-    (KeyCode::Down, Vec2::new(0.0, -1.0)),
-    (KeyCode::Left, Vec2::new(-1.0, 0.0)),
-    (KeyCode::Right, Vec2::X),
+static KEY_TO_DIRECTION: &[(KeyCode, Vec3)] = &[
+    // (KeyCode::Up, Vec2::Z),
+    // (KeyCode::Down, Vec2::new(0.0, -1.0)),
+    // (KeyCode::Left, Vec2::new(-1.0, 0.0)),
+    // (KeyCode::Right, Vec2::X),
+    (KeyCode::Up, Vec3::new(-1.0, 0.0, -1.0)),
+    (KeyCode::Down, Vec3::new(1.0, 0.0, 1.0)),
+    (KeyCode::Left, Vec3::new(-1.0, 0.0, 1.0)),
+    (KeyCode::Right, Vec3::new(1.0, 0.0, -1.0)),
 ];
 
 fn handle_camera_move(
@@ -64,7 +93,7 @@ fn handle_camera_move(
     for (key, dir) in KEY_TO_DIRECTION.iter() {
         if keys.pressed(*key) {
             for (mut transform, _) in camera.iter_mut() {
-                transform.translation += dir.extend(0.0) * conf.camera_speed;
+                transform.translation += *dir * conf.camera_speed;
             }
         }
     }
