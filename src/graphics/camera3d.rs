@@ -74,6 +74,18 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
             //     transform: Transform::from_xyz(10.0, 20.0, -50.0),
             //     ..default()
             // });
+
+            // b.spawn(PointLightBundle {
+            //     point_light: PointLight {
+            //         intensity: 1100.0,
+            //         range: 800.0,
+            //         // shadows_enabled: true,
+            //         color: Color::BLUE,
+            //         ..Default::default()
+            //     },
+            //     transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-CAMERA_OFFSET, Vec3::Y),
+            //     ..default()
+            // });
         });
 
     // commands.spawn(Camera2dBundle {

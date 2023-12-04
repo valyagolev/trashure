@@ -5,14 +5,13 @@ use bevy_inspector_egui::quick::{FilterQueryInspectorPlugin, ResourceInspectorPl
 pub struct DebugEditorPlugin;
 impl Plugin for DebugEditorPlugin {
     fn build(&self, app: &mut App) {
-        app
-            // .add_plugins(EguiPlugin)
-            // .add_plugins(ResourceInspectorPlugin::<AmbientLight>::default())
-            // .add_plugins(FilterQueryInspectorPlugin::<With<Camera3d>>::default())
-            // .add_plugins(FilterQueryInspectorPlugin::<With<PointLight>>::default())
-            // .add_plugins(FilterQueryInspectorPlugin::<With<DirectionalLight>>::default());
-            // .add_systems(Update, edit_stuff)
-            ;
+        // app
+        // .add_plugins(EguiPlugin)
+        // .add_plugins(ResourceInspectorPlugin::<AmbientLight>::default())
+        // .add_plugins(FilterQueryInspectorPlugin::<With<Camera3d>>::default())
+        // .add_plugins(FilterQueryInspectorPlugin::<With<PointLight>>::default())
+        // .add_plugins(FilterQueryInspectorPlugin::<With<DirectionalLight>>::default());
+        // .add_systems(Update, edit_stuff)
     }
 }
 

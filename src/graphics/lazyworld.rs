@@ -5,7 +5,7 @@ use crate::{game::material::GameMaterial, graphics::animated::MovingToPosition};
 
 use super::{
     camera3d::CAMERA_OFFSET,
-    voxels3d::{generate_voxel_block, VoxelResources, VOXEL_BLOCK_SIZE},
+    voxels3d::{generate_voxel_block, VoxelBlockChanges, VoxelResources, VOXEL_BLOCK_SIZE},
 };
 
 pub struct LazyWorldPlugin;
@@ -41,12 +41,13 @@ fn generate_part(
     part: IVec2,
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
+    mut changes: &mut VoxelBlockChanges,
 ) {
     let center = (part * VOXEL_BLOCK_SIZE).extend(0).xzy();
 
     // dbg!(&center);
 
-    let mut bundle = generate_voxel_block(meshes, voxel_resources);
+    let mut bundle = generate_voxel_block(part, meshes, voxel_resources);
     bundle.pbr_bundle.transform = Transform::from_translation(center.as_vec3());
 
     // if center == IVec3::ZERO {
@@ -70,9 +71,12 @@ fn generate_part(
             // let cnt = 1;
             for z in 0..cnt {
                 // vb._add_block(pos + IVec3::new(0, z, 0), GameMaterial::random(rand))
-                bundle
-                    .voxel_block
-                    .drop_block(pos.xz(), GameMaterial::random(rand), rand);
+                bundle.voxel_block.drop_block(
+                    pos.xz(),
+                    GameMaterial::random(rand),
+                    &mut changes,
+                    rand,
+                );
             }
         }
     }
@@ -86,6 +90,7 @@ fn handle_camera(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     voxel_resources: Res<VoxelResources>,
+    mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
     let camera = q_camera.single();
 
@@ -101,7 +106,13 @@ fn handle_camera(
         // println!("Checking part {:?}", part);
         if !lazy_world.known_parts.contains(&part) {
             println!("Generating part {:?} around {center:?}", part);
-            generate_part(&mut commands, part, &mut meshes, &voxel_resources);
+            generate_part(
+                &mut commands,
+                part,
+                &mut meshes,
+                &voxel_resources,
+                &mut blockchanges,
+            );
             lazy_world.known_parts.insert(part);
             // break;
         }

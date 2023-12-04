@@ -4,7 +4,7 @@ use rand::{seq::SliceRandom, Rng};
 
 use crate::{conf::Configuration, game::material::GameMaterial};
 
-use super::{VoxelBlock, VOXEL_BLOCK_SIZE};
+use super::{VoxelBlock, VoxelBlockChanges, VOXEL_BLOCK_SIZE};
 
 pub struct VoxelPhysics;
 impl Plugin for VoxelPhysics {
@@ -37,38 +37,78 @@ static AROUND_AND_THIS: &[IVec2] = &[
 ];
 
 impl VoxelBlock {
-    pub fn drop_block(&mut self, pos_xz: IVec2, mat: GameMaterial, rand: &mut impl Rng) {
+    pub fn drop_block(
+        &mut self,
+        pos_xz: IVec2,
+        mat: GameMaterial,
+        change_collector: &mut VoxelBlockChanges,
+        rand: &mut impl Rng,
+    ) {
+        if !Self::within_bounds(pos_xz.extend(0)) {
+            change_collector.register_change(
+                self.pos,
+                pos_xz.extend(VOXEL_BLOCK_SIZE - 1).xzy(),
+                mat,
+            );
+            return;
+        }
+
         let z_place = (0..VOXEL_BLOCK_SIZE)
             .filter(|z| self[IVec3::new(pos_xz.x, *z, pos_xz.y)].is_none())
             .next();
 
         let Some(z_place) = z_place else {
-            let close = DIRS_AROUND
-                .iter()
-                .map(|p| *p + pos_xz)
-                .filter(|p| Self::within_bounds(p.extend(0)))
-                .collect_vec();
+            let close = DIRS_AROUND.iter().map(|p| *p + pos_xz).collect_vec();
 
             let close = close.choose(rand).unwrap();
-            return self.drop_block(*close, mat, rand);
+            return self.drop_block(*close, mat, change_collector, rand);
         };
 
-        let empty_belows = AROUND_AND_THIS
-            .iter()
-            .map(|p| IVec3::new(pos_xz.x + p.x, z_place - 1, pos_xz.y + p.y))
-            .filter(|p| Self::within_bounds(*p))
-            .filter(|p| self[*p].is_none())
-            .collect_vec();
+        self.push_block(pos_xz.extend(z_place).xzy(), mat, change_collector, rand);
+    }
 
-        if rand.gen_range(0..9) < empty_belows.len()
-            || rand.gen_range(0..9) < empty_belows.len()
-            || rand.gen_range(0..9) < empty_belows.len()
-        {
-            let below = empty_belows.choose(rand).unwrap();
-            return self.drop_block(below.xz(), mat, rand);
+    pub fn push_block(
+        &mut self,
+        local_pos: IVec3,
+        mat: GameMaterial,
+        change_collector: &mut VoxelBlockChanges,
+        rand: &mut impl Rng,
+    ) {
+        if !Self::within_bounds(local_pos) {
+            change_collector.register_change(self.pos, local_pos, mat);
+            return;
         }
 
-        self._add_block(IVec3::new(pos_xz.x, z_place, pos_xz.y), mat);
+        if local_pos.y > 0 {
+            let empty_belows = AROUND_AND_THIS
+                .iter()
+                .map(|p| p.extend(-1).xzy() + local_pos)
+                .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
+                .collect_vec();
+
+            if rand.gen_range(0..9) < empty_belows.len()
+                || rand.gen_range(0..9) < empty_belows.len()
+                || rand.gen_range(0..9) < empty_belows.len()
+            {
+                let below = empty_belows.choose(rand).unwrap();
+                return self.drop_block(below.xz(), mat, change_collector, rand);
+            }
+        }
+
+        if self[local_pos].is_some() {
+            for i in local_pos.y..VOXEL_BLOCK_SIZE {
+                let pos = local_pos.extend(i).xzy();
+
+                if self[pos].is_none() {
+                    return self.push_block(pos, mat, change_collector, rand);
+                }
+            }
+
+            warn!("TODO: Couldn't place block at {:?}", local_pos);
+            return;
+        }
+
+        self._add_block(local_pos, mat);
     }
 }
 
@@ -78,6 +118,7 @@ fn handle_debug_keyboard(
     mut q_voxel_blocks: Query<&mut VoxelBlock>,
 
     conf: Res<Configuration>,
+    mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
     if keys.pressed(KeyCode::A) {
         let rnd = &mut rand::thread_rng();
@@ -91,6 +132,10 @@ fn handle_debug_keyboard(
             .unwrap()
             .clone();
 
-        q_vb.drop_block(pos, GameMaterial::random(rnd), rnd);
+        // let mut changes = VoxelBlockChanges::outof(&blockchanges);
+
+        q_vb.drop_block(pos, GameMaterial::random(rnd), &mut blockchanges, rnd);
+
+        // changes.drain(&mut blockchanges);
     }
 }

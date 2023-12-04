@@ -23,7 +23,8 @@ impl Plugin for Voxels3dPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup)
             .add_systems(Update, update_meshes)
-            .add_plugins(voxel_physics::VoxelPhysics);
+            .add_plugins(voxel_physics::VoxelPhysics)
+            .insert_resource(VoxelBlockChanges::default());
     }
 }
 
@@ -46,6 +47,7 @@ pub struct VoxelResources {
 
 #[derive(Component)]
 pub struct VoxelBlock {
+    pos: IVec2,
     meta: MeshMD<Option<GameMaterial>>,
     grid: [Option<GameMaterial>; CHUNK_LEN],
     mesh_id: AssetId<Mesh>,
@@ -149,6 +151,7 @@ pub struct VoxelBlockBundle {
 }
 
 pub fn generate_voxel_block(
+    pos: IVec2,
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
 ) -> VoxelBlockBundle {
@@ -194,6 +197,7 @@ pub fn generate_voxel_block(
 
     VoxelBlockBundle {
         voxel_block: VoxelBlock {
+            pos,
             meta: metadata,
             grid: g,
             mesh_id: culled_mesh_handle.id(),
@@ -259,6 +263,27 @@ impl VoxelBlock {
             && pos.z >= 0
             && pos.z < VOXEL_BLOCK_SIZE
     }
+
+    pub fn normalize_pos(mut voxel_block_pos: IVec2, mut inner_pos: IVec3) -> (IVec2, IVec3) {
+        while inner_pos.x < 0 {
+            voxel_block_pos.x -= 1;
+            inner_pos.x += VOXEL_BLOCK_SIZE;
+        }
+        while inner_pos.y < 0 {
+            voxel_block_pos.y -= 1;
+            inner_pos.y += VOXEL_BLOCK_SIZE;
+        }
+        while inner_pos.x >= VOXEL_BLOCK_SIZE {
+            voxel_block_pos.x += 1;
+            inner_pos.x -= VOXEL_BLOCK_SIZE;
+        }
+        while inner_pos.y >= VOXEL_BLOCK_SIZE {
+            voxel_block_pos.y += 1;
+            inner_pos.y -= VOXEL_BLOCK_SIZE;
+        }
+
+        (voxel_block_pos, inner_pos)
+    }
 }
 
 impl Index<IVec3> for VoxelBlock {
@@ -286,5 +311,38 @@ fn update_meshes(
         let mesh = meshes.get_mut(block.mesh_id).unwrap();
 
         update_mesh(mesh, &mut block.meta, vr);
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct VoxelBlockChanges {
+    pub added: HashMap<IVec2, Vec<(IVec3, GameMaterial)>>,
+}
+
+impl VoxelBlockChanges {
+    pub fn register_change(&mut self, voxel_block_pos: IVec2, inner_pos: IVec3, mat: GameMaterial) {
+        let (voxel_block_pos, inner_pos) = VoxelBlock::normalize_pos(voxel_block_pos, inner_pos);
+
+        self.added
+            .entry(voxel_block_pos)
+            .or_insert_with(Vec::new)
+            .push((inner_pos, mat));
+    }
+}
+
+fn apply_changes(mut changes: ResMut<VoxelBlockChanges>, mut blocks: Query<&mut VoxelBlock>) {
+    let rand = &mut rand::thread_rng();
+    let mut new_changes = VoxelBlockChanges::default();
+
+    for mut b in blocks.iter_mut() {
+        if let Some(changes) = changes.added.remove(&b.pos) {
+            for (pos, mat) in changes {
+                b.push_block(pos, mat, &mut new_changes, rand)
+            }
+        }
+    }
+
+    for (pos, ch) in new_changes.added.drain() {
+        changes.added.entry(pos).or_insert_with(Vec::new).extend(ch);
     }
 }
