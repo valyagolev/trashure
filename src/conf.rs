@@ -31,6 +31,9 @@ pub struct Configuration {
 
     #[inspector(min = 0.0, max = 1.0)]
     pub shadow_tint: f32,
+
+    #[inspector(min = 0.0, max = 10.0)]
+    pub camera_speed: f32,
 }
 
 // fn on_modify_configuration(
@@ -70,6 +73,7 @@ fn setup(mut commands: Commands) {
         // grid_size: 300.0,
         grid_size: 50.0,
         shadow_tint: 0.5,
+        camera_speed: 3.0,
     });
     // commands.insert_resource(pers);
 }

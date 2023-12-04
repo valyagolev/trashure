@@ -79,7 +79,7 @@ fn handle_debug_keyboard(
 
         commands.spawn((
             Voxel {
-                emoji: emojis.random_emoji().to_owned(),
+                emoji: "⚽️".to_owned(), // emojis.random_emoji().to_owned(),
                 shade: false,
                 tight_at: None,
             },
@@ -90,21 +90,68 @@ fn handle_debug_keyboard(
 }
 
 pub fn setup(mut commands: Commands, emojis: Res<Emojis>, conf: Res<Configuration>) {
-    for i in 0..3 {
-        for j in 0..3 {
-            // for z in 0..3 {
-            let p = IVec3::new(i, j, 0);
-            commands.spawn((
-                Voxel {
-                    emoji: emojis.random_emoji().to_owned(),
-                    shade: false,
-                    tight_at: None,
-                },
-                Transform::from_translation(transform_to_voxel_grid(&conf, p)),
-                MovingToPosition::new(p, 40.0),
-            ));
-            // }
-        }
+    // for i in 0..3 {
+    //     for j in 0..3 {
+    //         // for z in 0..3 {
+    //         let p = IVec3::new(i, j, 0);
+    //         commands.spawn((
+    //             Voxel {
+    //                 emoji: emojis.random_emoji().to_owned(),
+    //                 shade: false,
+    //                 tight_at: None,
+    //             },
+    //             Transform::from_translation(transform_to_voxel_grid(&conf, p)),
+    //             MovingToPosition::new(p, 40.0),
+    //         ));
+    //         // }
+    //     }
+    // }
+
+    for mut pos in [
+        IVec3::new(0, 0, 0),
+        IVec3::new(1, 0, 0),
+        IVec3::new(0, 1, 0),
+        IVec3::new(1, 1, 0),
+        IVec3::new(-1, 0, 0),
+        IVec3::new(0, -1, 0),
+        IVec3::new(-1, -1, 0),
+        IVec3::new(-1, 1, 0),
+        IVec3::new(1, -1, 0),
+        IVec3::new(0, -2, 0),
+    ] {
+        commands.spawn((
+            Voxel {
+                emoji: "⚽️".to_owned(), // emojis.random_emoji().to_owned(),
+                shade: false,
+                tight_at: None,
+            },
+            Transform::from_translation(transform_to_voxel_grid(&conf, pos)),
+            MovingToPosition::new(pos, 40000.0),
+        ));
+
+        pos.z += 1;
+
+        commands.spawn((
+            Voxel {
+                emoji: "⚽️".to_owned(), // emojis.random_emoji().to_owned(),
+                shade: false,
+                tight_at: None,
+            },
+            Transform::from_translation(transform_to_voxel_grid(&conf, pos)),
+            MovingToPosition::new(pos, 40000.0),
+        ));
+
+        pos.z += 1;
+
+        commands.spawn((
+            Voxel {
+                emoji: "⚽️".to_owned(), // emojis.random_emoji().to_owned(),
+                shade: false,
+                tight_at: None,
+            },
+            Transform::from_translation(transform_to_voxel_grid(&conf, pos)),
+            MovingToPosition::new(pos, 40000.0),
+        ));
     }
 }
 
@@ -190,6 +237,7 @@ fn disambiguate_entities(
     let mut to_drop = vec![];
     let mut taken = HashSet::new();
     for (k, entity) in &entities_pos.0 {
+        // continue;
         if k.z <= 0 {
             continue;
         }
@@ -245,21 +293,27 @@ fn disambiguate_entities(
 
 fn shade_voxels(
     entities_pos: Res<EntitiesPos>,
-    mut q_voxels: Query<(&mut Voxel, &MovingToPosition, &mut TextureAtlasSprite)>,
+    mut q_voxels: Query<(
+        &mut Voxel,
+        &MovingToPosition,
+        &mut TextureAtlasSprite,
+        &mut Visibility,
+    )>,
     conf: Res<Configuration>,
 ) {
-    for (mut voxel, pos, mut spr) in q_voxels.iter_mut() {
-        if entities_pos
+    for (mut voxel, pos, mut spr, mut vis) in q_voxels.iter_mut() {
+        voxel.shade = entities_pos
             .0
             .contains_key(&(pos.target - IVec3::new(0, 1, 0)))
             && entities_pos
                 .0
+                .contains_key(&(pos.target - IVec3::new(0, 2, 0)))
+            && entities_pos
+                .0
                 .contains_key(&(pos.target + IVec3::new(0, 0, 1)))
-        {
-            voxel.shade = true;
-        } else {
-            voxel.shade = false;
-        }
+            && entities_pos
+                .0
+                .contains_key(&(pos.target + IVec3::new(0, 0, 2)));
 
         // println!("voxel.shade: {}", voxel.shade);
 
@@ -267,9 +321,16 @@ fn shade_voxels(
             Color::rgb(conf.shadow_tint, conf.shadow_tint, conf.shadow_tint)
             // Color::RED
         } else {
-            Color::WHITE
+            // Color::WHITE
+            Color::rgb(0.9, 0.9, 0.9)
         };
 
-        spr.color += Color::rgba(0.0, 0.0, (0.05 * (pos.target.z as f32)).min(0.5), 0.0);
+        // if voxel.shade {
+        //     *vis = Visibility::Hidden;
+        // } else {
+        //     *vis = Visibility::Visible;
+        // }
+
+        // spr.color += Color::rgba(0.0, 0.0, (0.05 * (pos.target.z as f32)).min(0.5), 0.0);
     }
 }

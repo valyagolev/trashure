@@ -32,7 +32,7 @@ pub fn transform_to_voxel_grid(conf: &Res<Configuration>, a: IVec3) -> Vec3 {
     let x = vs.x + vs.z * 0.5;
     let y = vs.y + vs.z * 0.5;
 
-    Vec3::new(x - y, x + y, -vs.z * 10.0 + x + y)
+    Vec3::new(x - y, x + y, vs.z * 10.0 + x + y - 500.0)
 }
 
 fn animate(
