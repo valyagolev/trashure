@@ -1,4 +1,5 @@
 mod conf;
+mod debugeditor;
 mod game;
 mod graphics;
 
@@ -33,6 +34,7 @@ fn main() {
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::lazyworld::LazyWorldPlugin)
         .add_plugins(graphics::fps::FpsPlugin)
+        .add_plugins(debugeditor::DebugEditorPlugin)
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)
         // .add_plugins(TrainPlugin)
