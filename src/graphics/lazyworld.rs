@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
 use rand::Rng;
 
-use crate::graphics::animated::MovingToPosition;
+use crate::{game::material::GameMaterial, graphics::animated::MovingToPosition};
 
 use super::{
     camera3d::CAMERA_OFFSET,
@@ -44,48 +44,40 @@ fn generate_part(
 ) {
     let center = (part * VOXEL_BLOCK_SIZE).extend(0).xzy();
 
-    dbg!(&center);
+    // dbg!(&center);
 
-    let mut bdl = generate_voxel_block(meshes, voxel_resources);
-    bdl.0.transform = Transform::from_translation(center.as_vec3());
+    let mut bundle = generate_voxel_block(meshes, voxel_resources);
+    bundle.pbr_bundle.transform = Transform::from_translation(center.as_vec3());
 
-    if center == IVec3::ZERO {
-        bdl.0.material = voxel_resources.debug_voxel_material.clone();
+    // if center == IVec3::ZERO {
+    //     bdl.1.material = voxel_resources.debug_voxel_material.clone();
+    // }
+
+    let half_chunk = VOXEL_BLOCK_SIZE / 2;
+    let rand = &mut rand::thread_rng();
+
+    for x in -half_chunk..half_chunk {
+        for z in -half_chunk..half_chunk {
+            let pos = IVec3::new(x, 0, z) + IVec3::new(half_chunk, 0, half_chunk);
+
+            let cnt = {
+                if rand.gen_range(1..50) == 1 {
+                    rand.gen_range(80..=200)
+                } else {
+                    rand.gen_range(2..=3)
+                }
+            };
+            // let cnt = 1;
+            for z in 0..cnt {
+                // vb._add_block(pos + IVec3::new(0, z, 0), GameMaterial::random(rand))
+                bundle
+                    .voxel_block
+                    .drop_block(pos.xz(), GameMaterial::random(rand), rand);
+            }
+        }
     }
 
-    commands.spawn(bdl);
-
-    // let half_chunk = VOXEL_BLOCK_SIZE / 2;
-    // let rand = &mut rand::thread_rng();
-
-    // for x in -half_chunk..half_chunk {
-    //     for y in -half_chunk..half_chunk {
-    //         let pos = center + IVec3::new(x, 0, y);
-    //         let cnt = {
-    //             if rand.gen_range(1..50) == 1 {
-    //                 rand.gen_range(10..=40)
-    //             } else {
-    //                 rand.gen_range(1..=3)
-    //             }
-    //         };
-    //         let cnt = 1;
-    //         for _ in 0..cnt {
-    //             // commands.spawn((
-    //             //     Voxel {
-    //             //         material: Material::random(rand),
-    //             //         // shade: false,
-    //             //         tight_at: None,
-    //             //     },
-    //             //     Transform::from_translation(pos.as_vec3()),
-    //             //     MovingToPosition::new(pos, 40.0),
-    //             // ));
-
-    //             commands.spawn((
-    //                 generate_voxel_block()
-    //             ))
-    //         }
-    //     }
-    // }
+    commands.spawn(bundle);
 }
 
 fn handle_camera(
@@ -102,6 +94,7 @@ fn handle_camera(
     let all_around = AROUND_2D
         .iter()
         .map(|&offset| center + offset)
+        .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
         .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset));
 
     for part in all_around {

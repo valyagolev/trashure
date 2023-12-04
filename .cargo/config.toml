@@ -7,7 +7,7 @@
     linker = "clang"
     rustflags = [
         "-Clink-arg=-fuse-ld=lld",
-        #  "-Zshare-generics=y"
+        # "-Zshare-generics=y"
     ]
 
 # NOTE: you must install [Mach-O LLD Port](https://lld.llvm.org/MachO/index.html) on mac. you can easily do this by installing llvm which includes lld with the "brew" package manager:
@@ -30,11 +30,11 @@
     linker = "rust-lld.exe"
     # rustflags = ["-Zshare-generics=n"]
 
-    # Optional: Uncommenting the following improves compile times, but reduces the amount of debug info to 'line number tables only'
-    # In most cases the gains are negligible, but if you are on macos and have slow compile times you should see significant gains.
-    #[profile.dev]
-    #debug = 1
-
+# Optional: Uncommenting the following improves compile times, but reduces the amount of debug info to 'line number tables only'
+# In most cases the gains are negligible, but if you are on macos and have slow compile times you should see significant gains.
+[profile.dev]
+    debug = 1
+    # 
 
 [target.wasm32-unknown-unknown]
     runner = "wasm-server-runner"

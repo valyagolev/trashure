@@ -1,4 +1,7 @@
+use std::ops::{Index, IndexMut};
+
 use crate::{conf::Configuration, game::material::GameMaterial};
+use bevy::pbr::wireframe::Wireframe;
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::transform::commands;
 use bevy::{prelude::*, render::camera::ScalingMode, utils::HashMap};
@@ -10,6 +13,7 @@ use self::voxel_mesh::generate_colored_voxel_mesh;
 
 // mod meshem;
 mod voxel_mesh;
+pub mod voxel_physics;
 
 pub const VOXEL_BLOCK_SIZE: i32 = 32;
 const CHUNK_LEN: usize = (VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
@@ -18,10 +22,8 @@ pub struct Voxels3dPlugin;
 impl Plugin for Voxels3dPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup)
-            // .add_systems(OnEnter(VoxelPluginState::Loaded), generate_meshes)
-            ;
-        // .add_systems(Update, camera_setup)
-        // .add_systems(Update, handle_camera_move);
+            .add_systems(Update, update_meshes)
+            .add_plugins(voxel_physics::VoxelPhysics);
     }
 }
 
@@ -46,6 +48,7 @@ pub struct VoxelResources {
 pub struct VoxelBlock {
     meta: MeshMD<Option<GameMaterial>>,
     grid: [Option<GameMaterial>; CHUNK_LEN],
+    mesh_id: AssetId<Mesh>,
 }
 
 impl VoxelRegistry for VoxelResources {
@@ -138,42 +141,39 @@ fn setup(
     // }
 }
 
+#[derive(Bundle)]
+pub struct VoxelBlockBundle {
+    pub voxel_block: VoxelBlock,
+    pub pbr_bundle: PbrBundle,
+    // pub wireframe: Wireframe,
+}
+
 pub fn generate_voxel_block(
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
-) -> (PbrBundle, VoxelBlock) {
+) -> VoxelBlockBundle {
     let rand = &mut rand::thread_rng();
 
-    // let grid = (0..CHUNK_LEN)
-    //     .map(|_| {
-    //         if rand.gen::<bool>() {
-    //             Some(GameMaterial::random(rand))
-    //         } else {
-    //             None
-    //         }
+    // let grid = (0..VOXEL_BLOCK_SIZE)
+    //     .map(|x| {
+    //         (0..VOXEL_BLOCK_SIZE)
+    //             .map(|y| {
+    //                 (0..VOXEL_BLOCK_SIZE)
+    //                     .map(|z| {
+    //                         if x <= 3 && rand.gen::<bool>() {
+    //                             Some(GameMaterial::random(rand))
+    //                         } else {
+    //                             None
+    //                         }
+    //                     })
+    //                     .collect_vec()
+    //             })
+    //             .collect_vec()
     //     })
+    //     .flatten()
+    //     .flatten()
     //     .collect_vec();
-
-    let grid = (0..VOXEL_BLOCK_SIZE)
-        .map(|x| {
-            (0..VOXEL_BLOCK_SIZE)
-                .map(|y| {
-                    (0..VOXEL_BLOCK_SIZE)
-                        .map(|z| {
-                            if x <= 3 && rand.gen::<bool>() {
-                                Some(GameMaterial::random(rand))
-                            } else {
-                                None
-                            }
-                        })
-                        .collect_vec()
-                })
-                .collect_vec()
-        })
-        .flatten()
-        .flatten()
-        .collect_vec();
-    let g: [_; CHUNK_LEN] = grid.try_into().unwrap();
+    let g: [_; CHUNK_LEN] = [None; CHUNK_LEN]; // grid.try_into().unwrap();
     let dims: Dimensions = (
         VOXEL_BLOCK_SIZE as usize,
         VOXEL_BLOCK_SIZE as usize,
@@ -192,15 +192,99 @@ pub fn generate_voxel_block(
 
     let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
 
-    (
-        PbrBundle {
+    VoxelBlockBundle {
+        voxel_block: VoxelBlock {
+            meta: metadata,
+            grid: g,
+            mesh_id: culled_mesh_handle.id(),
+        },
+        pbr_bundle: PbrBundle {
             mesh: culled_mesh_handle,
             material: voxel_resources.voxel_material.clone(),
             ..default()
         },
-        VoxelBlock {
-            meta: metadata,
-            grid: g,
-        },
-    )
+        // wireframe: Wireframe,
+    }
+}
+
+impl VoxelBlock {
+    const DIMENSIONS: Dimensions = (
+        VOXEL_BLOCK_SIZE as usize,
+        VOXEL_BLOCK_SIZE as usize,
+        VOXEL_BLOCK_SIZE as usize,
+    );
+
+    fn _meshem_neighbors(&self, idx: usize) -> [Option<Option<GameMaterial>>; 6] {
+        let mut r = [None; 6];
+        for i in 0..6 {
+            match get_neighbor(idx, Face::from(i), Self::DIMENSIONS) {
+                None => {}
+                Some(j) => r[i] = Some(self.grid[j]),
+            }
+        }
+        r
+    }
+
+    pub fn _add_block(&mut self, local_pos: IVec3, mat: GameMaterial) {
+        assert!(
+            Self::within_bounds(local_pos),
+            "local_pos out of bounds: {local_pos:?}"
+        );
+        // no idea why...
+        let local_pos_fixed = local_pos.xzy();
+        // dbg!(&local_pos);
+        let idx = (local_pos_fixed.x
+            + local_pos_fixed.y * VOXEL_BLOCK_SIZE
+            + local_pos_fixed.z * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
+        // dbg!(&idx);
+
+        // assert!(idx >= 0);
+
+        assert!(self.grid[idx].is_none());
+
+        self.grid[idx] = Some(mat);
+        self.meta.log(
+            bevy_meshem::prelude::VoxelChange::Added,
+            idx,
+            Some(mat),
+            self._meshem_neighbors(idx),
+        )
+    }
+
+    pub fn within_bounds(pos: IVec3) -> bool {
+        pos.x >= 0
+            && pos.x < VOXEL_BLOCK_SIZE
+            && pos.y >= 0
+            && pos.y < VOXEL_BLOCK_SIZE
+            && pos.z >= 0
+            && pos.z < VOXEL_BLOCK_SIZE
+    }
+}
+
+impl Index<IVec3> for VoxelBlock {
+    type Output = Option<GameMaterial>;
+
+    fn index(&self, index: IVec3) -> &Self::Output {
+        let local_pos_fixed = index.xzy();
+
+        let idx = (local_pos_fixed.x
+            + local_pos_fixed.y * VOXEL_BLOCK_SIZE
+            + local_pos_fixed.z * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
+
+        &self.grid[idx]
+    }
+}
+
+fn update_meshes(
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut blocks: Query<&mut VoxelBlock, Changed<VoxelBlock>>,
+    voxel_resources: Res<VoxelResources>,
+) {
+    let vr = voxel_resources.into_inner();
+
+    for mut block in blocks.iter_mut() {
+        let mesh = meshes.get_mut(block.mesh_id).unwrap();
+
+        update_mesh(mesh, &mut block.meta, vr);
+    }
 }
