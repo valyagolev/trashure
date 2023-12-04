@@ -10,8 +10,8 @@ use bevy_meshem::prelude::*;
 /// Function that generates the mesh of a voxel.
 pub fn generate_colored_voxel_mesh(
     voxel_dims: [f32; 3],
-    texture_atlas_dims: [u32; 2],
-    texture: [(Face, [u32; 2]); 6],
+    // texture_atlas_dims: [u32; 2],
+    // texture: [(Face, [u32; 2]); 6],
     voxel_center: [f32; 3],
     padding: f32,
     color: [f32; 4],
@@ -25,16 +25,16 @@ pub fn generate_colored_voxel_mesh(
     let z = voxel_dims[2] / 2.0 + voxel_center[2];
     let nz = z - voxel_dims[2];
 
-    let u: f32 = 1.0 / (texture_atlas_dims[0] as f32);
-    let v: f32 = 1.0 / (texture_atlas_dims[1] as f32);
+    // let u: f32 = 1.0 / (texture_atlas_dims[0] as f32);
+    // let v: f32 = 1.0 / (texture_atlas_dims[1] as f32);
 
-    let padding_u = padding / (texture_atlas_dims[0] as f32);
-    let padding_v = padding / (texture_atlas_dims[1] as f32);
+    // let padding_u = padding / (texture_atlas_dims[0] as f32);
+    // let padding_v = padding / (texture_atlas_dims[1] as f32);
 
-    let mut uvs: [[f32; 2]; 6] = [[0.0, 0.0]; 6];
-    texture.iter().for_each(|(f, [a, b])| {
-        uvs[*f as usize] = [*a as f32 * u + padding_u, *b as f32 * v + padding_v]
-    });
+    // let mut uvs: [[f32; 2]; 6] = [[0.0, 0.0]; 6];
+    // texture.iter().for_each(|(f, [a, b])| {
+    //     uvs[*f as usize] = [*a as f32 * u + padding_u, *b as f32 * v + padding_v]
+    // });
 
     #[rustfmt::skip]
     cube_mesh.insert_attribute(

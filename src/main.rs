@@ -1,5 +1,5 @@
 mod conf;
-// mod game;
+mod game;
 mod graphics;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
@@ -14,8 +14,8 @@ fn main() {
     App::new()
         .insert_resource(AssetMetaCheck::Never)
         // outside
-        .add_plugins(bevy::pbr::wireframe::WireframePlugin)
         .add_plugins(DefaultPlugins)
+        .add_plugins(bevy::pbr::wireframe::WireframePlugin)
         .add_plugins(bevy_debug_text_overlay::OverlayPlugin {
             font_size: 23.0,
             ..default()
@@ -30,8 +30,9 @@ fn main() {
         .add_plugins(graphics::voxels3d::Voxels3dPlugin)
         // .add_plugins(TrashExperimentPlugin)
         .add_plugins(graphics::animated::AnimatedPlugin)
-        .add_plugins(graphics::pieces::PiecesPlugin)
+        // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::lazyworld::LazyWorldPlugin)
+        .add_plugins(graphics::fps::FpsPlugin)
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)
         // .add_plugins(TrainPlugin)

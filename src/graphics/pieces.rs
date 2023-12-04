@@ -39,25 +39,6 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Debug, Reflect, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Material {
-    Reddish,
-    Greenish,
-    Blueish,
-    Brownish,
-}
-
-impl Material {
-    pub fn random(rng: &mut impl Rng) -> Self {
-        match rng.gen_range(0..25) {
-            0 => Self::Reddish,
-            1..=3 => Self::Greenish,
-            4..=8 => Self::Blueish,
-            _ => Self::Brownish,
-        }
-    }
-}
-
 #[derive(Debug, Component, Reflect)]
 pub struct Voxel {
     pub material: Material,
