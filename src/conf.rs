@@ -73,7 +73,7 @@ fn setup(mut commands: Commands) {
         // grid_size: 300.0,
         grid_size: 50.0,
         shadow_tint: 0.5,
-        camera_speed: 3.0,
+        camera_speed: 0.1,
     });
     // commands.insert_resource(pers);
 }
