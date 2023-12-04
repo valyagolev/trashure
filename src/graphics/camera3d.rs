@@ -6,6 +6,8 @@ use bevy::{
 
 use crate::conf::Configuration;
 
+pub static CAMERA_OFFSET: Vec3 = Vec3::new(50.0, 50.0, 50.0);
+
 pub struct Camera3dPlugin;
 impl Plugin for Camera3dPlugin {
     fn build(&self, app: &mut App) {
@@ -33,16 +35,16 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
         brightness: 0.1,
     });
 
-    // commands.insert_resource(DirectionalLightShadowMap { size: 128 });
+    // commands.insert_resource(DirectionalLightShadowMap { size: 1024 });
 
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::WHITE,
             illuminance: 15000.0,
-            // shadows_enabled: true,
-            shadows_enabled: false,
-            shadow_depth_bias: 0.1,
-            shadow_normal_bias: 0.2,
+            shadows_enabled: true,
+            // shadows_enabled: false,
+            shadow_depth_bias: 0.02,
+            shadow_normal_bias: 1.8,
         },
         transform: Transform::from_xyz(7.0, 5.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
@@ -53,11 +55,12 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
             projection: OrthographicProjection {
                 scale: 20.0,
                 scaling_mode: ScalingMode::FixedVertical(2.0),
-                near: -1000.0,
+                // near: -1000.0,
+                near: 0.0,
                 ..default()
             }
             .into(),
-            transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_translation(CAMERA_OFFSET).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
         // .with_children(|b| {

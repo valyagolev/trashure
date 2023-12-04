@@ -38,7 +38,8 @@ pub struct VoxelResources {
     // pub mesh: Handle<Mesh>,
     // materials: [Handle<StandardMaterial>; 4],
     meshes: [Mesh; 4],
-    voxel_material: Handle<StandardMaterial>,
+    pub voxel_material: Handle<StandardMaterial>,
+    pub debug_voxel_material: Handle<StandardMaterial>,
 }
 
 #[derive(Component)]
@@ -108,6 +109,12 @@ fn setup(
             // base_color_texture: Some(texture_mesh),
             ..default()
         }),
+        debug_voxel_material: materials.add(StandardMaterial {
+            base_color: Color::RED,
+            // alpha_mode: AlphaMode::Mask(0.5),
+            // base_color_texture: Some(texture_mesh),
+            ..default()
+        }),
     });
 
     // // let rand = &mut rand::thread_rng();
@@ -137,16 +144,35 @@ pub fn generate_voxel_block(
 ) -> (PbrBundle, VoxelBlock) {
     let rand = &mut rand::thread_rng();
 
-    let grid = (0..CHUNK_LEN)
-        .map(|_| {
-            if rand.gen::<bool>() {
-                Some(GameMaterial::random(rand))
-            } else {
-                None
-            }
-        })
-        .collect_vec();
+    // let grid = (0..CHUNK_LEN)
+    //     .map(|_| {
+    //         if rand.gen::<bool>() {
+    //             Some(GameMaterial::random(rand))
+    //         } else {
+    //             None
+    //         }
+    //     })
+    //     .collect_vec();
 
+    let grid = (0..VOXEL_BLOCK_SIZE)
+        .map(|x| {
+            (0..VOXEL_BLOCK_SIZE)
+                .map(|y| {
+                    (0..VOXEL_BLOCK_SIZE)
+                        .map(|z| {
+                            if x <= 3 && rand.gen::<bool>() {
+                                Some(GameMaterial::random(rand))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect_vec()
+                })
+                .collect_vec()
+        })
+        .flatten()
+        .flatten()
+        .collect_vec();
     let g: [_; CHUNK_LEN] = grid.try_into().unwrap();
     let dims: Dimensions = (
         VOXEL_BLOCK_SIZE as usize,
@@ -154,7 +180,6 @@ pub fn generate_voxel_block(
         VOXEL_BLOCK_SIZE as usize,
     );
     // let texture_mesh = asset_server.load("array_texture.png");
-
     let (culled_mesh, metadata) = mesh_grid(
         dims,
         &[Face::Bottom, Face::Back, Face::Left],

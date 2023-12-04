@@ -3,7 +3,10 @@ use rand::Rng;
 
 use crate::graphics::animated::MovingToPosition;
 
-use super::voxels3d::{generate_voxel_block, VoxelResources, VOXEL_BLOCK_SIZE};
+use super::{
+    camera3d::CAMERA_OFFSET,
+    voxels3d::{generate_voxel_block, VoxelResources, VOXEL_BLOCK_SIZE},
+};
 
 pub struct LazyWorldPlugin;
 
@@ -22,11 +25,11 @@ struct LazyWorld {
 }
 
 static AROUND_2D: &[IVec2] = &[
+    IVec2::new(0, 0),
     IVec2::new(-1, -1),
     IVec2::new(-1, 0),
     IVec2::new(-1, 1),
     IVec2::new(0, -1),
-    IVec2::new(0, 0),
     IVec2::new(0, 1),
     IVec2::new(1, -1),
     IVec2::new(1, 0),
@@ -41,9 +44,14 @@ fn generate_part(
 ) {
     let center = (part * VOXEL_BLOCK_SIZE).extend(0).xzy();
 
-    let mut bdl = generate_voxel_block(meshes, voxel_resources);
+    dbg!(&center);
 
+    let mut bdl = generate_voxel_block(meshes, voxel_resources);
     bdl.0.transform = Transform::from_translation(center.as_vec3());
+
+    if center == IVec3::ZERO {
+        bdl.0.material = voxel_resources.debug_voxel_material.clone();
+    }
 
     commands.spawn(bdl);
 
@@ -89,9 +97,12 @@ fn handle_camera(
 ) {
     let camera = q_camera.single();
 
-    let center = (camera.translation().xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
+    let center = ((camera.translation() - CAMERA_OFFSET).xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
 
-    let all_around = AROUND_2D.iter().map(|&offset| center + offset);
+    let all_around = AROUND_2D
+        .iter()
+        .map(|&offset| center + offset)
+        .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset));
 
     for part in all_around {
         // println!("Checking part {:?}", part);
@@ -99,6 +110,8 @@ fn handle_camera(
             println!("Generating part {:?} around {center:?}", part);
             generate_part(&mut commands, part, &mut meshes, &voxel_resources);
             lazy_world.known_parts.insert(part);
+            // break;
         }
+        // break;
     }
 }
