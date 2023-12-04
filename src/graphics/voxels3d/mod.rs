@@ -5,8 +5,11 @@ use crate::conf::Configuration;
 
 use super::pieces::Material;
 
-pub struct Voxels3d;
-impl Plugin for Voxels3d {
+mod meshem;
+mod voxel_mesh;
+
+pub struct Voxels3dPlugin;
+impl Plugin for Voxels3dPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             // OnEnter(AtlasesPluginState::Finished),

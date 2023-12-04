@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use bevy::prelude::*;
-use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
+// use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
 use bevy_persistent::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -13,26 +13,34 @@ impl Plugin for ConfigPlugin {
             // .insert_resource(Persistent::<Configuration>::n())
             .add_systems(Startup, setup)
             // .add_systems(Update, on_modify_configuration)
-            .register_type::<Configuration>() // you need to register your type to display it
-            .add_plugins(ResourceInspectorPlugin::<Configuration>::default());
+            .register_type::<Configuration>(); // you need to register your type to display it
+                                               // .add_plugins(ResourceInspectorPlugin::<Configuration>::default());
     }
 }
 
-#[derive(Reflect, Resource, Default, InspectorOptions, Serialize, Deserialize, Clone)]
-#[reflect(Resource, InspectorOptions)]
+#[derive(
+    Reflect,
+    Resource,
+    Default,
+    //  InspectorOptions,
+    Serialize,
+    Deserialize,
+    Clone,
+)]
+// #[reflect(Resource, InspectorOptions)]
 pub struct Configuration {
     // #[inspector(min = 0.0, max = 2.0)]
     // pub track_point_scale: f32,
-    #[inspector(min = 0.0, max = 2000.0)]
+    // #[inspector(min = 0.0, max = 2000.0)]
     pub camera_scale: f32,
 
-    #[inspector(min = 0.0, max = 200000.0)]
+    // #[inspector(min = 0.0, max = 200000.0)]
     pub grid_size: f32,
 
-    #[inspector(min = 0.0, max = 1.0)]
+    // #[inspector(min = 0.0, max = 1.0)]
     pub shadow_tint: f32,
 
-    #[inspector(min = 0.0, max = 10.0)]
+    // #[inspector(min = 0.0, max = 10.0)]
     pub camera_speed: f32,
 }
 

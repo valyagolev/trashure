@@ -7,3 +7,5 @@ pub mod camera3d;
 // pub mod voxels;
 pub mod pieces;
 pub mod voxels3d;
+
+pub mod lazyworld;

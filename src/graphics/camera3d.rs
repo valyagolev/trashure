@@ -1,5 +1,8 @@
-use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*, render::camera::ScalingMode};
-use bevy_inspector_egui::bevy_egui::EguiContext;
+use bevy::{
+    core_pipeline::clear_color::ClearColorConfig, pbr::DirectionalLightShadowMap, prelude::*,
+    render::camera::ScalingMode,
+};
+// use bevy_inspector_egui::bevy_egui::EguiContext;
 
 use crate::conf::Configuration;
 
@@ -30,6 +33,21 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
         brightness: 0.1,
     });
 
+    // commands.insert_resource(DirectionalLightShadowMap { size: 128 });
+
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: Color::WHITE,
+            illuminance: 15000.0,
+            // shadows_enabled: true,
+            shadows_enabled: false,
+            shadow_depth_bias: 0.1,
+            shadow_normal_bias: 0.2,
+        },
+        transform: Transform::from_xyz(7.0, 5.0, 2.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+
     commands
         .spawn(Camera3dBundle {
             projection: OrthographicProjection {
@@ -42,17 +60,18 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
             transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
-        .with_children(|b| {
-            b.spawn(PointLightBundle {
-                point_light: PointLight {
-                    intensity: 6000.0,
-                    range: 800.0,
-                    ..default()
-                },
-                transform: Transform::from_xyz(10.0, 14.0, -1.0),
-                ..default()
-            });
-        });
+        // .with_children(|b| {
+        //     b.spawn(PointLightBundle {
+        //         point_light: PointLight {
+        //             intensity: 6000.0,
+        //             range: 800.0,
+        //             ..default()
+        //         },
+        //         transform: Transform::from_xyz(10.0, 14.0, -1.0),
+        //         ..default()
+        //     });
+        // })
+        ;
 
     // commands.spawn(Camera2dBundle {
     //     // transform: Transform::from_xyz(0.0, 0.0, 1000.0),

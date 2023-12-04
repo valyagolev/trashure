@@ -1,7 +1,9 @@
 use bevy::{
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
     utils::{HashMap, HashSet},
 };
+use bevy_debug_text_overlay::screen_print;
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
@@ -15,6 +17,9 @@ use super::{
 
 pub struct PiecesPlugin;
 
+const SPAWN_CLOSER_THAN: f32 = 50.0;
+const DESPAWN_FARTHER_THAN: f32 = 55.0;
+
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
@@ -23,11 +28,12 @@ impl Plugin for PiecesPlugin {
         )
         .add_systems(
             Update,
-            spawn_sprites, // .run_if(in_state(AtlasesPluginState::Finished)),
+            spawn_sprites.after(disambiguate_entities), // .run_if(in_state(AtlasesPluginState::Finished)),
         )
         .add_systems(Update, handle_debug_keyboard)
         .insert_resource(EntitiesPos::default())
         .add_systems(Update, disambiguate_entities)
+        .add_systems(Update, show_stats)
         // .add_systems(Update, shade_voxels.after(disambiguate_entities))
         .register_type::<Voxel>();
     }
@@ -54,9 +60,9 @@ impl Material {
 
 #[derive(Debug, Component, Reflect)]
 pub struct Voxel {
-    material: Material,
+    pub material: Material,
     // shade: bool,
-    tight_at: Option<IVec3>,
+    pub tight_at: Option<IVec3>,
 }
 
 pub fn setup(
@@ -155,22 +161,65 @@ pub fn setup(
 
 pub fn spawn_sprites(
     mut commands: Commands,
-    q_no_sprite: Query<(Entity, &Voxel, &Transform), Without<TextureAtlasSprite>>,
+    mut q_no_sprite: Query<(Entity, &Voxel, &Transform, Option<&mut Visibility>)>,
+    // mut q_no_sprite: Query<(Entity, &Voxel, &Transform, Option<&Visibility>)>,
     // emojis: Res<Emojis>,
+    q_camera: Query<&GlobalTransform, With<Camera3d>>,
     voxel_resources: Option<Res<VoxelResources>>,
 ) {
     let Some(voxel_resources) = voxel_resources else {
         return;
     };
 
-    for (entity, voxel, transform) in q_no_sprite.iter() {
+    let camera = q_camera.single();
+
+    let mut total = 0;
+    let mut visible = 0;
+    let mut spawned = 0;
+
+    for (entity, voxel, transform, mbvis) in q_no_sprite.iter_mut() {
         // let mut sbundle = emojis.sbundle(&voxel.emoji).expect("couldn't find emoji?");
 
         // sbundle.transform = transform.clone();
 
-        commands
-            .entity(entity)
-            .insert(voxel_resources.pbr_bundle(voxel.material, transform.translation));
+        total += 1;
+
+        if mbvis.is_none() {
+            // let child =
+            //     commands.spawn(voxel_resources.pbr_bundle(voxel.material, transform.translation));
+            if transform.translation.distance(camera.translation()) < SPAWN_CLOSER_THAN {
+                commands
+                    .entity(entity)
+                    .insert(voxel_resources.pbr_bundle(voxel.material, transform.translation));
+
+                spawned += 1;
+            }
+        } else {
+            let mut mbvis = mbvis.unwrap();
+            if transform.translation.distance(camera.translation()) > DESPAWN_FARTHER_THAN {
+                *mbvis = Visibility::Hidden;
+
+                // commands.entity(entity).remove::<PbrBundle>();
+            } else {
+                visible += 1;
+                *mbvis = Visibility::Visible;
+            }
+        }
+    }
+    screen_print!(
+        "total: {}, visible: {}, spawned: {}",
+        total,
+        visible,
+        spawned
+    );
+}
+
+pub fn show_stats(diagnostics: Res<DiagnosticsStore>) {
+    if let Some(rps) = diagnostics
+        .get(FrameTimeDiagnosticsPlugin::FPS)
+        .and_then(|d| d.average())
+    {
+        screen_print!("FPS: {}", rps);
     }
 }
 
@@ -190,15 +239,14 @@ fn handle_debug_keyboard(
         // let y = rnd.gen_range(-10..10);
         // let pos = IVec3::new(x, y, 0);
 
-        let pos =
-            [
-                IVec3::new(0, 0, 0),
-                IVec3::new(10, 0, 0),
-                IVec3::new(0, 0, 15),
-            ]
-            .choose(rnd)
-            .unwrap()
-            .clone();
+        let pos = [
+            IVec3::new(0, 0, 0),
+            IVec3::new(10, 0, 0),
+            IVec3::new(0, 0, 15),
+        ]
+        .choose(rnd)
+        .unwrap()
+        .clone();
 
         commands.spawn((
             Voxel {
@@ -259,93 +307,116 @@ fn find_available_cell(
 fn disambiguate_entities(
     mut entities_pos: ResMut<EntitiesPos>,
     mut q_voxels: Query<(Entity, &mut MovingToPosition, &mut Voxel)>,
+    q_camera: Query<&GlobalTransform, With<Camera3d>>,
 ) {
+    // return;
     entities_pos.0.clear();
+
+    let camera = q_camera.single();
 
     let mut entities = HashMap::<IVec3, Vec<_>>::new();
 
-    for (entity, pos, _) in q_voxels.iter() {
-        entities.entry(pos.target).or_default().push(entity);
+    {
+        let my_span = info_span!("disambiguate_entities::gather_vecs").entered();
+
+        for (entity, pos, _) in q_voxels.iter() {
+            if camera.translation().distance(pos.target.as_vec3()) < DESPAWN_FARTHER_THAN {
+                entities.entry(pos.target).or_default().push(entity);
+            }
+        }
     }
 
     let rng = &mut rand::thread_rng();
 
     let mut changes = Vec::new();
 
-    for (pos, cell_entities) in &entities {
-        if cell_entities.len() > 1 {
-            let mut cell_entities = cell_entities.clone();
+    {
+        let my_span = info_span!("disambiguate_entities::check_dupes").entered();
 
-            while cell_entities.len() > 1 {
-                let next_cell = find_available_cell(&entities, &entities_pos.0, *pos);
-                let entity_i = rng.gen_range(0..cell_entities.len());
+        for (pos, cell_entities) in &entities {
+            if cell_entities.len() > 1 {
+                let mut cell_entities = cell_entities.clone();
 
-                let entity = cell_entities.remove(entity_i);
+                while cell_entities.len() > 1 {
+                    let next_cell = find_available_cell(&entities, &entities_pos.0, *pos);
+                    let entity_i = rng.gen_range(0..cell_entities.len());
 
-                entities_pos.0.insert(next_cell, entity);
-                changes.push((entity, next_cell));
+                    let entity = cell_entities.remove(entity_i);
+
+                    entities_pos.0.insert(next_cell, entity);
+                    changes.push((entity, next_cell));
+                }
+                entities_pos.0.insert(*pos, cell_entities[0]);
+            } else {
+                entities_pos.0.insert(*pos, cell_entities[0]);
             }
-            entities_pos.0.insert(*pos, cell_entities[0]);
-        } else {
-            entities_pos.0.insert(*pos, cell_entities[0]);
         }
     }
 
     // now we're dropping some
     let mut to_drop = vec![];
     let mut taken = HashSet::new();
-    for (k, entity) in &entities_pos.0 {
-        // continue;
-        if k.y <= 0 {
-            continue;
+    {
+        let my_span = info_span!("disambiguate_entities::gravity").entered();
+
+        for (k, entity) in &entities_pos.0 {
+            // continue;
+            if k.y <= 0 {
+                continue;
+            }
+
+            let (_, _, mut voxel) = q_voxels.get_mut(*entity).unwrap();
+
+            let below = *k + IVec3::new(0, -1, 0);
+
+            if !entities_pos.0.contains_key(&below) && !taken.contains(&below) {
+                to_drop.push((*k, below, *entity));
+                taken.insert(below);
+                continue;
+            }
+
+            if voxel.tight_at == Some(*k) {
+                continue;
+            }
+
+            let empties_below = DROP_DIRECTIONS
+                .iter()
+                .map(|d| below + *d)
+                .filter(|p| !entities_pos.0.contains_key(p) && !taken.contains(p))
+                .collect_vec();
+
+            // either nothing is below; or we're not tight then there's a probability of drop
+
+            if empties_below.len() == 0 || {
+                let mut rng = rand::thread_rng();
+                rng.gen_range(0..4) > empties_below.len()
+            } {
+                voxel.tight_at = Some(*k);
+                continue;
+            }
+
+            let pos = empties_below.choose(rng).unwrap();
+
+            to_drop.push((*k, *pos, *entity));
+            taken.insert(*pos);
         }
-
-        let (_, _, mut voxel) = q_voxels.get_mut(*entity).unwrap();
-
-        let below = *k + IVec3::new(0, -1, 0);
-
-        if !entities_pos.0.contains_key(&below) && !taken.contains(&below) {
-            to_drop.push((*k, below, *entity));
-            taken.insert(below);
-            continue;
-        }
-
-        if voxel.tight_at == Some(*k) {
-            continue;
-        }
-
-        let empties_below = DROP_DIRECTIONS
-            .iter()
-            .map(|d| below + *d)
-            .filter(|p| !entities_pos.0.contains_key(p) && !taken.contains(p))
-            .collect_vec();
-
-        // either nothing is below; or we're not tight then there's a probability of drop
-
-        if empties_below.len() == 0 || {
-            let mut rng = rand::thread_rng();
-            rng.gen_range(0..4) > empties_below.len()
-        } {
-            voxel.tight_at = Some(*k);
-            continue;
-        }
-
-        let pos = empties_below.choose(rng).unwrap();
-
-        to_drop.push((*k, *pos, *entity));
-        taken.insert(*pos);
     }
 
-    for (entity, cell) in changes {
-        let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
-        pos.target = cell;
+    {
+        let my_span = info_span!("disambiguate_entities::apply_changes").entered();
+        for (entity, cell) in changes {
+            let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
+            pos.target = cell;
+        }
     }
-
-    for (from, to, entity) in to_drop {
-        let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
-        pos.target = to;
-        entities_pos.0.insert(to, entity);
-        entities_pos.0.remove(&from);
+    {
+        let my_span = info_span!("disambiguate_entities::apply_drops").entered();
+        for (from, to, entity) in to_drop {
+            let (_, mut pos, _) = q_voxels.get_mut(entity).unwrap();
+            pos.target = to;
+            entities_pos.0.insert(to, entity);
+            entities_pos.0.remove(&from);
+        }
     }
 }
 
