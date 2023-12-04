@@ -27,13 +27,13 @@ impl MovingToPosition {
     }
 }
 
-pub fn transform_to_voxel_grid(conf: &Res<Configuration>, a: IVec3) -> Vec3 {
-    let vs = a.as_vec3() * conf.grid_size;
-    let x = vs.x + vs.z * 0.5;
-    let y = vs.y + vs.z * 0.5;
+// pub fn transform_to_voxel_grid(conf: &Res<Configuration>, a: IVec3) -> Vec3 {
+//     let vs = a.as_vec3() * conf.grid_size;
+//     let x = vs.x + vs.z * 0.5;
+//     let y = vs.y + vs.z * 0.5;
 
-    Vec3::new(x - y, x + y, vs.z * 10.0 + x + y - 500.0)
-}
+//     Vec3::new(x - y, x + y, vs.z * 10.0 + x + y - 500.0)
+// }
 
 fn animate(
     mut q_animation: Query<(&mut Transform, &MovingToPosition)>,
@@ -43,7 +43,8 @@ fn animate(
     let dt = time.delta_seconds();
 
     for (mut transform, moving_to_position) in q_animation.iter_mut() {
-        let target = transform_to_voxel_grid(&conf, moving_to_position.target);
+        // let target = transform_to_voxel_grid(&conf, moving_to_position.target);
+        let target = moving_to_position.target.as_vec3();
 
         let delta = target - transform.translation;
 
@@ -59,8 +60,8 @@ fn animate(
             transform.translation += movement;
         }
 
-        if transform.translation.x.is_nan() {
-            panic!("transform.translation.x is NaN");
-        }
+        // if transform.translation.x.is_nan() {
+        //     panic!("transform.translation.x is NaN");
+        // }
     }
 }
