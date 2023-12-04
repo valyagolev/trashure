@@ -61,6 +61,7 @@ impl VoxelBlock {
             let close = DIRS_AROUND.iter().map(|p| *p + pos_xz).collect_vec();
 
             let close = close.choose(rand).unwrap();
+
             return self.drop_block(*close, mat, change_collector, rand);
         };
 
@@ -91,21 +92,23 @@ impl VoxelBlock {
                 || rand.gen_range(0..9) < empty_belows.len()
             {
                 let below = empty_belows.choose(rand).unwrap();
+
                 return self.drop_block(below.xz(), mat, change_collector, rand);
             }
         }
 
-        if self[local_pos].is_some() {
-            for i in local_pos.y..VOXEL_BLOCK_SIZE {
-                let pos = local_pos.extend(i).xzy();
+        if self.forbidden_columns[local_pos.x as usize][local_pos.z as usize]
+            || self[local_pos].is_some()
+        {
+            let arounds = DIRS_AROUND
+                .iter()
+                .map(|p| p.extend(1).xzy() + local_pos)
+                .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
+                .collect_vec();
 
-                if self[pos].is_none() {
-                    return self.push_block(pos, mat, change_collector, rand);
-                }
-            }
+            let pos = arounds.choose(rand).unwrap();
 
-            warn!("TODO: Couldn't place block at {:?}", local_pos);
-            return;
+            return self.push_block(*pos, mat, change_collector, rand);
         }
 
         self._add_block(local_pos, mat);

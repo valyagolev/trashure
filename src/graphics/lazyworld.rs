@@ -50,9 +50,15 @@ fn generate_part(
     let mut bundle = generate_voxel_block(part, meshes, voxel_resources);
     bundle.pbr_bundle.transform = Transform::from_translation(center.as_vec3());
 
-    // if center == IVec3::ZERO {
-    //     bdl.1.material = voxel_resources.debug_voxel_material.clone();
-    // }
+    if center == IVec3::ZERO {
+        //     bdl.1.material = voxel_resources.debug_voxel_material.clone();
+
+        for x in 0..15 {
+            for z in 0..15 {
+                bundle.voxel_block.forbid_column(IVec2::new(x, z));
+            }
+        }
+    }
 
     let half_chunk = VOXEL_BLOCK_SIZE / 2;
     let rand = &mut rand::thread_rng();

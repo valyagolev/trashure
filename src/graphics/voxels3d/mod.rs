@@ -4,6 +4,7 @@ use crate::{conf::Configuration, game::material::GameMaterial};
 use bevy::pbr::wireframe::Wireframe;
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::transform::commands;
+use bevy::utils::HashSet;
 use bevy::{prelude::*, render::camera::ScalingMode, utils::HashMap};
 use bevy_meshem::{prelude::*, Dimensions};
 use itertools::Itertools;
@@ -24,6 +25,7 @@ impl Plugin for Voxels3dPlugin {
         app.add_systems(Startup, setup)
             .add_systems(Update, update_meshes)
             .add_plugins(voxel_physics::VoxelPhysics)
+            .add_systems(Update, apply_changes)
             .insert_resource(VoxelBlockChanges::default());
     }
 }
@@ -51,6 +53,7 @@ pub struct VoxelBlock {
     meta: MeshMD<Option<GameMaterial>>,
     grid: [Option<GameMaterial>; CHUNK_LEN],
     mesh_id: AssetId<Mesh>,
+    forbidden_columns: [[bool; VOXEL_BLOCK_SIZE as usize]; VOXEL_BLOCK_SIZE as usize],
 }
 
 impl VoxelRegistry for VoxelResources {
@@ -201,6 +204,7 @@ pub fn generate_voxel_block(
             meta: metadata,
             grid: g,
             mesh_id: culled_mesh_handle.id(),
+            forbidden_columns: [[false; VOXEL_BLOCK_SIZE as usize]; VOXEL_BLOCK_SIZE as usize],
         },
         pbr_bundle: PbrBundle {
             mesh: culled_mesh_handle,
@@ -245,6 +249,7 @@ impl VoxelBlock {
         // assert!(idx >= 0);
 
         assert!(self.grid[idx].is_none());
+        assert!(self.forbidden_columns[local_pos.x as usize][local_pos.z as usize] == false);
 
         self.grid[idx] = Some(mat);
         self.meta.log(
@@ -283,6 +288,14 @@ impl VoxelBlock {
         }
 
         (voxel_block_pos, inner_pos)
+    }
+
+    pub fn forbid_column(&mut self, local_pos: IVec2) {
+        for y in 0..VOXEL_BLOCK_SIZE {
+            assert!(self[local_pos.extend(y).xzy()].is_none());
+        }
+
+        self.forbidden_columns[local_pos.x as usize][local_pos.y as usize] = true;
     }
 }
 
