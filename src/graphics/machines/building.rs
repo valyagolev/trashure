@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::Instant};
 
 use crate::{
     game::Direction2D,
@@ -20,43 +20,76 @@ impl Plugin for MachinesBuildingPlugin {
                 // debug_setup,
                 move_ghost,
                 check_placement,
+                place_ghost.after(check_placement),
             ),
         )
-        .insert_resource(MachineGhost(None));
+        .insert_resource(MachineGhost(
+            None,
+            false,
+            Instant::now() + std::time::Duration::from_millis(200),
+        ));
     }
 }
 
 #[derive(Debug, Resource, Reflect)]
 /// MachineType, MyMachine
-pub struct MachineGhost(pub Option<(Entity, Entity)>);
+pub struct MachineGhost(pub Option<(Entity, Entity)>, pub bool, pub Instant);
 
-fn debug_setup(
-    mut commands: Commands,
-    mut ghost: ResMut<MachineGhost>,
-    q_types: Query<Entity, With<MachineType>>,
-    // mut q_messages: ResMut<DebugTexts>,
-    cursor: Res<CursorOver>,
-) {
-    if ghost.0.is_none() {
-        let Some(t) = q_types.iter().next() else {
-            return;
-        };
-
-        let tp = commands
+impl MachineGhost {
+    pub fn start(
+        tp: Entity,
+        commands: &mut Commands,
+        cursor: &Res<CursorOver>,
+        machine_type: &MachineType,
+    ) -> Self {
+        let ent = commands
             .spawn((
                 Tinted::from(MachineRecolor::Ghost.into()),
                 // BuiltMachine,
                 MyMachine {
-                    tp: t,
+                    tp,
+                    dims: machine_type.dims,
                     pos: cursor.block.xz(),
                     direction: Direction2D::Backward,
                 },
             ))
             .id();
 
-        ghost.0 = Some((t, tp));
+        Self(
+            Some((tp, ent)),
+            false,
+            Instant::now() + std::time::Duration::from_millis(200),
+        )
     }
 }
+
+// fn debug_setup(
+//     mut commands: Commands,
+//     mut ghost: ResMut<MachineGhost>,
+//     q_types: Query<Entity, With<MachineType>>,
+//     // mut q_messages: ResMut<DebugTexts>,
+//     cursor: Res<CursorOver>,
+// ) {
+//     if ghost.0.is_none() {
+//         let Some(t) = q_types.iter().next() else {
+//             return;
+//         };
+
+//         let tp = commands
+//             .spawn((
+//                 Tinted::from(MachineRecolor::Ghost.into()),
+//                 // BuiltMachine,
+//                 MyMachine {
+//                     tp: t,
+//                     pos: cursor.block.xz(),
+//                     direction: Direction2D::Backward,
+//                 },
+//             ))
+//             .id();
+
+//         ghost.0 = Some((t, tp));
+//     }
+// }
 
 fn move_ghost(
     mut ghost: ResMut<MachineGhost>,
@@ -78,15 +111,43 @@ fn move_ghost(
     }
 }
 
+fn place_ghost(
+    mut commands: Commands,
+    mut mghost: ResMut<MachineGhost>,
+    // mut q_machines: Query<&mut MyMachine, Without<BuiltMachine>>,
+    cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
+) {
+    if !mghost.1 {
+        return;
+    }
+
+    if mghost.2 > Instant::now() {
+        return;
+    }
+
+    let Some((tp, ghost)) = mghost.0 else {
+        return;
+    };
+
+    if cursor.just_released(MouseButton::Left) {
+        commands
+            .entity(ghost)
+            .insert((BuiltMachine, Tinted::empty()));
+        mghost.0 = None;
+    }
+}
+
 fn check_placement(
-    ghost: Res<MachineGhost>,
+    mut mghost: ResMut<MachineGhost>,
     mut q_machines: Query<(&MyMachine, &mut Tinted), (Changed<MyMachine>, Without<BuiltMachine>)>,
+
+    q_existing_machines: Query<&MyMachine, With<BuiltMachine>>,
 
     lazyworld: Res<LazyWorld>,
     blocks: Query<&VoxelBlock>,
     q_types: Query<&MachineType>,
 ) {
-    let Some((mt_e, ghost_e)) = ghost.0 else {
+    let Some((mt_e, ghost_e)) = mghost.0 else {
         return;
     };
     let Ok((ghost, mut tinted)) = q_machines.get_mut(ghost_e) else {
@@ -98,30 +159,25 @@ fn check_placement(
 
     let center = mt.dims / 2;
 
-    let mut bad = false;
-
-    'outer: for x in 0..mt.dims.x {
-        for z in 0..mt.dims.y {
-            let pos = ghost.pos + ghost.direction.rotate_size(IVec2::new(x, z) - center);
-
-            let (block_i, inner) = VoxelBlock::normalize_pos(IVec2::ZERO, pos.extend(0).xzy());
-
-            let Ok(block) = blocks.get(lazyworld.known_parts[&block_i]) else {
-                continue;
-            };
-
-            dbg!((pos, block_i, inner));
-
-            if block[inner].is_some() {
-                println!("{pos:?}");
-                bad = true;
-                break 'outer;
-            }
-        }
-    }
+    let mut bad = q_existing_machines.iter().any(|m| m.intersects(ghost));
 
     if !bad {
-        println!("good");
+        'outer: for x in 0..mt.dims.x {
+            for z in 0..mt.dims.y {
+                let pos = ghost.pos + ghost.direction.rotate_size(IVec2::new(x, z) - center);
+
+                let (block_i, inner) = VoxelBlock::normalize_pos(IVec2::ZERO, pos.extend(0).xzy());
+
+                let Ok(block) = blocks.get(lazyworld.known_parts[&block_i]) else {
+                    continue;
+                };
+
+                if block[inner].is_some() {
+                    bad = true;
+                    break 'outer;
+                }
+            }
+        }
     }
 
     *tinted = if bad {
@@ -129,4 +185,6 @@ fn check_placement(
     } else {
         MachineRecolor::Ghost.into()
     };
+
+    mghost.1 = !bad;
 }

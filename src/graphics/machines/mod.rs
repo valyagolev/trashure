@@ -54,6 +54,21 @@ pub struct MyMachine {
     tp: Entity,
     pos: IVec2,
     direction: Direction2D,
+    dims: IVec2,
+}
+
+impl MyMachine {
+    pub fn intersects(&self, other: &Self) -> bool {
+        let (x1, y1) = (self.pos.x, self.pos.y);
+        let (x2, y2) = (other.pos.x, other.pos.y);
+
+        let (w1, h1) = self.direction.rotate_size(self.dims).into();
+        let (w2, h2) = other.direction.rotate_size(other.dims).into();
+
+        // we don't care about recentering them...
+
+        x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2
+    }
 }
 
 #[derive(Debug, Resource, Reflect)]

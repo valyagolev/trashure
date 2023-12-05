@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use super::machines::{building::MachineGhost, MachineType};
+use super::{
+    cursor::CursorOver,
+    machines::{building::MachineGhost, MachineType},
+};
 
 pub struct GameMenuPlugin;
 mod looks;
@@ -8,7 +11,7 @@ impl Plugin for GameMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameMenu(GameMenuState::ToPickBuilding))
             .add_systems(Update, looks::setup_menu)
-            .add_systems(Update, redraw_menu);
+            .add_systems(Update, (handle_build_click, redraw_menu));
     }
 }
 
@@ -37,6 +40,30 @@ struct GameMenuToPickBuilding;
 
 #[derive(Component)]
 struct GameMenuToPickBuildingForMachineButton(Entity);
+
+fn handle_build_click(
+    mut commands: Commands,
+    q_interaction: Query<
+        (&GameMenuToPickBuildingForMachineButton, &Interaction),
+        Changed<Interaction>,
+    >,
+    q_types: Query<&MachineType>,
+    mut menustate: ResMut<GameMenu>,
+    mut ghost: ResMut<MachineGhost>,
+    cursor: Res<CursorOver>,
+) {
+    for (entity, interaction) in q_interaction.iter() {
+        if *interaction == Interaction::Pressed {
+            let tp = q_types.get(entity.0).unwrap();
+
+            println!("Clicked on {:?}", tp.name);
+
+            menustate.0 = GameMenuState::CurrentlyCreating;
+
+            *ghost = MachineGhost::start(entity.0, &mut commands, &cursor, tp);
+        }
+    }
+}
 
 fn redraw_menu(
     menu_state: Res<GameMenu>,
