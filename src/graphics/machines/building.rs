@@ -14,8 +14,15 @@ pub struct MachinesBuildingPlugin;
 
 impl Plugin for MachinesBuildingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (debug_setup, move_ghost, check_placement))
-            .insert_resource(MachineGhost(None));
+        app.add_systems(
+            Update,
+            (
+                // debug_setup,
+                move_ghost,
+                check_placement,
+            ),
+        )
+        .insert_resource(MachineGhost(None));
     }
 }
 

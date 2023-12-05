@@ -6,7 +6,7 @@ pub struct GameMenuPlugin;
 
 impl Plugin for GameMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(GameMenu(GameMenuState::CurrentlyCreating))
+        app.insert_resource(GameMenu(GameMenuState::ToPickBuilding))
             .add_systems(Startup, setup_menu)
             .add_systems(Update, redraw_menu);
     }
@@ -19,6 +19,12 @@ pub enum GameMenuState {
 
 #[derive(Resource)]
 struct GameMenu(GameMenuState);
+
+#[derive(Component)]
+struct LeftBottomUiNode;
+
+#[derive(Component)]
+struct TutorialNode;
 
 #[derive(Component)]
 struct GameMenuNode;
@@ -56,14 +62,12 @@ fn redraw_menu(
 }
 
 fn setup_menu(mut commands: Commands) {
-    // create our UI root node
-    // this is the wrapper/container for the text
-    let root = commands
+    let ui_root = commands
         .spawn((
-            GameMenuNode,
+            LeftBottomUiNode,
             NodeBundle {
                 // give it a dark background for readability
-                background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
+                // background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
                 // make it "always on top" by setting the Z index to maximum
                 // we want it to be displayed over all other UI
                 z_index: ZIndex::Global(i32::MAX),
@@ -78,7 +82,88 @@ fn setup_menu(mut commands: Commands) {
                     padding: UiRect::all(Val::Px(4.0)),
                     flex_direction: FlexDirection::Column,
                     // align_content: AlignContent::FlexEnd,
-                    align_items: AlignItems::FlexEnd,
+                    align_items: AlignItems::FlexStart,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        ))
+        .id();
+
+    let tutorial_root = commands
+        .spawn((
+            GameMenuNode,
+            NodeBundle {
+                // give it a dark background for readability
+                background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
+                // make it "always on top" by setting the Z index to maximum
+                // we want it to be displayed over all other UI
+                z_index: ZIndex::Global(i32::MAX),
+                style: Style {
+                    // position_type: PositionType::Absolute,
+
+                    // right: Val::Auto,
+                    // top: Val::Auto,
+                    // bottom: Val::Percent(1.),
+                    // left: Val::Percent(1.),
+                    // give it some padding for readability
+                    margin: UiRect::all(Val::Px(4.0)),
+                    padding: UiRect::all(Val::Px(4.0)),
+                    flex_direction: FlexDirection::Column,
+                    // align_content: AlignContent::FlexEnd,
+                    align_items: AlignItems::FlexStart,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        ))
+        .id();
+
+    let text = commands
+        .spawn((
+            TutorialNode,
+            TextBundle {
+                // use two sections, so it is easy to update just the number
+                text: Text::from_sections([TextSection {
+                    value: "tutorial".into(),
+                    style: TextStyle {
+                        font_size: 20.0,
+                        color: Color::WHITE,
+                        // if you want to use your game's font asset,
+                        // uncomment this and provide the handle:
+                        // font: my_font_handle
+                        ..default()
+                    },
+                }]),
+                ..Default::default()
+            },
+        ))
+        .id();
+
+    commands.entity(tutorial_root).push_children(&[text]);
+
+    let menu_root = commands
+        .spawn((
+            GameMenuNode,
+            NodeBundle {
+                // give it a dark background for readability
+                background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
+                // make it "always on top" by setting the Z index to maximum
+                // we want it to be displayed over all other UI
+                z_index: ZIndex::Global(i32::MAX),
+                style: Style {
+                    // position_type: PositionType::Absolute,
+
+                    // right: Val::Auto,
+                    // top: Val::Auto,
+                    // bottom: Val::Percent(1.),
+                    // left: Val::Percent(1.),
+                    // give it some padding for readability
+                    margin: UiRect::all(Val::Px(4.0)),
+                    padding: UiRect::all(Val::Px(4.0)),
+                    flex_direction: FlexDirection::Column,
+                    // align_content: AlignContent::FlexEnd,
+                    align_items: AlignItems::FlexStart,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -107,5 +192,9 @@ fn setup_menu(mut commands: Commands) {
         ))
         .id();
 
-    commands.entity(root).push_children(&[text]);
+    commands.entity(menu_root).push_children(&[text]);
+
+    commands
+        .entity(ui_root)
+        .push_children(&[tutorial_root, menu_root]);
 }
