@@ -2,5 +2,6 @@
   "rust-analyzer.cargo.extraEnv": {
     "__RUSTFLAGS": "-C link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld64.lld -Zshare-generics=y",
     "RUSTFLAGS": "-C link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld64.lld"
-  }
+  },
+  "rust-analyzer.cargo.features": []
 }

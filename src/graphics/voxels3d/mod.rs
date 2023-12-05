@@ -297,6 +297,20 @@ impl VoxelBlock {
 
         self.forbidden_columns[local_pos.x as usize][local_pos.y as usize] = true;
     }
+
+    pub fn real_pos(mut voxel_block_pos: IVec2, mut inner_pos: IVec3) -> Vec3 {
+        ((voxel_block_pos * VOXEL_BLOCK_SIZE).extend(0) + inner_pos).as_vec3()
+    }
+
+    pub fn inner_pos(pos: Vec3) -> (IVec2, IVec3) {
+        let voxel_block_pos = (pos.xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
+        let inner_pos = (pos.xz() % VOXEL_BLOCK_SIZE as f32)
+            .as_ivec2()
+            .extend(0)
+            .xzy();
+
+        (voxel_block_pos, inner_pos)
+    }
 }
 
 impl Index<IVec3> for VoxelBlock {
@@ -357,5 +371,21 @@ fn apply_changes(mut changes: ResMut<VoxelBlockChanges>, mut blocks: Query<&mut 
 
     for (pos, ch) in new_changes.added.drain() {
         changes.added.entry(pos).or_insert_with(Vec::new).extend(ch);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use bevy::math::{IVec2, IVec3, Vec3};
+
+    use crate::graphics::voxels3d::VoxelBlock;
+
+    #[test]
+    fn hmm() {
+        dbg!(VoxelBlock::real_pos(IVec2::new(0, 0), IVec3::new(0, 0, 0)));
+        dbg!(VoxelBlock::inner_pos(Vec3::new(0.0, 0.0, 0.0)));
+        dbg!(VoxelBlock::real_pos(IVec2::new(0, 1), IVec3::new(0, 0, 0)));
+
+        dbg!(VoxelBlock::real_pos(IVec2::new(0, 1), IVec3::new(1, 0, 1)));
     }
 }
