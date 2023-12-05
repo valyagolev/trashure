@@ -6,6 +6,8 @@ use crate::game::Direction2D;
 
 // use self::recolor::RecoloredScenes;
 
+use self::colors::MachineRecolor;
+
 use super::{recolor::Tinted, selectable::Selectable};
 
 pub struct MachinesPlugin;
@@ -15,7 +17,14 @@ impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, load_machines)
             // .add_systems(Update, debug_keyboard)
-            .add_systems(Update, (update_machines, update_boxes))
+            .add_systems(
+                Update,
+                (
+                    update_machines,
+                    //  update_boxes,
+                    update_colors,
+                ),
+            )
             .register_type::<MyMachine>()
             .register_type::<MachineType>();
     }
@@ -65,7 +74,7 @@ fn load_machines(
         .id();
 
     commands.spawn((
-        Tinted::new(Color::rgba(0.1, 0.6, 0.2, 0.1)),
+        Tinted::from(MachineRecolor::Selected.into()),
         MyMachine {
             tp: t,
             pos: IVec2 { x: 5, y: 4 },
@@ -74,7 +83,7 @@ fn load_machines(
     ));
 
     commands.spawn((
-        Tinted::new(Color::rgba(0.3, 0.2, 0.2, 0.1)),
+        Tinted::from(MachineRecolor::Ghost.into()),
         MyMachine {
             tp: t,
             pos: IVec2 { x: 15, y: 4 },
@@ -129,7 +138,28 @@ fn update_machines(
     }
 }
 
-fn update_boxes(
+// fn update_boxes(
+//     // mut commands: Commands,
+//     // ass: Res<AssetServer>,
+//     q_machinetypes: Query<&MachineType>,
+//     mut q_machines: Query<(Entity, &MyMachine, &Children)>,
+//     mut q_cubes: Query<(&DebugCube, &mut Transform)>,
+//     // mres: Res<MachineResources>,
+// ) {
+//     for (e, machine, children) in q_machines.iter_mut() {
+//         let tp = q_machinetypes.get(machine.tp).unwrap();
+
+//         for ch in children {
+//             let Ok((cube, mut trans)) = q_cubes.get_mut(*ch) else {
+//                 continue;
+//             };
+
+//             *trans = Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32));
+//         }
+//     }
+// }
+
+fn update_colors(
     // mut commands: Commands,
     // ass: Res<AssetServer>,
     q_machinetypes: Query<&MachineType>,

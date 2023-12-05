@@ -5,7 +5,7 @@ pub struct RecolorPlugin;
 
 impl Plugin for RecolorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_colors)
+        app.add_systems(Update, (ensure_stores, update_colors.after(ensure_stores)))
             .register_type::<Tinted>()
             .insert_resource(TintedMaterials::default());
     }
@@ -15,17 +15,25 @@ impl Plugin for RecolorPlugin {
 pub struct Tinted {
     pub color: Option<Color>,
     pub emissive: Option<Color>,
+}
+
+#[derive(Debug, Component)]
+struct TintedStore {
     last_applied: (Option<Color>, Option<Color>),
     origs: HashMap<Entity, Handle<StandardMaterial>>,
 }
 
 impl Tinted {
+    pub fn empty() -> Self {
+        Tinted {
+            color: None,
+            emissive: None,
+        }
+    }
     pub fn new(color: Color) -> Self {
         Tinted {
             color: Some(color),
             emissive: None,
-            last_applied: (None, None),
-            origs: HashMap::default(),
         }
     }
 
@@ -33,8 +41,6 @@ impl Tinted {
         Tinted {
             color: Some(color),
             emissive: Some(emissive),
-            last_applied: (None, None),
-            origs: HashMap::default(),
         }
     }
 }
@@ -42,16 +48,25 @@ impl Tinted {
 #[derive(Resource, Default)]
 struct TintedMaterials(HashMap<(AssetId<StandardMaterial>, [u8; 4]), Handle<StandardMaterial>>);
 
+fn ensure_stores(mut cmds: Commands, mut q_scenes: Query<(Entity, &Tinted), Without<TintedStore>>) {
+    for (e, tnted) in q_scenes.iter_mut() {
+        cmds.entity(e).insert(TintedStore {
+            last_applied: (None, None),
+            origs: HashMap::default(),
+        });
+    }
+}
+
 fn update_colors(
     mut cmds: Commands,
-    mut q_scenes: Query<(Entity, &SceneInstance, &mut Tinted)>,
+    mut q_scenes: Query<(Entity, &SceneInstance, &mut Tinted, &mut TintedStore)>,
     q_material_uses: Query<(Entity, &Handle<StandardMaterial>)>,
     scene_manager: Res<SceneSpawner>,
     mut pbr_materials: ResMut<Assets<StandardMaterial>>,
     mut custom_materials: ResMut<TintedMaterials>,
 ) {
-    for (e, instance, mut tnted) in q_scenes.iter_mut() {
-        if tnted.last_applied == (tnted.color, tnted.emissive) {
+    for (e, instance, mut tnted, mut tnted_store) in q_scenes.iter_mut() {
+        if tnted_store.last_applied == (tnted.color, tnted.emissive) {
             continue;
         }
 
@@ -62,11 +77,11 @@ fn update_colors(
                 q_material_uses.iter_many(scene_manager.iter_instance_entities(**instance));
 
             for (entity, material_handle) in material_uses {
-                if tnted.origs.get(&entity).is_none() {
-                    tnted.origs.insert(entity, material_handle.clone());
+                if tnted_store.origs.get(&entity).is_none() {
+                    tnted_store.origs.insert(entity, material_handle.clone());
                 }
 
-                let orig_material = tnted.origs.get(&entity).unwrap();
+                let orig_material = tnted_store.origs.get(&entity).unwrap();
 
                 let id = orig_material.id();
 
@@ -105,13 +120,13 @@ fn update_colors(
                         .0
                         .insert((id, color.as_rgba_u8()), new_material.clone());
                 } else {
-                    new_material = tnted.origs.get(&entity).unwrap().clone();
+                    new_material = tnted_store.origs.get(&entity).unwrap().clone();
                 }
 
                 cmds.entity(entity).insert(new_material);
             }
 
-            tnted.last_applied = (tnted.color, tnted.emissive);
+            tnted_store.last_applied = (tnted.color, tnted.emissive);
         }
     }
 }
