@@ -23,10 +23,13 @@ impl Into<Color> for MachineRecolor {
 
 impl Into<Tinted> for MachineRecolor {
     fn into(self) -> Tinted {
-        if let Some(em) = self.emissive() {
-            Tinted::new_emissive(self.into(), em)
-        } else {
-            Tinted::new(self.into())
+        match self {
+            MachineRecolor::Ghost | MachineRecolor::ForbiddenGhost => {
+                let mut t = Tinted::new(self.into());
+                t.alpha_mode = Some(AlphaMode::Blend);
+                t
+            }
+            MachineRecolor::Selected => Tinted::new_emissive(self.into(), self.emissive().unwrap()),
         }
     }
 }

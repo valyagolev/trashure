@@ -15,11 +15,12 @@ impl Plugin for RecolorPlugin {
 pub struct Tinted {
     pub color: Option<Color>,
     pub emissive: Option<Color>,
+    pub alpha_mode: Option<AlphaMode>,
 }
 
 #[derive(Debug, Component)]
 struct TintedStore {
-    last_applied: (Option<Color>, Option<Color>),
+    last_applied: (Option<Color>, Option<Color>, Option<AlphaMode>),
     origs: HashMap<Entity, Handle<StandardMaterial>>,
 }
 
@@ -28,12 +29,14 @@ impl Tinted {
         Tinted {
             color: None,
             emissive: None,
+            alpha_mode: None,
         }
     }
     pub fn new(color: Color) -> Self {
         Tinted {
             color: Some(color),
             emissive: None,
+            alpha_mode: None,
         }
     }
 
@@ -41,6 +44,14 @@ impl Tinted {
         Tinted {
             color: Some(color),
             emissive: Some(emissive),
+            alpha_mode: None,
+        }
+    }
+
+    pub fn alpha(self) -> Self {
+        Tinted {
+            alpha_mode: Some(AlphaMode::Blend),
+            ..self
         }
     }
 }
@@ -51,7 +62,7 @@ struct TintedMaterials(HashMap<(AssetId<StandardMaterial>, [u8; 4]), Handle<Stan
 fn ensure_stores(mut cmds: Commands, mut q_scenes: Query<(Entity, &Tinted), Without<TintedStore>>) {
     for (e, tnted) in q_scenes.iter_mut() {
         cmds.entity(e).insert(TintedStore {
-            last_applied: (None, None),
+            last_applied: (None, None, None),
             origs: HashMap::default(),
         });
     }
@@ -66,7 +77,7 @@ fn update_colors(
     mut custom_materials: ResMut<TintedMaterials>,
 ) {
     for (e, instance, mut tnted, mut tnted_store) in q_scenes.iter_mut() {
-        if tnted_store.last_applied == (tnted.color, tnted.emissive) {
+        if tnted_store.last_applied == (tnted.color, tnted.emissive, tnted.alpha_mode) {
             continue;
         }
 
@@ -114,6 +125,10 @@ fn update_colors(
                         new_material_m.emissive = em;
                     }
 
+                    if let Some(am) = tnted.alpha_mode {
+                        new_material_m.alpha_mode = am;
+                    }
+
                     new_material = pbr_materials.add(new_material_m);
 
                     custom_materials
@@ -126,7 +141,7 @@ fn update_colors(
                 cmds.entity(entity).insert(new_material);
             }
 
-            tnted_store.last_applied = (tnted.color, tnted.emissive);
+            tnted_store.last_applied = (tnted.color, tnted.emissive, tnted.alpha_mode);
         }
     }
 }

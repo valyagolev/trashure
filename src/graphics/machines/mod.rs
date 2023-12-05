@@ -12,12 +12,13 @@ use super::{recolor::Tinted, selectable::Selectable};
 
 pub mod building;
 mod colors;
+pub mod radar;
 
 pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(building::MachinesBuildingPlugin)
+        app.add_plugins((building::MachinesBuildingPlugin, radar::RadarPlugin))
             .add_systems(Startup, load_machines)
             // .add_systems(Update, debug_keyboard)
             .add_systems(
@@ -75,6 +76,7 @@ impl MyMachine {
 pub struct MachineResources {
     selection_cube: Handle<Mesh>,
     debug_reddish: Handle<StandardMaterial>,
+    radar: Handle<Scene>,
 }
 
 #[derive(Debug, Component)]
@@ -86,9 +88,13 @@ pub fn load_machines(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let selection_cube = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
+    let debug_reddish = materials.add(Color::rgba(0.8, 0.5, 0.4, 0.2).into());
+
     commands.insert_resource(MachineResources {
-        selection_cube: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        debug_reddish: materials.add(Color::rgba(0.8, 0.5, 0.4, 0.2).into()),
+        selection_cube: selection_cube.clone(),
+        debug_reddish: debug_reddish.clone(),
+        radar: ass.load("objects/radar.glb#Scene0"),
     });
 
     commands.spawn(MachineType {
@@ -97,6 +103,16 @@ pub fn load_machines(
         // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
         dims: IVec2 { x: 7, y: 12 },
     });
+
+    commands.spawn((
+        DebugCube,
+        PbrBundle {
+            mesh: selection_cube,
+            material: debug_reddish,
+            // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
+            ..default()
+        },
+    ));
 }
 
 fn update_machines(
@@ -119,22 +135,6 @@ fn update_machines(
                     transform: trans,
                     ..default()
                 });
-
-                // let bx = commands
-                //     .spawn((
-                //         DebugCube,
-                //         PbrBundle {
-                //             mesh: mres.selection_cube.clone(),
-                //             material: mres.debug_reddish.clone(),
-                //             transform: Transform::from_scale(Vec3::new(
-                //                 tp.dims.x as f32,
-                //                 32.0,
-                //                 tp.dims.y as f32,
-                //             )),
-                //             ..default()
-                //         },
-                //     ))
-                //     .id();
 
                 // commands.entity(e).push_children(&[bx]);
             }

@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-use super::{colors::MachineRecolor, BuiltMachine, MachineType, MyMachine};
+use super::{colors::MachineRecolor, radar::Radar, BuiltMachine, MachineType, MyMachine};
 
 pub struct MachinesBuildingPlugin;
 
@@ -132,7 +132,7 @@ fn place_ghost(
     if cursor.just_released(MouseButton::Left) {
         commands
             .entity(ghost)
-            .insert((BuiltMachine, Tinted::empty()));
+            .insert((BuiltMachine, Tinted::empty(), Radar::new()));
         mghost.0 = None;
     }
 }
