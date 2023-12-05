@@ -11,3 +11,4 @@ pub mod voxels3d;
 // pub mod pieces;
 pub mod fps;
 pub mod lazyworld;
+pub mod machines;

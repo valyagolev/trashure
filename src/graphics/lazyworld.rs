@@ -106,7 +106,8 @@ fn handle_camera(
         .iter()
         .map(|&offset| center + offset)
         .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
-        .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset));
+        // .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
+        ;
 
     for part in all_around {
         // println!("Checking part {:?}", part);
