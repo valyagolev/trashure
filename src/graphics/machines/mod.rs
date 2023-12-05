@@ -65,7 +65,7 @@ pub struct MachineResources {
 #[derive(Debug, Component)]
 pub struct DebugCube;
 
-fn load_machines(
+pub fn load_machines(
     mut commands: Commands,
     ass: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -76,34 +76,12 @@ fn load_machines(
         debug_reddish: materials.add(Color::rgba(0.8, 0.5, 0.4, 0.2).into()),
     });
 
-    let t = commands
-        .spawn(MachineType {
-            name: "Recycler".into(),
-            scene: ass.load("objects/recycler.glb#Scene0"),
-            // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
-            dims: IVec2 { x: 7, y: 12 },
-        })
-        .id();
-
-    // commands.spawn((
-    //     Tinted::from(MachineRecolor::Selected.into()),
-    //     BuiltMachine,
-    //     MyMachine {
-    //         tp: t,
-    //         pos: IVec2 { x: 5, y: 4 },
-    //         direction: Direction2D::Backward,
-    //     },
-    // ));
-
-    // commands.spawn((
-    //     Tinted::from(MachineRecolor::Ghost.into()),
-    //     BuiltMachine,
-    //     MyMachine {
-    //         tp: t,
-    //         pos: IVec2 { x: 15, y: 4 },
-    //         direction: Direction2D::Left,
-    //     },
-    // ));
+    commands.spawn(MachineType {
+        name: "Recycler".into(),
+        scene: ass.load("objects/recycler.glb#Scene0"),
+        // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
+        dims: IVec2 { x: 7, y: 12 },
+    });
 }
 
 fn update_machines(
