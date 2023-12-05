@@ -1,6 +1,10 @@
 use std::f32::consts::PI;
 
-use bevy::{app::Plugin, math::Quat, reflect::Reflect};
+use bevy::{
+    app::Plugin,
+    math::{IVec2, Quat, Vec2Swizzles},
+    reflect::Reflect,
+};
 
 pub mod machines;
 pub mod material;
@@ -29,5 +33,23 @@ impl Into<Quat> for Direction2D {
             Direction2D::Left => PI / 2.0,
             Direction2D::Right => 3.0 * PI / 2.0,
         })
+    }
+}
+
+impl Direction2D {
+    pub fn rotate(self) -> Self {
+        match self {
+            Direction2D::Forward => Direction2D::Right,
+            Direction2D::Backward => Direction2D::Left,
+            Direction2D::Right => Direction2D::Backward,
+            Direction2D::Left => Direction2D::Forward,
+        }
+    }
+
+    pub fn rotate_size(self, size: IVec2) -> IVec2 {
+        match self {
+            Direction2D::Backward | Direction2D::Forward => size,
+            Direction2D::Left | Direction2D::Right => size.yx(),
+        }
     }
 }

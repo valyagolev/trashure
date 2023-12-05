@@ -6,7 +6,7 @@ use bevy::{
         RegisterDiagnostic,
     },
     prelude::*,
-    utils::HashSet,
+    utils::{HashMap, HashSet},
 };
 use rand::Rng;
 use uuid::uuid;
@@ -30,7 +30,7 @@ impl Plugin for LazyWorldPlugin {
         app.register_diagnostic(Diagnostic::new(WORLD_PARTS_DIAGNOSTIC, "world_parts", 1))
             .register_diagnostic(Diagnostic::new(UNAPPLIED_CHANGES, "unapplied_changes", 10))
             .insert_resource(LazyWorld {
-                known_parts: HashSet::new(),
+                known_parts: HashMap::new(),
             })
             .add_systems(Update, handle_camera)
             .add_systems(Update, diagnostics);
@@ -38,8 +38,8 @@ impl Plugin for LazyWorldPlugin {
 }
 
 #[derive(Debug, Resource, Reflect)]
-struct LazyWorld {
-    known_parts: HashSet<IVec2>,
+pub struct LazyWorld {
+    pub known_parts: HashMap<IVec2, Entity>,
 }
 
 static AROUND_2D: &[IVec2] = &[
@@ -60,7 +60,7 @@ fn generate_part(
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
     mut changes: &mut VoxelBlockChanges,
-) {
+) -> Entity {
     let center = (part * VOXEL_BLOCK_SIZE).extend(0).xzy();
 
     // dbg!(&center);
@@ -105,7 +105,7 @@ fn generate_part(
         }
     }
 
-    commands.spawn(bundle);
+    commands.spawn(bundle).id()
 }
 
 fn handle_camera(
@@ -129,16 +129,19 @@ fn handle_camera(
 
     for part in all_around {
         // println!("Checking part {:?}", part);
-        if !lazy_world.known_parts.contains(&part) {
+        if !lazy_world.known_parts.contains_key(&part) {
             println!("Generating part {:?} around {center:?}", part);
-            generate_part(
-                &mut commands,
+
+            lazy_world.known_parts.insert(
                 part,
-                &mut meshes,
-                &voxel_resources,
-                &mut blockchanges,
+                generate_part(
+                    &mut commands,
+                    part,
+                    &mut meshes,
+                    &voxel_resources,
+                    &mut blockchanges,
+                ),
             );
-            lazy_world.known_parts.insert(part);
             // break;
         }
         // break;

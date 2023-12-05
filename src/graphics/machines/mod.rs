@@ -10,12 +10,15 @@ use self::colors::MachineRecolor;
 
 use super::{recolor::Tinted, selectable::Selectable};
 
-pub struct MachinesPlugin;
+mod building;
 mod colors;
+
+pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, load_machines)
+        app.add_plugins(building::MachinesBuildingPlugin)
+            .add_systems(Startup, load_machines)
             // .add_systems(Update, debug_keyboard)
             .add_systems(
                 Update,
@@ -29,6 +32,15 @@ impl Plugin for MachinesPlugin {
             .register_type::<MachineType>();
     }
 }
+
+// #[derive(Debug, Reflect)]
+// pub struct MachineState {
+//     Ghost,
+//     Built,
+// }
+
+#[derive(Debug, Component, Reflect)]
+pub struct BuiltMachine;
 
 #[derive(Debug, Component, Reflect)]
 pub struct MachineType {
@@ -73,23 +85,25 @@ fn load_machines(
         })
         .id();
 
-    commands.spawn((
-        Tinted::from(MachineRecolor::Selected.into()),
-        MyMachine {
-            tp: t,
-            pos: IVec2 { x: 5, y: 4 },
-            direction: Direction2D::Backward,
-        },
-    ));
+    // commands.spawn((
+    //     Tinted::from(MachineRecolor::Selected.into()),
+    //     BuiltMachine,
+    //     MyMachine {
+    //         tp: t,
+    //         pos: IVec2 { x: 5, y: 4 },
+    //         direction: Direction2D::Backward,
+    //     },
+    // ));
 
-    commands.spawn((
-        Tinted::from(MachineRecolor::Ghost.into()),
-        MyMachine {
-            tp: t,
-            pos: IVec2 { x: 15, y: 4 },
-            direction: Direction2D::Left,
-        },
-    ));
+    // commands.spawn((
+    //     Tinted::from(MachineRecolor::Ghost.into()),
+    //     BuiltMachine,
+    //     MyMachine {
+    //         tp: t,
+    //         pos: IVec2 { x: 15, y: 4 },
+    //         direction: Direction2D::Left,
+    //     },
+    // ));
 }
 
 fn update_machines(

@@ -274,17 +274,17 @@ impl VoxelBlock {
             voxel_block_pos.x -= 1;
             inner_pos.x += VOXEL_BLOCK_SIZE;
         }
-        while inner_pos.y < 0 {
+        while inner_pos.z < 0 {
             voxel_block_pos.y -= 1;
-            inner_pos.y += VOXEL_BLOCK_SIZE;
+            inner_pos.z += VOXEL_BLOCK_SIZE;
         }
         while inner_pos.x >= VOXEL_BLOCK_SIZE {
             voxel_block_pos.x += 1;
             inner_pos.x -= VOXEL_BLOCK_SIZE;
         }
-        while inner_pos.y >= VOXEL_BLOCK_SIZE {
+        while inner_pos.z >= VOXEL_BLOCK_SIZE {
             voxel_block_pos.y += 1;
-            inner_pos.y -= VOXEL_BLOCK_SIZE;
+            inner_pos.z -= VOXEL_BLOCK_SIZE;
         }
 
         (voxel_block_pos, inner_pos)
@@ -310,6 +310,12 @@ impl VoxelBlock {
             .xzy();
 
         (voxel_block_pos, inner_pos)
+    }
+
+    pub fn is_column_empty(&self, pos: IVec2) -> bool {
+        assert!(pos.x >= 0 && pos.x < VOXEL_BLOCK_SIZE);
+
+        self[pos.extend(0).xzy()].is_none()
     }
 }
 
