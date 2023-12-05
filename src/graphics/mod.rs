@@ -10,6 +10,9 @@ pub mod cursor;
 pub mod voxels3d;
 
 // pub mod pieces;
-pub mod fps;
+
 pub mod lazyworld;
 pub mod machines;
+
+pub mod dbgtext;
+pub mod fps;

@@ -39,8 +39,12 @@ fn main() {
         .add_plugins(graphics::animated::AnimatedPlugin)
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::lazyworld::LazyWorldPlugin)
-        .add_plugins(graphics::fps::FpsPlugin)
-        .add_plugins((game::GameUtilsPlugin, graphics::machines::MachinesPlugin))
+        .add_plugins((graphics::fps::FpsPlugin, graphics::dbgtext::DbgTextPlugin))
+        .add_plugins((
+            game::GameUtilsPlugin,
+            graphics::machines::MachinesPlugin,
+            graphics::cursor::CursorPlugin,
+        ))
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)
         // .add_plugins(TrainPlugin)

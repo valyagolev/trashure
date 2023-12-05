@@ -1,6 +1,9 @@
 use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
 
-use super::voxels3d::{VoxelBlock, VOXEL_BLOCK_SIZE};
+use super::{
+    dbgtext::DebugTexts,
+    voxels3d::{VoxelBlock, VOXEL_BLOCK_SIZE},
+};
 
 pub struct CursorPlugin;
 
@@ -24,6 +27,8 @@ fn handle_cursor(
     q_camera: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
 
     mut cursor: ResMut<CursorOver>,
+
+    mut texts: ResMut<DebugTexts>,
 ) {
     if let Some(viewport) = q_windows.single().cursor_position() {
         let (camera, camera_transform) = q_camera.single();
@@ -51,6 +56,8 @@ fn handle_cursor(
             block: full_block,
             lazy_block: (block, pos),
             viewport,
-        }
+        };
+
+        texts.set("cursor", format!("{:#?}", cursor));
     }
 }
