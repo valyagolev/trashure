@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_inspector_egui::quick::{FilterQueryInspectorPlugin, ResourceInspectorPlugin};
 
+use crate::graphics::machines::{MachineType, MyMachine};
+
 pub struct DebugEditorPlugin;
 impl Plugin for DebugEditorPlugin {
     fn build(&self, app: &mut App) {
@@ -11,7 +13,10 @@ impl Plugin for DebugEditorPlugin {
             // .add_plugins(FilterQueryInspectorPlugin::<With<Camera3d>>::default())
             // .add_plugins(FilterQueryInspectorPlugin::<With<PointLight>>::default())
             // .add_plugins(FilterQueryInspectorPlugin::<With<DirectionalLight>>::default());
-            .add_plugins(FilterQueryInspectorPlugin::<With<Handle<Scene>>>::default());
+            .add_plugins(FilterQueryInspectorPlugin::<
+                Or<(With<MyMachine>, With<MachineType>)>,
+            >::default());
+        // .add_plugins(FilterQueryInspectorPlugin::<With<Handle<Scene>>>::default());
         // .add_systems(Update, edit_stuff)
     }
 }
