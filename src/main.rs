@@ -1,5 +1,6 @@
 mod conf;
-// mod debugeditor;
+#[cfg(feature = "dbg")]
+mod debugeditor;
 mod game;
 mod graphics;
 
@@ -25,7 +26,11 @@ fn main() {
         .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
         // .add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new())
         // mine
-        .add_plugins(conf::ConfigPlugin)
+        .add_plugins((
+            conf::ConfigPlugin,
+            #[cfg(feature = "dbg")]
+            debugeditor::DebugEditorPlugin,
+        ))
         // .add_plugins(bevy::render::camera::CameraPlugin)
         .add_plugins(graphics::camera3d::Camera3dPlugin)
         // .add_plugins(graphics::atlases::AtlasesPlugin)
@@ -35,7 +40,6 @@ fn main() {
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::lazyworld::LazyWorldPlugin)
         .add_plugins(graphics::fps::FpsPlugin)
-        // .add_plugins(debugeditor::DebugEditorPlugin)
         .add_plugins(graphics::machines::MachinesPlugin)
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)
