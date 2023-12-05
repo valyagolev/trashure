@@ -1,5 +1,5 @@
 mod conf;
-mod debugeditor;
+// mod debugeditor;
 mod game;
 mod graphics;
 
@@ -16,6 +16,7 @@ fn main() {
         .insert_resource(AssetMetaCheck::Never)
         // outside
         .add_plugins(DefaultPlugins)
+        .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_plugins(bevy::pbr::wireframe::WireframePlugin)
         .add_plugins(bevy_debug_text_overlay::OverlayPlugin {
             font_size: 23.0,
@@ -34,7 +35,7 @@ fn main() {
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::lazyworld::LazyWorldPlugin)
         .add_plugins(graphics::fps::FpsPlugin)
-        .add_plugins(debugeditor::DebugEditorPlugin)
+        // .add_plugins(debugeditor::DebugEditorPlugin)
         .add_plugins(graphics::machines::MachinesPlugin)
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)

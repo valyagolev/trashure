@@ -1,14 +1,24 @@
+use bevy::diagnostic::DiagnosticId;
 use bevy::prelude::*;
 
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+
+use super::lazyworld::UNAPPLIED_CHANGES;
+use super::lazyworld::WORLD_PARTS_DIAGNOSTIC;
 
 pub struct FpsPlugin;
 
 impl Plugin for FpsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup_fps_counter);
-        app.add_systems(Update, (fps_text_update_system, fps_counter_showhide));
+        app.add_systems(
+            Update,
+            fps_text_update_system, // (
+
+                                    //     // fps_counter_showhide
+                                    // ),
+        );
     }
 }
 
@@ -16,16 +26,15 @@ impl Plugin for FpsPlugin {
 #[derive(Component)]
 struct FpsRoot;
 
-/// Marker to find the text entity so we can update it
 #[derive(Component)]
-struct FpsText;
+struct DiagnosticText(DiagnosticId);
 
 fn setup_fps_counter(mut commands: Commands) {
     // create our UI root node
     // this is the wrapper/container for the text
     let root = commands
         .spawn((
-            FpsRoot,
+            DiagnosticText(FrameTimeDiagnosticsPlugin::FPS),
             NodeBundle {
                 // give it a dark background for readability
                 background_color: BackgroundColor(Color::BLACK.with_a(0.5)),
@@ -44,95 +53,110 @@ fn setup_fps_counter(mut commands: Commands) {
                     left: Val::Auto,
                     // give it some padding for readability
                     padding: UiRect::all(Val::Px(4.0)),
+                    flex_direction: FlexDirection::Column,
+                    // align_content: AlignContent::FlexEnd,
+                    align_items: AlignItems::FlexEnd,
                     ..Default::default()
                 },
                 ..Default::default()
             },
         ))
         .id();
-    // create our text
-    let text_fps = commands
-        .spawn((
-            FpsText,
-            TextBundle {
-                // use two sections, so it is easy to update just the number
-                text: Text::from_sections([
-                    TextSection {
-                        value: "FPS: ".into(),
-                        style: TextStyle {
-                            font_size: 16.0,
-                            color: Color::WHITE,
-                            // if you want to use your game's font asset,
-                            // uncomment this and provide the handle:
-                            // font: my_font_handle
-                            ..default()
+
+    let children = [
+        ("FPS", FrameTimeDiagnosticsPlugin::FPS),
+        ("World Parts", WORLD_PARTS_DIAGNOSTIC),
+        ("Unapplied Changes", UNAPPLIED_CHANGES),
+    ]
+    .map(|(name, did)| {
+        commands
+            .spawn((
+                DiagnosticText(did),
+                TextBundle {
+                    // use two sections, so it is easy to update just the number
+                    text: Text::from_sections([
+                        TextSection {
+                            value: name.into(),
+                            style: TextStyle {
+                                font_size: 16.0,
+                                color: Color::WHITE,
+                                // if you want to use your game's font asset,
+                                // uncomment this and provide the handle:
+                                // font: my_font_handle
+                                ..default()
+                            },
                         },
-                    },
-                    TextSection {
-                        value: " N/A".into(),
-                        style: TextStyle {
-                            font_size: 16.0,
-                            color: Color::WHITE,
-                            // if you want to use your game's font asset,
-                            // uncomment this and provide the handle:
-                            // font: my_font_handle
-                            ..default()
+                        TextSection {
+                            value: " N/A".into(),
+                            style: TextStyle {
+                                font_size: 16.0,
+                                color: Color::WHITE,
+                                // if you want to use your game's font asset,
+                                // uncomment this and provide the handle:
+                                // font: my_font_handle
+                                ..default()
+                            },
                         },
-                    },
-                ]),
-                ..Default::default()
-            },
-        ))
-        .id();
-    commands.entity(root).push_children(&[text_fps]);
+                    ]),
+                    ..Default::default()
+                },
+            ))
+            .id()
+    });
+
+    commands.entity(root).push_children(&children);
 }
 
 fn fps_text_update_system(
     diagnostics: Res<DiagnosticsStore>,
-    mut query: Query<&mut Text, With<FpsText>>,
+    mut query: Query<(&mut Text, &DiagnosticText)>,
 ) {
-    for mut text in &mut query {
+    // for mut text in &mut query {
+    for (mut text, dt) in query.iter_mut() {
         // try to get a "smoothed" FPS value from Bevy
         if let Some(value) = diagnostics
-            .get(FrameTimeDiagnosticsPlugin::FPS)
+            .get(
+                // FrameTimeDiagnosticsPlugin::FPS
+                dt.0,
+            )
             .and_then(|fps| fps.smoothed())
         {
             // Format the number as to leave space for 4 digits, just in case,
             // right-aligned and rounded. This helps readability when the
             // number changes rapidly.
-            text.sections[1].value = format!("{value:>4.0}");
+            text.sections[1].value = format!("{value:>6.0}");
 
             // Let's make it extra fancy by changing the color of the
             // text according to the FPS value:
-            text.sections[1].style.color = if value >= 120.0 {
-                // Above 120 FPS, use green color
-                Color::rgb(0.0, 1.0, 0.0)
-            } else if value >= 60.0 {
-                // Between 60-120 FPS, gradually transition from yellow to green
-                Color::rgb((1.0 - (value - 60.0) / (120.0 - 60.0)) as f32, 1.0, 0.0)
-            } else if value >= 30.0 {
-                // Between 30-60 FPS, gradually transition from red to yellow
-                Color::rgb(1.0, ((value - 30.0) / (60.0 - 30.0)) as f32, 0.0)
-            } else {
-                // Below 30 FPS, use red color
-                Color::rgb(1.0, 0.0, 0.0)
-            }
+            // text.sections[1].style.color = if value >= 120.0 {
+            //     // Above 120 FPS, use green color
+            //     Color::rgb(0.0, 1.0, 0.0)
+            // } else if value >= 60.0 {
+            //     // Between 60-120 FPS, gradually transition from yellow to green
+            //     Color::rgb((1.0 - (value - 60.0) / (120.0 - 60.0)) as f32, 1.0, 0.0)
+            // } else if value >= 30.0 {
+            //     // Between 30-60 FPS, gradually transition from red to yellow
+            //     Color::rgb(1.0, ((value - 30.0) / (60.0 - 30.0)) as f32, 0.0)
+            // } else {
+            //     // Below 30 FPS, use red color
+            //     Color::rgb(1.0, 0.0, 0.0)
+            // }
         } else {
             // display "N/A" if we can't get a FPS measurement
             // add an extra space to preserve alignment
             text.sections[1].value = " N/A".into();
-            text.sections[1].style.color = Color::WHITE;
+            // text.sections[1].style.color = Color::WHITE;
         }
     }
 }
 
-/// Toggle the FPS counter when pressing F12
-fn fps_counter_showhide(mut q: Query<&mut Visibility, With<FpsRoot>>, kbd: Res<Input<KeyCode>>) {
-    if kbd.just_pressed(KeyCode::F12) {
-        let mut vis = q.single_mut();
-        *vis = match *vis {
-            Visibility::Hidden => Visibility::Visible,
-            _ => Visibility::Hidden,
-        };
-    }
-}
+// /// Toggle the FPS counter when pressing F12
+// fn fps_counter_showhide(mut q: Query<&mut Visibility, With<FpsRoot>>, kbd: Res<Input<KeyCode>>) {
+//     if kbd.just_pressed(KeyCode::F12) {
+//         let mut vis = q.single_mut();
+//         *vis = match *vis {
+//             Visibility::Hidden => Visibility::Visible,
+//             _ => Visibility::Hidden,
+//         };
+//     }
+// }

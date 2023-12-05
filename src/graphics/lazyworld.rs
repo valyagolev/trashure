@@ -1,5 +1,15 @@
-use bevy::{prelude::*, utils::HashSet};
+use std::time::Instant;
+
+use bevy::{
+    diagnostic::{
+        self, Diagnostic, DiagnosticId, DiagnosticMeasurement, Diagnostics, DiagnosticsStore,
+        RegisterDiagnostic,
+    },
+    prelude::*,
+    utils::HashSet,
+};
 use rand::Rng;
+use uuid::uuid;
 
 use crate::{game::material::GameMaterial, graphics::animated::MovingToPosition};
 
@@ -10,12 +20,20 @@ use super::{
 
 pub struct LazyWorldPlugin;
 
+pub const WORLD_PARTS_DIAGNOSTIC: DiagnosticId =
+    DiagnosticId(uuid!("71a16bb7-7b2a-4be4-9bad-ddbc591f42f5"));
+pub const UNAPPLIED_CHANGES: DiagnosticId =
+    DiagnosticId(uuid!("12a019af-d250-4d23-99b1-3079ee897d8f"));
+
 impl Plugin for LazyWorldPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(LazyWorld {
-            known_parts: HashSet::new(),
-        })
-        .add_systems(Update, handle_camera);
+        app.register_diagnostic(Diagnostic::new(WORLD_PARTS_DIAGNOSTIC, "world_parts", 1))
+            .register_diagnostic(Diagnostic::new(UNAPPLIED_CHANGES, "unapplied_changes", 10))
+            .insert_resource(LazyWorld {
+                known_parts: HashSet::new(),
+            })
+            .add_systems(Update, handle_camera)
+            .add_systems(Update, diagnostics);
     }
 }
 
@@ -125,4 +143,26 @@ fn handle_camera(
         }
         // break;
     }
+}
+
+fn diagnostics(
+    mut diagnostics: ResMut<DiagnosticsStore>,
+    lazy_world: ResMut<LazyWorld>,
+    blockchanges: ResMut<VoxelBlockChanges>,
+) {
+    diagnostics
+        .get_mut(WORLD_PARTS_DIAGNOSTIC)
+        .unwrap()
+        .add_measurement(DiagnosticMeasurement {
+            time: Instant::now(),
+            value: lazy_world.known_parts.len() as f64,
+        });
+
+    diagnostics
+        .get_mut(UNAPPLIED_CHANGES)
+        .unwrap()
+        .add_measurement(DiagnosticMeasurement {
+            time: Instant::now(),
+            value: blockchanges.added.values().map(|v| v.len()).sum::<usize>() as f64,
+        });
 }

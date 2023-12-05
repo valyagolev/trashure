@@ -123,11 +123,12 @@ fn handle_camera_move(
     keys: Res<Input<KeyCode>>,
     conf: Res<Configuration>,
     mut camera: Query<(&mut Transform, With<Camera3d>)>,
+    time: Res<Time>,
 ) {
     for (key, dir) in KEY_TO_DIRECTION.iter() {
         if keys.pressed(*key) {
             for (mut transform, _) in camera.iter_mut() {
-                transform.translation += *dir * conf.camera_speed;
+                transform.translation += *dir * conf.camera_speed * time.delta_seconds() * 100.0;
             }
         }
     }
