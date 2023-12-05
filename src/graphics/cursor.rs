@@ -16,10 +16,10 @@ impl Plugin for CursorPlugin {
 
 #[derive(Resource, Debug, Default)]
 pub struct CursorOver {
-    ground: Vec3,
-    block: IVec3,
-    lazy_block: (IVec2, IVec3),
-    viewport: Vec2,
+    pub ground: Vec3,
+    pub block: IVec3,
+    pub lazy_block: (IVec2, IVec3),
+    pub viewport: Vec2,
 }
 
 fn handle_cursor(
@@ -58,6 +58,6 @@ fn handle_cursor(
             viewport,
         };
 
-        texts.set("cursor", format!("{:#?}", cursor));
+        texts.set("cursor", format!("{:#?}", *cursor));
     }
 }

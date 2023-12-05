@@ -3,7 +3,7 @@ mod conf;
 mod debugeditor;
 mod game;
 mod graphics;
-
+#[allow(unused_imports)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 // use game::train::TrainPlugin;
@@ -44,6 +44,7 @@ fn main() {
             game::GameUtilsPlugin,
             graphics::machines::MachinesPlugin,
             graphics::cursor::CursorPlugin,
+            graphics::recolor::RecolorPlugin,
         ))
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)

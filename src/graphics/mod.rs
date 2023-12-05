@@ -16,3 +16,6 @@ pub mod machines;
 
 pub mod dbgtext;
 pub mod fps;
+
+pub mod recolor;
+pub mod selectable;

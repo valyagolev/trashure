@@ -1,8 +1,15 @@
-use bevy::prelude::*;
+use std::borrow::Cow;
+
+use bevy::{prelude::*, scene::SceneInstance};
 
 use crate::game::Direction2D;
 
+// use self::recolor::RecoloredScenes;
+
+use super::{recolor::Tinted, selectable::Selectable};
+
 pub struct MachinesPlugin;
+mod colors;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
@@ -16,6 +23,7 @@ impl Plugin for MachinesPlugin {
 
 #[derive(Debug, Component, Reflect)]
 pub struct MachineType {
+    name: Cow<'static, str>,
     scene: Handle<Scene>,
     dims: IVec2,
 }
@@ -49,24 +57,30 @@ fn load_machines(
 
     let t = commands
         .spawn(MachineType {
+            name: "Recycler".into(),
             scene: ass.load("objects/recycler.glb#Scene0"),
+            // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
             dims: IVec2 { x: 7, y: 12 },
         })
         .id();
 
-    commands.spawn(MyMachine {
-        tp: t,
-        pos: IVec2 { x: 5, y: 4 },
-        direction: Direction2D::Backward,
-    });
+    commands.spawn((
+        Tinted::new(Color::rgba(0.1, 0.6, 0.2, 0.1)),
+        MyMachine {
+            tp: t,
+            pos: IVec2 { x: 5, y: 4 },
+            direction: Direction2D::Backward,
+        },
+    ));
 
-    // commands.spawn(SceneBundle {
-    //     scene: my_gltf,
-    //     transform: Transform::from_xyz(7.0, 0.5, 5.0)
-    //         // .with_scale(Vec3::new(2.0, 2.0, 2.0))
-    //         .with_rotation(Quat::from_rotation_y(3.14 / 2.0)),
-    //     ..Default::default()
-    // });
+    commands.spawn((
+        Tinted::new(Color::rgba(0.3, 0.2, 0.2, 0.1)),
+        MyMachine {
+            tp: t,
+            pos: IVec2 { x: 15, y: 4 },
+            direction: Direction2D::Left,
+        },
+    ));
 }
 
 fn update_machines(
@@ -90,23 +104,23 @@ fn update_machines(
                     ..default()
                 });
 
-                let bx = commands
-                    .spawn((
-                        DebugCube,
-                        PbrBundle {
-                            mesh: mres.selection_cube.clone(),
-                            material: mres.debug_reddish.clone(),
-                            transform: Transform::from_scale(Vec3::new(
-                                tp.dims.x as f32,
-                                32.0,
-                                tp.dims.y as f32,
-                            )),
-                            ..default()
-                        },
-                    ))
-                    .id();
+                // let bx = commands
+                //     .spawn((
+                //         DebugCube,
+                //         PbrBundle {
+                //             mesh: mres.selection_cube.clone(),
+                //             material: mres.debug_reddish.clone(),
+                //             transform: Transform::from_scale(Vec3::new(
+                //                 tp.dims.x as f32,
+                //                 32.0,
+                //                 tp.dims.y as f32,
+                //             )),
+                //             ..default()
+                //         },
+                //     ))
+                //     .id();
 
-                commands.entity(e).push_children(&[bx]);
+                // commands.entity(e).push_children(&[bx]);
             }
             Some(mut ts) => {
                 *ts = trans;
