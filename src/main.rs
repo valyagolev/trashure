@@ -42,6 +42,7 @@ fn main() {
         .add_plugins((graphics::fps::FpsPlugin, graphics::dbgtext::DbgTextPlugin))
         .add_plugins((
             game::GameUtilsPlugin,
+            graphics::gamemenu::GameMenuPlugin,
             graphics::machines::MachinesPlugin,
             graphics::cursor::CursorPlugin,
             graphics::recolor::RecolorPlugin,

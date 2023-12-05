@@ -20,7 +20,8 @@ impl Plugin for MachinesBuildingPlugin {
 }
 
 #[derive(Debug, Resource, Reflect)]
-pub struct MachineGhost(pub Option<Entity>);
+/// MachineType, MyMachine
+pub struct MachineGhost(pub Option<(Entity, Entity)>);
 
 fn debug_setup(
     mut commands: Commands,
@@ -46,7 +47,7 @@ fn debug_setup(
             ))
             .id();
 
-        ghost.0 = Some(tp);
+        ghost.0 = Some((t, tp));
     }
 }
 
@@ -56,7 +57,7 @@ fn move_ghost(
     cursor: Res<CursorOver>,
     keyb: Res<Input<KeyCode>>,
 ) {
-    let Some(ghost) = ghost.0 else {
+    let Some((_, ghost)) = ghost.0 else {
         return;
     };
     let Ok(mut m) = q_machines.get_mut(ghost) else {
@@ -78,13 +79,13 @@ fn check_placement(
     blocks: Query<&VoxelBlock>,
     q_types: Query<&MachineType>,
 ) {
-    let Some(ghost_e) = ghost.0 else {
+    let Some((mt_e, ghost_e)) = ghost.0 else {
         return;
     };
     let Ok((ghost, mut tinted)) = q_machines.get_mut(ghost_e) else {
         return;
     };
-    let Ok(mt) = q_types.get(ghost.tp) else {
+    let Ok(mt) = q_types.get(mt_e) else {
         return;
     };
 

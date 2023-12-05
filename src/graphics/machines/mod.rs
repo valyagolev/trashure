@@ -10,7 +10,7 @@ use self::colors::MachineRecolor;
 
 use super::{recolor::Tinted, selectable::Selectable};
 
-mod building;
+pub mod building;
 mod colors;
 
 pub struct MachinesPlugin;
@@ -44,9 +44,9 @@ pub struct BuiltMachine;
 
 #[derive(Debug, Component, Reflect)]
 pub struct MachineType {
-    name: Cow<'static, str>,
+    pub name: Cow<'static, str>,
     scene: Handle<Scene>,
-    dims: IVec2,
+    pub dims: IVec2,
 }
 
 #[derive(Debug, Component, Reflect)]

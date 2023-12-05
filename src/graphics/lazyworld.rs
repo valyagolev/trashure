@@ -130,7 +130,7 @@ fn handle_camera(
     for part in all_around {
         // println!("Checking part {:?}", part);
         if !lazy_world.known_parts.contains_key(&part) {
-            println!("Generating part {:?} around {center:?}", part);
+            // println!("Generating part {:?} around {center:?}", part);
 
             lazy_world.known_parts.insert(
                 part,
