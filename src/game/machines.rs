@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use strum::EnumDiscriminants;
 
 use crate::graphics::{
+    flyingvoxel::FlyingVoxel,
     machines::{radar::Radar, BuiltMachine, MyMachine},
     voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
 };
@@ -44,14 +45,15 @@ impl Plugin for MachinesPlugin {
 }
 
 pub fn consume_radars(
+    mut commands: Commands,
     lazy_world: Res<LazyWorld>,
-    q_machines: Query<&mut BuiltMachine>,
+    q_machines: Query<(Entity, &BuiltMachine, &MyMachine)>,
     mut q_radars: Query<&mut Radar>,
     mut q_blocks: Query<&mut VoxelBlock>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
     let rand = &mut rand::thread_rng();
-    for m in q_machines.iter() {
+    for (e, m, mach) in q_machines.iter() {
         match m.0 {
             GameMachineSettings::Recycler { recycling_radar } => {
                 let Ok(mut r) = q_radars.get_mut(recycling_radar) else {
@@ -66,11 +68,14 @@ pub fn consume_radars(
 
                 let mut block = q_blocks.get_mut(lazy_world.known_parts[&gp]).unwrap();
 
-                // if block[lp] != Some(mat) {
-                //     continue;
-                // }
-
                 let mat = block.steal_block(lp, &mut blockchanges, rand);
+
+                commands.spawn(FlyingVoxel {
+                    origin: vc,
+                    target: mach.pos.extend(3).xzy(),
+                    target_mailbox: e,
+                    material: mat,
+                });
             }
         }
     }

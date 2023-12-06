@@ -125,7 +125,12 @@ fn setup(
 ) {
     let handles = GameMaterial::all()
         .iter()
-        .map(|m| materials.add(StandardMaterial::from(Into::<Color>::into(m))))
+        .map(|m| {
+            materials.add(StandardMaterial::from(
+                // they're too bright compared to meshem i dunno why
+                Into::<Color>::into(m) + Color::rgb(0.2, 0.2, 0.2),
+            ))
+        })
         .collect::<Vec<_>>()
         .try_into()
         .unwrap();

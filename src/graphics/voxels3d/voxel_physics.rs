@@ -147,6 +147,26 @@ impl VoxelBlock {
 
         mt
     }
+
+    pub fn empty_around_col(&self, col: IVec2, rand: &mut impl Rng) -> IVec3 {
+        let mut empty = IVec3::new(col.x, 0, col.y);
+
+        for y in 0..VOXEL_BLOCK_SIZE {
+            empty.y = y;
+
+            if self[empty].is_some() {
+                return empty;
+            }
+        }
+
+        let around = DIRS_AROUND
+            .iter()
+            .map(|p| *p + col)
+            .filter(|p| !Self::within_bounds(p.extend(0)))
+            .collect_vec();
+
+        self.empty_around_col(*around.choose(rand).unwrap(), rand)
+    }
 }
 
 fn handle_debug_keyboard(

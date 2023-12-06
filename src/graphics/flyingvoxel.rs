@@ -25,10 +25,10 @@ pub struct FlyingVoxel {
 
 #[derive(Debug, Component)]
 struct FlyingVoxelState {
-    pub a: f32,
-    pub b: f32,
-    pub t: Stopwatch,
-    pub max_t: f32,
+    a: f32,
+    b: f32,
+    t: Stopwatch,
+    max_t: f32,
 }
 
 fn initialize_voxel(
@@ -42,7 +42,7 @@ fn initialize_voxel(
         let target_reorig_vertical_plane: Vec2 =
             Vec2::new(target_reorig.xz().length(), target_reorig.y);
 
-        let a = rand::thread_rng().gen_range(-2.0..-1.0);
+        let a = rand::thread_rng().gen_range(-0.5..-0.2);
         let b = (target_reorig_vertical_plane.y - a * target_reorig_vertical_plane.x.powi(2))
             / target_reorig_vertical_plane.x;
 
@@ -51,7 +51,7 @@ fn initialize_voxel(
                 a,
                 b,
                 t: Stopwatch::new(),
-                max_t: target_reorig.length() * rand::thread_rng().gen_range(0.5..1.0),
+                max_t: target_reorig.length() * rand::thread_rng().gen_range(0.5..1.0) / 5.0,
             },
             PbrBundle {
                 mesh: res.cube.clone(),
