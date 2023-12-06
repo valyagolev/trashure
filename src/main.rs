@@ -36,7 +36,7 @@ fn main() {
         // .add_plugins(graphics::atlases::AtlasesPlugin)
         .add_plugins(graphics::voxels3d::Voxels3dPlugin)
         // .add_plugins(TrashExperimentPlugin)
-        .add_plugins(graphics::animated::AnimatedPlugin)
+        // .add_plugins(graphics::animated::AnimatedPlugin)
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::voxels3d::lazyworld::LazyWorldPlugin)
         .add_plugins((graphics::fps::FpsPlugin, graphics::dbgtext::DbgTextPlugin))
@@ -47,6 +47,8 @@ fn main() {
             graphics::cursor::CursorPlugin,
             graphics::recolor::RecolorPlugin,
             graphics::selectable::SelectablePlugin,
+            graphics::flyingvoxel::FlyingVoxelPlugin,
+            game::voxelmailbox::VoxelMailboxPlugin,
         ))
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)

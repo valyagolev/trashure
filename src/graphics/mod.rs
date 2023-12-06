@@ -1,4 +1,4 @@
-pub mod animated;
+// pub mod animated;
 // pub mod atlases;
 // pub mod camera;
 pub mod camera3d;
@@ -19,3 +19,5 @@ pub mod gamemenu;
 
 pub mod recolor;
 pub mod selectable;
+
+pub mod flyingvoxel;

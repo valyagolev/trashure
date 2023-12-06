@@ -10,6 +10,18 @@ pub enum GameMaterial {
     Golden = 0b10000,
 }
 
+impl Into<Color> for &GameMaterial {
+    fn into(self) -> Color {
+        match self {
+            GameMaterial::Reddish => Color::rgb(0.8, 0.5, 0.4),
+            GameMaterial::Greenish => Color::rgb(0.5, 0.8, 0.4),
+            GameMaterial::Blueish => Color::rgb(0.4, 0.5, 0.8),
+            GameMaterial::Brownish => Color::rgb(0.8, 0.7, 0.6),
+            GameMaterial::Golden => Color::rgb(0.8, 0.7, 0.2),
+        }
+    }
+}
+
 impl GameMaterial {
     pub fn as_usize(self) -> usize {
         (self as u8).trailing_zeros() as usize

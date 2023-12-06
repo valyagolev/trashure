@@ -123,13 +123,12 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.insert_resource(VoxelResources {
-        meshes: [
-            generate_colored_mesh(Color::rgb(0.8, 0.5, 0.4)),
-            generate_colored_mesh(Color::rgb(0.5, 0.8, 0.4)),
-            generate_colored_mesh(Color::rgb(0.4, 0.5, 0.8)),
-            generate_colored_mesh(Color::rgb(0.8, 0.7, 0.6)),
-            generate_colored_mesh(Color::rgb(0.8, 0.7, 0.2)),
-        ],
+        meshes: GameMaterial::all()
+            .iter()
+            .map(|m| generate_colored_mesh(m.into()))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap(),
         voxel_material: materials.add(StandardMaterial {
             // base_color: Color::LIME_GREEN,
             // alpha_mode: AlphaMode::Mask(0.5),

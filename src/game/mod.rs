@@ -9,6 +9,7 @@ use bevy::{
 
 pub mod machines;
 pub mod material;
+pub mod voxelmailbox;
 
 pub struct GameUtilsPlugin;
 
