@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use strum::EnumDiscriminants;
 
 use crate::graphics::{
-    machines::{radar::Radar, BuiltMachine},
+    machines::{radar::Radar, BuiltMachine, MyMachine},
     voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
 };
 
@@ -15,15 +15,14 @@ pub enum GameMachineSettings {
 }
 
 impl GameMachineSettings {
-    pub fn instantiate(
-        ghost: Entity,
-        commands: &mut Commands,
-        tp: GameMachineSettingsDiscriminants,
-    ) {
-        let set = match tp {
+    pub fn instantiate(ghost: Entity, commands: &mut Commands, mc: &MyMachine) {
+        let set = match mc.gmt {
             GameMachineSettingsDiscriminants::Recycler => {
                 let recycling_radar = commands
-                    .spawn((Radar::new(GameMaterial::all()), TransformBundle::default()))
+                    .spawn((
+                        Radar::new(GameMaterial::all(), Some(mc.direction)),
+                        TransformBundle::default(),
+                    ))
                     .id();
 
                 commands.entity(ghost).add_child(recycling_radar);

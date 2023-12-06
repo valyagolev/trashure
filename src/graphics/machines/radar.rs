@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{prelude::*, time::Stopwatch};
 
 use crate::{
-    game::material::GameMaterial,
+    game::{material::GameMaterial, Direction2D},
     graphics::{
         recolor::Tinted,
         voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
@@ -34,6 +34,9 @@ pub struct Radar {
     scene: Option<Entity>,
 
     found_voxel: Option<(GameMaterial, IVec3)>,
+
+    // todo: convert to global direction??
+    pub direction: Option<Direction2D>,
 }
 
 impl Radar {
@@ -50,12 +53,13 @@ impl Radar {
 pub struct RadarScene;
 
 impl Radar {
-    pub fn new(mats: &[GameMaterial]) -> Self {
+    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>) -> Self {
         Radar {
             material_mask: GameMaterial::any_of_mask(mats),
             watch: Stopwatch::new(),
             scene: None,
             found_voxel: None,
+            direction,
         }
     }
 
@@ -127,7 +131,16 @@ fn radar_search(
 
             for col in voxel_block.closest_columns(local_pos, dist) {
                 if let Some((mat, pos)) = voxel_block.material_in_col(col, r.material_mask) {
+                    if let Some(dir) = r.direction {
+                        let radar_local_pos = (bigblock_pos * VOXEL_BLOCK_SIZE) - radar_ipos;
+
+                        if !dir.within_cone(radar_local_pos) {
+                            continue;
+                        }
+                    }
+
                     let full_pos = (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos;
+
                     r.found_voxel = Some((mat, full_pos));
 
                     let real_dist =

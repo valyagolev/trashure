@@ -53,4 +53,13 @@ impl Direction2D {
             Direction2D::Left | Direction2D::Right => size.yx(),
         }
     }
+
+    pub fn within_cone(self, pos: IVec2) -> bool {
+        match self {
+            Direction2D::Forward => pos.y < 0 && pos.x.abs() < -pos.y,
+            Direction2D::Backward => pos.y > 0 && pos.x.abs() < pos.y,
+            Direction2D::Left => pos.x > 0 && pos.y.abs() < -pos.x,
+            Direction2D::Right => pos.x < 0 && pos.y.abs() < pos.x,
+        }
+    }
 }

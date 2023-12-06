@@ -144,7 +144,7 @@ fn place_ghost(
     if cursor.just_released(MouseButton::Left) {
         commands.entity(ghost).insert((Tinted::empty(),));
 
-        GameMachineSettings::instantiate(ghost, &mut commands, m.gmt);
+        GameMachineSettings::instantiate(ghost, &mut commands, m);
 
         mghost.0 = None;
 
