@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{prelude::*, time::Stopwatch};
-use rand::seq::SliceRandom;
+use rand::{seq::SliceRandom, Rng};
 
 use crate::{
     game::{material::GameMaterial, Direction2D},
@@ -21,10 +21,11 @@ impl Plugin for RadarPlugin {
             Update,
             (
                 setup_radars,
-                radar_search.after(setup_radars),
+                // radar_search.after(setup_radars),
                 redraw_radars.after(radar_search),
             ),
-        );
+        )
+        .add_systems(FixedUpdate, radar_search);
     }
 }
 
@@ -112,7 +113,8 @@ fn radar_search(
     q_blocks: Query<&VoxelBlock>,
 ) {
     let rand = &mut rand::thread_rng();
-    'radars: for (mut r, rpar, gt) in q_radars.iter_mut() {
+
+    for (mut r, rpar, gt) in q_radars.iter_mut() {
         if r.found_voxel.is_some() {
             continue;
         }
@@ -124,6 +126,9 @@ fn radar_search(
         r.watch.tick(time.delta());
 
         let dist = r.dist();
+
+        // make it more interesting lmao
+        let dist = dist + rand.gen_range(0.0..3.0);
 
         let radar_ipos = gt.translation().xz().as_ivec2();
 
