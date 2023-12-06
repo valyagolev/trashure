@@ -377,17 +377,15 @@ impl VoxelBlock {
             })
     }
 
-    pub fn material_in_col(&self, pos: IVec2, mask: u8) -> Option<(GameMaterial, IVec3)> {
-        for y in 0..VOXEL_BLOCK_SIZE {
-            let p = pos.extend(y).xzy();
-            if let Some(mat) = self[p] {
-                if mat.mask_contains(mask) {
-                    return Some((mat, p));
-                }
-            }
-        }
-
-        None
+    pub fn material_in_col(
+        &self,
+        pos: IVec2,
+        mask: u8,
+    ) -> impl Iterator<Item = (GameMaterial, IVec3)> + '_ {
+        (0..VOXEL_BLOCK_SIZE)
+            .map(move |y| pos.extend(y).xzy())
+            .filter_map(move |p| self[p].map(|mat| (mat, p)))
+            .filter(move |(mat, _)| mat.mask_contains(mask))
     }
 }
 

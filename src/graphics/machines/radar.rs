@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{prelude::*, time::Stopwatch};
+use rand::seq::SliceRandom;
 
 use crate::{
     game::{material::GameMaterial, Direction2D},
@@ -110,6 +111,7 @@ fn radar_search(
     lazyworld: Res<LazyWorld>,
     q_blocks: Query<&VoxelBlock>,
 ) {
+    let rand = &mut rand::thread_rng();
     'radars: for (mut r, rpar, gt) in q_radars.iter_mut() {
         if r.found_voxel.is_some() {
             continue;
@@ -124,6 +126,9 @@ fn radar_search(
         let dist = r.dist();
 
         let radar_ipos = gt.translation().xz().as_ivec2();
+
+        let mut candidates = vec![];
+
         for (bigblock_pos, ent) in lazyworld.lookup_around(radar_ipos, dist) {
             // dbg!(bigblock_pos, ent);
             let Ok(voxel_block) = q_blocks.get(ent) else {
@@ -134,7 +139,7 @@ fn radar_search(
 
             for col in voxel_block.closest_columns(local_pos, dist) {
                 // dbg!(col);
-                if let Some((mat, pos)) = voxel_block.material_in_col(col, r.material_mask) {
+                for (mat, pos) in voxel_block.material_in_col(col, r.material_mask) {
                     if let Some(dir) = r.direction {
                         let radar_local_pos = (bigblock_pos * VOXEL_BLOCK_SIZE) - radar_ipos + col;
 
@@ -147,19 +152,33 @@ fn radar_search(
 
                     let full_pos = (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos;
 
-                    r.found_voxel = Some((mat, full_pos));
+                    // r.found_voxel = Some((mat, full_pos));
 
-                    let real_dist =
-                        (full_pos.xz().as_vec2() - radar_ipos.as_vec2()).length_squared();
+                    // let real_dist =
+                    //     (full_pos.xz().as_vec2() - radar_ipos.as_vec2()).length_squared();
 
-                    println!(
-                        "found voxel: {:?} dist={dist} real_dist={real_dist} radar_local_pos={local_pos} found_local_pos={col}",
-                        r.found_voxel
-                    );
+                    // println!(
+                    //     "found voxel: {:?} dist={dist} real_dist={real_dist} radar_local_pos={local_pos} found_local_pos={col}",
+                    //     r.found_voxel
+                    // );
 
-                    continue 'radars;
+                    // continue 'radars;
+
+                    candidates.push((mat, full_pos));
                 }
             }
+        }
+
+        if !candidates.is_empty() {
+            let winner = candidates.choose(rand).unwrap();
+
+            // println!(
+            //     "found voxel: {:?} dist={dist} (out of {} candidates)",
+            //     r.found_voxel,
+            //     candidates.len()
+            // );
+
+            r.found_voxel = Some(*winner);
         }
     }
 }
