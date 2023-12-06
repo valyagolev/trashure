@@ -1,16 +1,18 @@
-use std::ops::{Index};
+use std::{ops::Index, time::Instant};
 
-use crate::{game::material::GameMaterial};
+use crate::game::material::GameMaterial;
 
-
-
-
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    diagnostic::{
+        Diagnostic, DiagnosticId, DiagnosticMeasurement, DiagnosticsStore, RegisterDiagnostic,
+    },
+    prelude::*,
+    utils::HashMap,
+};
 use bevy_meshem::{prelude::*, Dimensions};
 
-
-
 use self::voxel_mesh::generate_colored_voxel_mesh;
+use uuid::uuid;
 
 // mod meshem;
 mod voxel_mesh;
@@ -19,6 +21,15 @@ pub mod voxel_physics;
 pub const VOXEL_BLOCK_SIZE: i32 = 32;
 const CHUNK_LEN: usize = (VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
 
+pub const APPLIED_CHANGES: DiagnosticId =
+    DiagnosticId(uuid!("a4a701b9-f1bc-4552-a9a0-7e0ec1a14bbc"));
+
+pub const POSTPONED_CHANGES: DiagnosticId =
+    DiagnosticId(uuid!("964e6a5f-ac48-4a25-a7d2-e02e3db9ac22"));
+
+pub const CHANGED_BLOCKS: DiagnosticId =
+    DiagnosticId(uuid!("f77ae6cc-032f-49e0-b089-2d8458c7f736"));
+
 pub struct Voxels3dPlugin;
 impl Plugin for Voxels3dPlugin {
     fn build(&self, app: &mut App) {
@@ -26,7 +37,10 @@ impl Plugin for Voxels3dPlugin {
             .add_systems(Update, update_meshes)
             .add_plugins(voxel_physics::VoxelPhysics)
             .add_systems(Update, apply_changes)
-            .insert_resource(VoxelBlockChanges::default());
+            .insert_resource(VoxelBlockChanges::default())
+            .register_diagnostic(Diagnostic::new(APPLIED_CHANGES, "applied_changes", 10))
+            .register_diagnostic(Diagnostic::new(POSTPONED_CHANGES, "postponed_changes", 10))
+            .register_diagnostic(Diagnostic::new(CHANGED_BLOCKS, "changed_blocks", 10));
     }
 }
 
@@ -363,20 +377,50 @@ impl VoxelBlockChanges {
     }
 }
 
-fn apply_changes(mut changes: ResMut<VoxelBlockChanges>, mut blocks: Query<&mut VoxelBlock>) {
+fn apply_changes(
+    mut changes: ResMut<VoxelBlockChanges>,
+    mut blocks: Query<&mut VoxelBlock>,
+    mut diagnostics: ResMut<DiagnosticsStore>,
+) {
+    let mut total_changes = 0;
+    let mut total_postponed = 0;
+    let mut changed_blocks = 0;
+
     let rand = &mut rand::thread_rng();
     let mut new_changes = VoxelBlockChanges::default();
 
     for mut b in blocks.iter_mut() {
         if let Some(changes) = changes.added.remove(&b.pos) {
+            if !changes.is_empty() {
+                changed_blocks += 1;
+            }
+
             for (pos, mat) in changes {
+                total_changes += 1;
                 b.push_block(pos, mat, &mut new_changes, rand)
             }
         }
     }
 
     for (pos, ch) in new_changes.added.drain() {
+        total_postponed += ch.len();
         changes.added.entry(pos).or_insert_with(Vec::new).extend(ch);
+    }
+
+    let measurements = [
+        (APPLIED_CHANGES, total_changes),
+        (POSTPONED_CHANGES, total_postponed),
+        (CHANGED_BLOCKS, changed_blocks),
+    ];
+
+    for (diagnostic, value) in measurements.iter() {
+        diagnostics
+            .get_mut(*diagnostic)
+            .unwrap()
+            .add_measurement(DiagnosticMeasurement {
+                time: Instant::now(),
+                value: *value as f64,
+            });
     }
 }
 

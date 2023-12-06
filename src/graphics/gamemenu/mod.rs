@@ -15,9 +15,11 @@ impl Plugin for GameMenuPlugin {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameMenuState {
     ToPickBuilding,
     CurrentlyCreating,
+    SelectedMachine,
 }
 
 #[derive(Resource)]
@@ -33,10 +35,7 @@ struct TutorialNode;
 struct GameMenuNode;
 
 #[derive(Component)]
-struct GameMenuCurrentlyCreating;
-
-#[derive(Component)]
-struct GameMenuToPickBuilding;
+struct GameMenuPart(GameMenuState);
 
 #[derive(Component)]
 struct GameMenuToPickBuildingForMachineButton(Entity);
@@ -67,34 +66,26 @@ fn handle_build_click(
 
 fn redraw_menu(
     menu_state: Res<GameMenu>,
-    mut q_menu_currently: Query<
-        (&mut Text, &mut Visibility),
-        (
-            With<GameMenuCurrentlyCreating>,
-            Without<GameMenuToPickBuilding>,
-        ),
-    >,
-    mut q_menu_to_pick: Query<
-        &mut Visibility,
-        (
-            With<GameMenuToPickBuilding>,
-            Without<GameMenuCurrentlyCreating>,
-        ),
-    >,
+    mut q_menu_parts: Query<(Option<&mut Text>, &mut Visibility, &GameMenuPart)>,
     ghost: Res<MachineGhost>,
     q_types: Query<&MachineType>,
 ) {
-    let Ok(mut q_menu_currently) = q_menu_currently.get_single_mut() else {
-        return;
-    };
-    let mut q_menu_to_pick = q_menu_to_pick.single_mut();
+    let state = menu_state.0;
 
-    match menu_state.0 {
-        GameMenuState::CurrentlyCreating => {
-            let (mut text, mut vis) = q_menu_currently;
+    let mut current_text = None;
 
+    for (text, mut vis, part) in q_menu_parts.iter_mut() {
+        if part.0 == state {
             *vis = Visibility::Visible;
-            *q_menu_to_pick = Visibility::Hidden;
+            current_text = text;
+        } else {
+            *vis = Visibility::Hidden;
+        }
+    }
+
+    match state {
+        GameMenuState::CurrentlyCreating => {
+            let mut text = current_text.unwrap();
 
             let Some((tp, _)) = ghost.0 else {
                 text.sections[1].value = "(bug: No machine selected.)".into();
@@ -105,9 +96,18 @@ fn redraw_menu(
 
             text.sections[1].value = tp.name.to_string();
         }
-        GameMenuState::ToPickBuilding => {
-            *q_menu_currently.1 = Visibility::Hidden;
-            *q_menu_to_pick = Visibility::Visible;
+        GameMenuState::SelectedMachine => {
+            let mut text = current_text.unwrap();
+
+            let Some((tp, _)) = ghost.0 else {
+                text.sections[1].value = "(bug: No machine selected.)".into();
+                return;
+            };
+
+            let tp = q_types.get(tp).unwrap();
+
+            text.sections[1].value = tp.name.to_string();
         }
+        _ => {}
     }
 }

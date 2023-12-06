@@ -32,7 +32,8 @@ impl Radar {
     }
 
     fn dist(&self) -> f32 {
-        30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin())
+        //todo
+        30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
     }
 }
 
@@ -56,18 +57,18 @@ pub fn setup_radars(
         r.scene = Some(radar_e);
         commands.entity(e).add_child(radar_e);
 
-        let cube = commands
-            .spawn((
-                DebugCube,
-                PbrBundle {
-                    mesh: res.selection_cube.clone(),
-                    material: res.debug_reddish.clone(),
-                    // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
-                    ..default()
-                },
-            ))
-            .id();
-        commands.entity(e).add_child(cube);
+        // let cube = commands
+        //     .spawn((
+        //         DebugCube,
+        //         PbrBundle {
+        //             mesh: res.selection_cube.clone(),
+        //             material: res.debug_reddish.clone(),
+        //             // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
+        //             ..default()
+        //         },
+        //     ))
+        //     .id();
+        // commands.entity(e).add_child(cube);
     }
 }
 

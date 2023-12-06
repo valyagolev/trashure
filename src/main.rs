@@ -17,8 +17,8 @@ fn main() {
         .insert_resource(AssetMetaCheck::Never)
         // outside
         .add_plugins(DefaultPlugins)
-        .insert_resource(Time::<Fixed>::from_seconds(0.1))
-        .add_plugins(bevy::pbr::wireframe::WireframePlugin)
+        // .insert_resource(Time::<Fixed>::from_seconds(0.1))
+        // .add_plugins(bevy::pbr::wireframe::WireframePlugin)
         .add_plugins(bevy_debug_text_overlay::OverlayPlugin {
             font_size: 23.0,
             ..default()

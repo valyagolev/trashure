@@ -6,6 +6,9 @@ use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 
 use super::lazyworld::UNAPPLIED_CHANGES;
 use super::lazyworld::WORLD_PARTS_DIAGNOSTIC;
+use super::voxels3d::APPLIED_CHANGES;
+use super::voxels3d::CHANGED_BLOCKS;
+use super::voxels3d::POSTPONED_CHANGES;
 
 pub struct FpsPlugin;
 
@@ -67,6 +70,9 @@ fn setup_fps_counter(mut commands: Commands) {
         ("FPS", FrameTimeDiagnosticsPlugin::FPS),
         ("World Parts", WORLD_PARTS_DIAGNOSTIC),
         ("Unapplied Changes", UNAPPLIED_CHANGES),
+        ("Applied Changes", APPLIED_CHANGES),
+        ("Postponed Changes", POSTPONED_CHANGES),
+        ("Changed Blocks", CHANGED_BLOCKS),
     ]
     .map(|(name, did)| {
         commands
@@ -112,7 +118,9 @@ fn fps_text_update_system(
     mut query: Query<(&mut Text, &DiagnosticText)>,
 ) {
     for (mut text, dt) in query.iter_mut() {
-        if let Some(value) = diagnostics.get(dt.0).and_then(|fps| fps.smoothed()) {
+        if let Some(value) = diagnostics.get(dt.0).and_then(|fps| //fps.smoothed()
+             fps.value())
+        {
             text.sections[1].value = format!("{value:>6.0}");
         } else {
             text.sections[1].value = " N/A".into();

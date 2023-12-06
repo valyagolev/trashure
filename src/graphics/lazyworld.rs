@@ -2,16 +2,15 @@ use std::time::Instant;
 
 use bevy::{
     diagnostic::{
-        Diagnostic, DiagnosticId, DiagnosticMeasurement, DiagnosticsStore,
-        RegisterDiagnostic,
+        Diagnostic, DiagnosticId, DiagnosticMeasurement, DiagnosticsStore, RegisterDiagnostic,
     },
     prelude::*,
-    utils::{HashMap},
+    utils::HashMap,
 };
 use rand::Rng;
 use uuid::uuid;
 
-use crate::{game::material::GameMaterial};
+use crate::game::material::GameMaterial;
 
 use super::{
     camera3d::CAMERA_OFFSET,
@@ -95,12 +94,9 @@ fn generate_part(
             // let cnt = 1;
             for _z in 0..cnt {
                 // vb._add_block(pos + IVec3::new(0, z, 0), GameMaterial::random(rand))
-                bundle.voxel_block.drop_block(
-                    pos.xz(),
-                    GameMaterial::random(rand),
-                    changes,
-                    rand,
-                );
+                bundle
+                    .voxel_block
+                    .drop_block(pos.xz(), GameMaterial::random(rand), changes, rand);
             }
         }
     }
