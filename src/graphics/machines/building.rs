@@ -47,7 +47,7 @@ impl MachineGhost {
         machine_type: &MachineType,
     ) -> Self {
         let ent = commands
-            .spawn::<(Tinted, _)>((
+            .spawn::<(Tinted, _, _)>((
                 MachineRecolor::Ghost.into(),
                 // BuiltMachine,
                 MyMachine {
@@ -55,8 +55,9 @@ impl MachineGhost {
                     gmt: machine_type.gmt,
                     dims: machine_type.dims,
                     pos: cursor.block.xz(),
-                    direction: Direction2D::Backward,
+                    // direction: ,
                 },
+                Direction2D::Backward,
             ))
             .id();
 
@@ -98,21 +99,21 @@ impl MachineGhost {
 
 fn move_ghost(
     ghost: ResMut<MachineGhost>,
-    mut q_machines: Query<&mut MyMachine, Without<BuiltMachine>>,
+    mut q_machines: Query<(&mut MyMachine, &mut Direction2D), Without<BuiltMachine>>,
     cursor: Res<CursorOver>,
     keyb: Res<Input<KeyCode>>,
 ) {
     let Some((_, ghost)) = ghost.0 else {
         return;
     };
-    let Ok(mut m) = q_machines.get_mut(ghost) else {
+    let Ok((mut m, mut dir)) = q_machines.get_mut(ghost) else {
         return;
     };
 
     m.pos = cursor.block.xz();
 
     if keyb.just_released(KeyCode::R) {
-        m.direction = m.direction.rotate();
+        *dir = dir.rotate();
     }
 }
 
@@ -155,9 +156,12 @@ fn place_ghost(
 
 fn check_placement(
     mut mghost: ResMut<MachineGhost>,
-    mut q_machines: Query<(&MyMachine, &mut Tinted), (Changed<MyMachine>, Without<BuiltMachine>)>,
+    mut q_machines: Query<
+        (&MyMachine, &mut Tinted, &Direction2D),
+        (Changed<MyMachine>, Without<BuiltMachine>),
+    >,
 
-    q_existing_machines: Query<&MyMachine, With<BuiltMachine>>,
+    q_existing_machines: Query<(&MyMachine, &Direction2D), With<BuiltMachine>>,
 
     lazyworld: Res<LazyWorld>,
     blocks: Query<&VoxelBlock>,
@@ -166,7 +170,7 @@ fn check_placement(
     let Some((mt_e, ghost_e)) = mghost.0 else {
         return;
     };
-    let Ok((ghost, mut tinted)) = q_machines.get_mut(ghost_e) else {
+    let Ok((ghost, mut tinted, dir)) = q_machines.get_mut(ghost_e) else {
         return;
     };
     let Ok(mt) = q_types.get(mt_e) else {
@@ -175,12 +179,14 @@ fn check_placement(
 
     let center = mt.dims / 2;
 
-    let mut bad = q_existing_machines.iter().any(|m| m.intersects(ghost));
+    let mut bad = q_existing_machines
+        .iter()
+        .any(|(m, mdir)| m.intersects(*mdir, ghost, *dir));
 
     if !bad {
         'outer: for x in 0..mt.dims.x {
             for z in 0..mt.dims.y {
-                let pos = ghost.pos + ghost.direction.rotate_size(IVec2::new(x, z) - center);
+                let pos = ghost.pos + dir.rotate_size(IVec2::new(x, z) - center);
 
                 let (block_i, inner) = VoxelBlock::normalize_pos(IVec2::ZERO, pos.extend(0).xzy());
 

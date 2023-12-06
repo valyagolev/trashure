@@ -6,7 +6,7 @@ use crate::graphics::{
     voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
 };
 
-use super::material::GameMaterial;
+use super::{material::GameMaterial, Direction2D};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, EnumDiscriminants)]
 #[strum_discriminants(derive(Reflect))]
@@ -20,7 +20,7 @@ impl GameMachineSettings {
             GameMachineSettingsDiscriminants::Recycler => {
                 let recycling_radar = commands
                     .spawn((
-                        Radar::new(GameMaterial::all(), Some(mc.direction)),
+                        Radar::new(GameMaterial::all(), Some(Direction2D::Forward)),
                         TransformBundle::default(),
                     ))
                     .id();

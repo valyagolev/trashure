@@ -1,8 +1,9 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, ops::Mul};
 
 use bevy::{
     app::Plugin,
     math::{IVec2, Quat, Vec2Swizzles},
+    prelude::Component,
     reflect::Reflect,
 };
 
@@ -18,16 +19,16 @@ impl Plugin for GameUtilsPlugin {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Component)]
 pub enum Direction2D {
-    Forward,
-    Backward,
-    Left,
-    Right,
+    Forward = 0,
+    Right = 1,
+    Backward = 2,
+    Left = 3,
 }
 
-impl From<Direction2D> for Quat {
-    fn from(val: Direction2D) -> Self {
+impl From<&Direction2D> for Quat {
+    fn from(val: &Direction2D) -> Self {
         Quat::from_rotation_y(match val {
             Direction2D::Forward => 0.0,
             Direction2D::Backward => PI,
@@ -37,14 +38,29 @@ impl From<Direction2D> for Quat {
     }
 }
 
+impl From<usize> for Direction2D {
+    fn from(val: usize) -> Self {
+        match val % 4 {
+            0 => Direction2D::Forward,
+            1 => Direction2D::Right,
+            2 => Direction2D::Backward,
+            3 => Direction2D::Left,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Mul<Direction2D> for Direction2D {
+    type Output = Direction2D;
+
+    fn mul(self, rhs: Direction2D) -> Self::Output {
+        ((self as usize) + (rhs as usize)).into()
+    }
+}
+
 impl Direction2D {
     pub fn rotate(self) -> Self {
-        match self {
-            Direction2D::Forward => Direction2D::Right,
-            Direction2D::Backward => Direction2D::Left,
-            Direction2D::Right => Direction2D::Backward,
-            Direction2D::Left => Direction2D::Forward,
-        }
+        ((self as usize) + 1).into()
     }
 
     pub fn rotate_size(self, size: IVec2) -> IVec2 {
@@ -58,8 +74,8 @@ impl Direction2D {
         match self {
             Direction2D::Forward => pos.y < 0 && pos.x.abs() < -pos.y,
             Direction2D::Backward => pos.y > 0 && pos.x.abs() < pos.y,
-            Direction2D::Left => pos.x > 0 && pos.y.abs() < -pos.x,
-            Direction2D::Right => pos.x < 0 && pos.y.abs() < pos.x,
+            Direction2D::Left => pos.x < 0 && pos.y.abs() < -pos.x,
+            Direction2D::Right => pos.x > 0 && pos.y.abs() < pos.x,
         }
     }
 }

@@ -35,7 +35,6 @@ pub struct Radar {
 
     found_voxel: Option<(GameMaterial, IVec3)>,
 
-    // todo: convert to global direction??
     pub direction: Option<Direction2D>,
 }
 
@@ -106,14 +105,17 @@ fn setup_radars(
 
 fn radar_search(
     time: Res<Time>,
-    mut q_radars: Query<(&mut Radar, &GlobalTransform)>,
+    mut q_radars: Query<(&mut Radar, &Parent, &GlobalTransform)>,
+    q_parent_dirs: Query<&Direction2D, With<Children>>,
     lazyworld: Res<LazyWorld>,
     q_blocks: Query<&VoxelBlock>,
 ) {
-    'radars: for (mut r, gt) in q_radars.iter_mut() {
+    'radars: for (mut r, rpar, gt) in q_radars.iter_mut() {
         if r.found_voxel.is_some() {
             continue;
         }
+
+        let rpardir = q_parent_dirs.get(**rpar).unwrap();
 
         // println!("checking radar: {:?}", r);
 
@@ -123,6 +125,7 @@ fn radar_search(
 
         let radar_ipos = gt.translation().xz().as_ivec2();
         for (bigblock_pos, ent) in lazyworld.lookup_around(radar_ipos, dist) {
+            // dbg!(bigblock_pos, ent);
             let Ok(voxel_block) = q_blocks.get(ent) else {
                 continue;
             };
@@ -130,11 +133,14 @@ fn radar_search(
             let local_pos = radar_ipos - bigblock_pos * VOXEL_BLOCK_SIZE;
 
             for col in voxel_block.closest_columns(local_pos, dist) {
+                // dbg!(col);
                 if let Some((mat, pos)) = voxel_block.material_in_col(col, r.material_mask) {
                     if let Some(dir) = r.direction {
-                        let radar_local_pos = (bigblock_pos * VOXEL_BLOCK_SIZE) - radar_ipos;
+                        let radar_local_pos = (bigblock_pos * VOXEL_BLOCK_SIZE) - radar_ipos + col;
 
-                        if !dir.within_cone(radar_local_pos) {
+                        // println!("radar_local_pos={:?} ent={ent:?}", radar_local_pos);
+                        if !(dir * *rpardir).within_cone(radar_local_pos) {
+                            // println!("not within cone");
                             continue;
                         }
                     }

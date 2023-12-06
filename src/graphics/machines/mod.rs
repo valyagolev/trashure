@@ -7,6 +7,8 @@ use crate::game::{
     Direction2D,
 };
 
+use super::selectable::CurrentlySelected;
+
 // use self::recolor::RecoloredScenes;
 
 pub mod building;
@@ -26,6 +28,7 @@ impl Plugin for MachinesPlugin {
                     update_machines,
                     //  update_boxes,
                     update_colors,
+                    rotate_selected_machine,
                 ),
             )
             .register_type::<MyMachine>()
@@ -55,17 +58,17 @@ pub struct MyMachine {
     pub gmt: GameMachineSettingsDiscriminants,
     pub tp: Entity,
     pub pos: IVec2,
-    pub direction: Direction2D,
+    // pub direction: Direction2D,
     pub dims: IVec2,
 }
 
 impl MyMachine {
-    pub fn intersects(&self, other: &Self) -> bool {
+    pub fn intersects(&self, self_dir: Direction2D, other: &Self, other_dir: Direction2D) -> bool {
         let (x1, y1) = (self.pos.x, self.pos.y);
         let (x2, y2) = (other.pos.x, other.pos.y);
 
-        let (w1, h1) = self.direction.rotate_size(self.dims).into();
-        let (w2, h2) = other.direction.rotate_size(other.dims).into();
+        let (w1, h1) = self_dir.rotate_size(self.dims).into();
+        let (w2, h2) = other_dir.rotate_size(other.dims).into();
 
         // we don't care about recentering them...
 
@@ -124,12 +127,12 @@ fn update_machines(
     mut commands: Commands,
     // ass: Res<AssetServer>,
     q_machinetypes: Query<&MachineType>,
-    mut q_machines: Query<(Entity, &MyMachine, Option<&mut Transform>)>,
+    mut q_machines: Query<(Entity, &MyMachine, &Direction2D, Option<&mut Transform>)>,
     _mres: Res<MachineResources>,
 ) {
-    for (e, machine, spawn) in q_machines.iter_mut() {
+    for (e, machine, dir, spawn) in q_machines.iter_mut() {
         let trans = Transform::from_translation(machine.pos.extend(0).xzy().as_vec3())
-            .with_rotation(machine.direction.into());
+            .with_rotation(dir.into());
 
         match spawn {
             None => {
@@ -190,4 +193,26 @@ fn update_colors(
             *trans = Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32));
         }
     }
+}
+
+fn rotate_selected_machine(
+    selected: Res<CurrentlySelected>,
+    mut q_machines: Query<&mut Direction2D, With<BuiltMachine>>,
+    keyb: Res<Input<KeyCode>>,
+) {
+    if !keyb.just_released(KeyCode::R) {
+        return;
+    }
+
+    let Some(mid) = selected.0 else {
+        return;
+    };
+
+    let Ok(mut m) = q_machines.get_mut(mid) else {
+        return;
+    };
+
+    *m = m.rotate();
+
+    dbg!(&m);
 }
