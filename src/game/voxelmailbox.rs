@@ -13,4 +13,4 @@ impl Plugin for VoxelMailboxPlugin {
 }
 
 #[derive(Debug, Component)]
-pub struct VoxelMailbox(pub Vec<GameMaterial>);
+pub struct VoxelMailbox(pub Vec<(IVec3, GameMaterial)>);

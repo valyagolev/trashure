@@ -60,7 +60,8 @@ impl Plugin for Voxels3dPlugin {
 pub struct VoxelResources {
     // pub mesh: Handle<Mesh>,
     // materials: [Handle<StandardMaterial>; 4],
-    meshes: [Mesh; 5],
+    pub meshes: [Mesh; 5],
+    pub material_handles: [Handle<StandardMaterial>; 5],
     pub voxel_material: Handle<StandardMaterial>,
     pub debug_voxel_material: Handle<StandardMaterial>,
 }
@@ -119,9 +120,16 @@ fn generate_colored_mesh(color: Color) -> Mesh {
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
+    mut res_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let handles = GameMaterial::all()
+        .iter()
+        .map(|m| materials.add(StandardMaterial::from(Into::<Color>::into(m))))
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap();
+
     commands.insert_resource(VoxelResources {
         meshes: GameMaterial::all()
             .iter()
@@ -129,6 +137,7 @@ fn setup(
             .collect::<Vec<_>>()
             .try_into()
             .unwrap(),
+        material_handles: handles,
         voxel_material: materials.add(StandardMaterial {
             // base_color: Color::LIME_GREEN,
             // alpha_mode: AlphaMode::Mask(0.5),
@@ -146,7 +155,7 @@ fn setup(
     // // let rand = &mut rand::thread_rng();
     // // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(1000.0).into()),
+        mesh: res_meshes.add(shape::Plane::from_size(1000.0).into()),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         transform: Transform::from_xyz(0.0, -0.5, 0.0),
         ..default()

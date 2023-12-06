@@ -78,7 +78,7 @@ impl MyMachine {
 
 #[derive(Debug, Resource, Reflect)]
 pub struct MachineResources {
-    selection_cube: Handle<Mesh>,
+    pub cube: Handle<Mesh>,
     debug_reddish: Handle<StandardMaterial>,
     radar: Handle<Scene>,
 }
@@ -92,11 +92,11 @@ pub fn load_machines(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let selection_cube = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
+    let cube = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
     let debug_reddish = materials.add(Color::rgba(0.8, 0.5, 0.4, 0.2).into());
 
     commands.insert_resource(MachineResources {
-        selection_cube: selection_cube.clone(),
+        cube: cube.clone(),
         debug_reddish: debug_reddish.clone(),
         radar: ass.load("objects/radar.glb#Scene0"),
     });
@@ -112,15 +112,15 @@ pub fn load_machines(
         dims: IVec2 { x: 12, y: 12 },
     });
 
-    commands.spawn((
-        DebugCube,
-        PbrBundle {
-            mesh: selection_cube,
-            material: debug_reddish,
-            // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
-            ..default()
-        },
-    ));
+    // commands.spawn((
+    //     DebugCube,
+    //     PbrBundle {
+    //         mesh: cube,
+    //         material: debug_reddish,
+    //         // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
+    //         ..default()
+    //     },
+    // ));
 }
 
 fn update_machines(

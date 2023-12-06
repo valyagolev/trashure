@@ -1,7 +1,10 @@
 use bevy::{prelude::*, utils::Instant};
 
 use crate::{
-    game::{machines::GameMachineSettings, material::GameMaterial, Direction2D},
+    game::{
+        machines::GameMachineSettings, material::GameMaterial, voxelmailbox::VoxelMailbox,
+        Direction2D,
+    },
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
@@ -47,8 +50,9 @@ impl MachineGhost {
         machine_type: &MachineType,
     ) -> Self {
         let ent = commands
-            .spawn::<(Tinted, _, _)>((
-                MachineRecolor::Ghost.into(),
+            .spawn((
+                VoxelMailbox(vec![]),
+                Into::<Tinted>::into(MachineRecolor::Ghost),
                 // BuiltMachine,
                 MyMachine {
                     tp,
