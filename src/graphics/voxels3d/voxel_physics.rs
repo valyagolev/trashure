@@ -53,9 +53,7 @@ impl VoxelBlock {
             return;
         }
 
-        let z_place = (0..VOXEL_BLOCK_SIZE)
-            .filter(|z| self[IVec3::new(pos_xz.x, *z, pos_xz.y)].is_none())
-            .next();
+        let z_place = (0..VOXEL_BLOCK_SIZE).find(|z| self[IVec3::new(pos_xz.x, *z, pos_xz.y)].is_none());
 
         let Some(z_place) = z_place else {
             let close = DIRS_AROUND.iter().map(|p| *p + pos_xz).collect_vec();
@@ -117,10 +115,10 @@ impl VoxelBlock {
 
 fn handle_debug_keyboard(
     keys: Res<Input<KeyCode>>,
-    mut commands: Commands,
+    _commands: Commands,
     mut q_voxel_blocks: Query<&mut VoxelBlock>,
 
-    conf: Res<Configuration>,
+    _conf: Res<Configuration>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
     if keys.pressed(KeyCode::A) {
@@ -130,10 +128,9 @@ fn handle_debug_keyboard(
         // let y = rnd.gen_range(-10..10);
         // let pos = IVec3::new(x, y, 0);
 
-        let pos = [IVec2::new(0, 0), IVec2::new(10, 0), IVec2::new(0, 15)]
+        let pos = *[IVec2::new(0, 0), IVec2::new(10, 0), IVec2::new(0, 15)]
             .choose(rnd)
-            .unwrap()
-            .clone();
+            .unwrap();
 
         // let mut changes = VoxelBlockChanges::outof(&blockchanges);
 

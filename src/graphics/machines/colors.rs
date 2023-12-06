@@ -1,4 +1,4 @@
-use std::f32::consts::E;
+
 
 use bevy::prelude::*;
 
@@ -11,9 +11,9 @@ pub enum MachineRecolor {
     Selected,
 }
 
-impl Into<Color> for MachineRecolor {
-    fn into(self) -> Color {
-        match self {
+impl From<MachineRecolor> for Color {
+    fn from(val: MachineRecolor) -> Self {
+        match val {
             MachineRecolor::Ghost => Color::rgba_u8(180, 194, 201, 192),
             MachineRecolor::ForbiddenGhost => Color::rgba_u8(177, 61, 61, 192),
             MachineRecolor::Selected => Color::rgba_u8(0, 162, 220, 255),
@@ -21,15 +21,15 @@ impl Into<Color> for MachineRecolor {
     }
 }
 
-impl Into<Tinted> for MachineRecolor {
-    fn into(self) -> Tinted {
-        match self {
+impl From<MachineRecolor> for Tinted {
+    fn from(val: MachineRecolor) -> Self {
+        match val {
             MachineRecolor::Ghost | MachineRecolor::ForbiddenGhost => {
-                let mut t = Tinted::new(self.into());
+                let mut t = Tinted::new(val.into());
                 t.alpha_mode = Some(AlphaMode::Blend);
                 t
             }
-            MachineRecolor::Selected => Tinted::new_emissive(self.into(), self.emissive().unwrap()),
+            MachineRecolor::Selected => Tinted::new_emissive(val.into(), val.emissive().unwrap()),
         }
     }
 }

@@ -103,7 +103,7 @@ fn redraw_menu(
 
             let tp = q_types.get(tp).unwrap();
 
-            text.sections[1].value = tp.name.to_string().into();
+            text.sections[1].value = tp.name.to_string();
         }
         GameMenuState::ToPickBuilding => {
             *q_menu_currently.1 = Visibility::Hidden;

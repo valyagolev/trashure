@@ -1,14 +1,14 @@
 use std::borrow::Cow;
 
-use bevy::{prelude::*, scene::SceneInstance};
+use bevy::{prelude::*};
 
 use crate::game::Direction2D;
 
 // use self::recolor::RecoloredScenes;
 
-use self::colors::MachineRecolor;
 
-use super::{recolor::Tinted, selectable::Selectable};
+
+
 
 pub mod building;
 mod colors;
@@ -120,7 +120,7 @@ fn update_machines(
     // ass: Res<AssetServer>,
     q_machinetypes: Query<&MachineType>,
     mut q_machines: Query<(Entity, &MyMachine, Option<&mut Transform>)>,
-    mres: Res<MachineResources>,
+    _mres: Res<MachineResources>,
 ) {
     for (e, machine, spawn) in q_machines.iter_mut() {
         let trans = Transform::from_translation(machine.pos.extend(0).xzy().as_vec3())
@@ -174,11 +174,11 @@ fn update_colors(
     mut q_cubes: Query<(&DebugCube, &mut Transform)>,
     // mres: Res<MachineResources>,
 ) {
-    for (e, machine, children) in q_machines.iter_mut() {
+    for (_e, machine, children) in q_machines.iter_mut() {
         let tp = q_machinetypes.get(machine.tp).unwrap();
 
         for ch in children {
-            let Ok((cube, mut trans)) = q_cubes.get_mut(*ch) else {
+            let Ok((_cube, mut trans)) = q_cubes.get_mut(*ch) else {
                 continue;
             };
 

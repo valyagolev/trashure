@@ -1,8 +1,8 @@
-use std::path::Path;
+
 
 use bevy::prelude::*;
 // use bevy_inspector_egui::{prelude::*, quick::ResourceInspectorPlugin};
-use bevy_persistent::prelude::*;
+
 use serde::{Deserialize, Serialize};
 
 pub struct ConfigPlugin;

@@ -25,9 +25,9 @@ pub enum Direction2D {
     Right,
 }
 
-impl Into<Quat> for Direction2D {
-    fn into(self) -> Quat {
-        Quat::from_rotation_y(match self {
+impl From<Direction2D> for Quat {
+    fn from(val: Direction2D) -> Self {
+        Quat::from_rotation_y(match val {
             Direction2D::Forward => 0.0,
             Direction2D::Backward => PI,
             Direction2D::Left => PI / 2.0,

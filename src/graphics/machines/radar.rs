@@ -77,7 +77,7 @@ pub fn update_radars(
     mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
     // mut q_cubes: Query<&mut Transform, (With<DebugCube>, Without<RadarScene>)>,
 ) {
-    for (mut r, children) in q_radars.iter_mut() {
+    for (mut r, _children) in q_radars.iter_mut() {
         r.watch.tick(time.delta());
 
         let Ok(mut t) = q_scenes.get_mut(r.scene.unwrap()) else {

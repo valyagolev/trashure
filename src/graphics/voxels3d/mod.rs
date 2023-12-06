@@ -1,14 +1,14 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Index};
 
-use crate::{conf::Configuration, game::material::GameMaterial};
-use bevy::pbr::wireframe::Wireframe;
-use bevy::render::mesh::MeshVertexAttribute;
-use bevy::transform::commands;
-use bevy::utils::HashSet;
-use bevy::{prelude::*, render::camera::ScalingMode, utils::HashMap};
+use crate::{game::material::GameMaterial};
+
+
+
+
+use bevy::{prelude::*, utils::HashMap};
 use bevy_meshem::{prelude::*, Dimensions};
-use itertools::Itertools;
-use rand::{seq::SliceRandom, Rng};
+
+
 
 use self::voxel_mesh::generate_colored_voxel_mesh;
 
@@ -67,7 +67,7 @@ impl VoxelRegistry for VoxelResources {
         VoxelMesh::NormalCube(&self.meshes[(*v as usize) - 1])
     }
 
-    fn is_covering(&self, voxel: &Self::Voxel, side: prelude::Face) -> bool {
+    fn is_covering(&self, voxel: &Self::Voxel, _side: prelude::Face) -> bool {
         voxel.is_some()
     }
 
@@ -158,7 +158,7 @@ pub fn generate_voxel_block(
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
 ) -> VoxelBlockBundle {
-    let rand = &mut rand::thread_rng();
+    let _rand = &mut rand::thread_rng();
 
     // let grid = (0..VOXEL_BLOCK_SIZE)
     //     .map(|x| {
@@ -249,7 +249,7 @@ impl VoxelBlock {
         // assert!(idx >= 0);
 
         assert!(self.grid[idx].is_none());
-        assert!(self.forbidden_columns[local_pos.x as usize][local_pos.z as usize] == false);
+        assert!(!self.forbidden_columns[local_pos.x as usize][local_pos.z as usize]);
 
         self.grid[idx] = Some(mat);
         self.meta.log(
@@ -298,7 +298,7 @@ impl VoxelBlock {
         self.forbidden_columns[local_pos.x as usize][local_pos.y as usize] = true;
     }
 
-    pub fn real_pos(mut voxel_block_pos: IVec2, mut inner_pos: IVec3) -> Vec3 {
+    pub fn real_pos(voxel_block_pos: IVec2, inner_pos: IVec3) -> Vec3 {
         ((voxel_block_pos * VOXEL_BLOCK_SIZE).extend(0) + inner_pos).as_vec3()
     }
 

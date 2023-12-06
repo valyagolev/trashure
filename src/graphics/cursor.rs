@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
+use bevy::{prelude::*, window::PrimaryWindow};
 
 use super::{
     dbgtext::DebugTexts,

@@ -1,13 +1,13 @@
-use bevy::diagnostic::DiagnosticId;
+
 use bevy::prelude::*;
 
-use bevy::diagnostic::DiagnosticsStore;
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+
+
 use bevy::utils::HashMap;
 use itertools::Itertools;
 
-use super::lazyworld::UNAPPLIED_CHANGES;
-use super::lazyworld::WORLD_PARTS_DIAGNOSTIC;
+
+
 
 pub struct DbgTextPlugin;
 
@@ -90,7 +90,7 @@ fn setup_text(mut commands: Commands) {
 }
 
 fn text_update_system(texts: Res<DebugTexts>, mut query: Query<(&mut Text, &DbgText)>) {
-    for (mut text, dt) in query.iter_mut() {
+    for (mut text, _dt) in query.iter_mut() {
         let total_text =
             texts
                 .0
@@ -101,6 +101,6 @@ fn text_update_system(texts: Res<DebugTexts>, mut query: Query<(&mut Text, &DbgT
                     acc
                 });
 
-        text.sections[0].value = total_text.into();
+        text.sections[0].value = total_text;
     }
 }

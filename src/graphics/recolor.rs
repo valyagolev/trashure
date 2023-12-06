@@ -1,5 +1,5 @@
 use bevy::{prelude::*, scene::SceneInstance, utils::HashMap};
-use itertools::Itertools;
+
 
 pub struct RecolorPlugin;
 
@@ -60,7 +60,7 @@ impl Tinted {
 struct TintedMaterials(HashMap<(AssetId<StandardMaterial>, [u8; 4]), Handle<StandardMaterial>>);
 
 fn ensure_stores(mut cmds: Commands, mut q_scenes: Query<(Entity, &Tinted), Without<TintedStore>>) {
-    for (e, tnted) in q_scenes.iter_mut() {
+    for (e, _tnted) in q_scenes.iter_mut() {
         cmds.entity(e).insert(TintedStore {
             last_applied: (None, None, None),
             origs: HashMap::default(),
@@ -76,7 +76,7 @@ fn update_colors(
     mut pbr_materials: ResMut<Assets<StandardMaterial>>,
     mut custom_materials: ResMut<TintedMaterials>,
 ) {
-    for (e, instance, mut tnted, mut tnted_store) in q_scenes.iter_mut() {
+    for (_e, instance, tnted, mut tnted_store) in q_scenes.iter_mut() {
         if tnted_store.last_applied == (tnted.color, tnted.emissive, tnted.alpha_mode) {
             continue;
         }

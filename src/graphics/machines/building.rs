@@ -3,7 +3,7 @@ use bevy::{prelude::*, utils::Instant};
 use crate::{
     game::Direction2D,
     graphics::{
-        cursor::CursorOver, dbgtext::DebugTexts, lazyworld::LazyWorld, recolor::Tinted,
+        cursor::CursorOver, lazyworld::LazyWorld, recolor::Tinted,
         voxels3d::VoxelBlock,
     },
 };
@@ -44,7 +44,7 @@ impl MachineGhost {
     ) -> Self {
         let ent = commands
             .spawn::<(Tinted, _)>((
-                Tinted::from(MachineRecolor::Ghost.into()),
+                MachineRecolor::Ghost.into(),
                 // BuiltMachine,
                 MyMachine {
                     tp,
@@ -92,7 +92,7 @@ impl MachineGhost {
 // }
 
 fn move_ghost(
-    mut ghost: ResMut<MachineGhost>,
+    ghost: ResMut<MachineGhost>,
     mut q_machines: Query<&mut MyMachine, Without<BuiltMachine>>,
     cursor: Res<CursorOver>,
     keyb: Res<Input<KeyCode>>,
@@ -125,7 +125,7 @@ fn place_ghost(
         return;
     }
 
-    let Some((tp, ghost)) = mghost.0 else {
+    let Some((_tp, ghost)) = mghost.0 else {
         return;
     };
 

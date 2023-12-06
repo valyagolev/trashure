@@ -1,5 +1,5 @@
 use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, pbr::DirectionalLightShadowMap, prelude::*,
+    pbr::DirectionalLightShadowMap, prelude::*,
     render::camera::ScalingMode,
 };
 // use bevy_inspector_egui::bevy_egui::EguiContext;
@@ -28,7 +28,7 @@ fn camera_setup(
     }
 }
 
-fn setup(mut commands: Commands, conf: Res<Configuration>) {
+fn setup(mut commands: Commands, _conf: Res<Configuration>) {
     // ambient light
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
@@ -63,7 +63,7 @@ fn setup(mut commands: Commands, conf: Res<Configuration>) {
             transform: Transform::from_translation(CAMERA_OFFSET).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
-        .with_children(|b| {
+        .with_children(|_b| {
             // b.spawn(PointLightBundle {
             //     point_light: PointLight {
             //         intensity: 11000.0,

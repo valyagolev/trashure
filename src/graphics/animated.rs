@@ -38,7 +38,7 @@ impl MovingToPosition {
 fn animate(
     mut q_animation: Query<(&mut Transform, &MovingToPosition)>,
     time: Res<Time>,
-    conf: Res<Configuration>,
+    _conf: Res<Configuration>,
 ) {
     let dt = time.delta_seconds();
 

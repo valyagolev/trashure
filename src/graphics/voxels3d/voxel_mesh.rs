@@ -5,7 +5,7 @@ use std::iter;
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
-use bevy_meshem::prelude::*;
+
 
 /// Function that generates the mesh of a voxel.
 pub fn generate_colored_voxel_mesh(
@@ -13,9 +13,9 @@ pub fn generate_colored_voxel_mesh(
     // texture_atlas_dims: [u32; 2],
     // texture: [(Face, [u32; 2]); 6],
     voxel_center: [f32; 3],
-    padding: f32,
+    _padding: f32,
     color: [f32; 4],
-    alpha: f32,
+    _alpha: f32,
 ) -> Mesh {
     let mut cube_mesh = Mesh::new(PrimitiveTopology::TriangleList);
     let y = voxel_dims[1] / 2.0 + voxel_center[1];
