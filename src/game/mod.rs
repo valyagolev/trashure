@@ -13,7 +13,8 @@ pub struct GameUtilsPlugin;
 
 impl Plugin for GameUtilsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.register_type::<Direction2D>();
+        app.register_type::<Direction2D>()
+            .add_plugins(machines::MachinesPlugin);
     }
 }
 

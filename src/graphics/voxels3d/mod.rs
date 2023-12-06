@@ -1,4 +1,7 @@
-use std::{ops::Index, time::Instant};
+use std::{
+    ops::{Index, IndexMut},
+    time::Instant,
+};
 
 use crate::game::material::GameMaterial;
 
@@ -204,7 +207,8 @@ pub fn generate_voxel_block(
     // let texture_mesh = asset_server.load("array_texture.png");
     let (culled_mesh, metadata) = mesh_grid(
         dims,
-        &[Face::Bottom, Face::Back, Face::Left],
+        // &[Face::Bottom, Face::Back, Face::Left],
+        &[],
         &g,
         voxel_resources.as_ref(), //.into_inner(),
         MeshingAlgorithm::Culling,
@@ -276,6 +280,30 @@ impl VoxelBlock {
         )
     }
 
+    pub fn _take_block(&mut self, local_pos: IVec3) -> Option<GameMaterial> {
+        assert!(
+            Self::within_bounds(local_pos),
+            "local_pos out of bounds: {local_pos:?}"
+        );
+        // no idea why...
+        let local_pos_fixed = local_pos.xzy();
+        // dbg!(&local_pos);
+        let idx = (local_pos_fixed.x
+            + local_pos_fixed.y * VOXEL_BLOCK_SIZE
+            + local_pos_fixed.z * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
+        // dbg!(&idx);
+
+        // assert!(idx >= 0);
+
+        self.meta.log(
+            bevy_meshem::prelude::VoxelChange::Broken,
+            idx,
+            None,
+            self._meshem_neighbors(idx),
+        );
+        self.grid[idx].take()
+    }
+
     pub fn within_bounds(pos: IVec3) -> bool {
         pos.x >= 0
             && pos.x < VOXEL_BLOCK_SIZE
@@ -345,7 +373,7 @@ impl VoxelBlock {
             .filter(move |col| {
                 let dist = (col.as_vec2() - pos).length_squared();
 
-                dist <= dist * dist
+                dist <= dist_sq
             })
     }
 
@@ -376,6 +404,18 @@ impl Index<IVec3> for VoxelBlock {
         &self.grid[idx]
     }
 }
+
+// impl IndexMut<IVec3> for VoxelBlock {
+//     fn index_mut(&mut self, index: IVec3) -> &mut Self::Output {
+//         let local_pos_fixed = index.xzy();
+
+//         let idx = (local_pos_fixed.x
+//             + local_pos_fixed.y * VOXEL_BLOCK_SIZE
+//             + local_pos_fixed.z * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
+
+//         &mut self.grid[idx]
+//     }
+// }
 
 fn update_meshes(
     mut meshes: ResMut<Assets<Mesh>>,

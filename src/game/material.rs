@@ -30,6 +30,17 @@ impl GameMaterial {
     }
 
     #[inline]
+    pub fn all() -> &'static [GameMaterial] {
+        &[
+            GameMaterial::Reddish,
+            GameMaterial::Greenish,
+            GameMaterial::Blueish,
+            GameMaterial::Brownish,
+            GameMaterial::Golden,
+        ]
+    }
+
+    #[inline]
     pub fn mask_contains(&self, mask: u8) -> bool {
         (*self as u8) & mask != 0
     }

@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::Instant};
 
 use crate::{
-    game::{material::GameMaterial, Direction2D},
+    game::{machines::GameMachineSettings, material::GameMaterial, Direction2D},
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
@@ -119,7 +119,7 @@ fn move_ghost(
 fn place_ghost(
     mut commands: Commands,
     mut mghost: ResMut<MachineGhost>,
-    // mut q_machines: Query<&mut MyMachine, Without<BuiltMachine>>,
+    mut q_machines: Query<&MyMachine, Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
 
     mut selected: ResMut<CurrentlySelected>,
@@ -137,12 +137,15 @@ fn place_ghost(
         return;
     };
 
+    let Ok(m) = q_machines.get(ghost) else {
+        return;
+    };
+
     if cursor.just_released(MouseButton::Left) {
-        commands.entity(ghost).insert((
-            BuiltMachine,
-            Tinted::empty(),
-            Radar::new(&[GameMaterial::Brownish]),
-        ));
+        commands.entity(ghost).insert((Tinted::empty(),));
+
+        GameMachineSettings::instantiate(ghost, &mut commands, m.gmt);
+
         mghost.0 = None;
 
         selected.0 = Some(ghost);

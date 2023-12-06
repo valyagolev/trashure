@@ -27,13 +27,23 @@ impl Plugin for RadarPlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Radar {
     material_mask: u8,
     watch: Stopwatch,
     scene: Option<Entity>,
 
     found_voxel: Option<(GameMaterial, IVec3)>,
+}
+
+impl Radar {
+    pub fn take_voxel(&mut self) -> Option<(GameMaterial, IVec3)> {
+        let v = self.found_voxel.take()?;
+
+        self.watch.reset();
+
+        Some(v)
+    }
 }
 
 #[derive(Component)]
@@ -50,7 +60,8 @@ impl Radar {
     }
 
     fn dist(&self) -> f32 {
-        30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
+        // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
+        self.watch.elapsed().as_secs_f32() * 5.0
     }
 }
 
@@ -100,6 +111,8 @@ fn radar_search(
             continue;
         }
 
+        // println!("checking radar: {:?}", r);
+
         r.watch.tick(time.delta());
 
         let dist = r.dist();
@@ -110,14 +123,20 @@ fn radar_search(
                 continue;
             };
 
-            let local_pos = bigblock_pos * VOXEL_BLOCK_SIZE - radar_ipos;
+            let local_pos = radar_ipos - bigblock_pos * VOXEL_BLOCK_SIZE;
 
             for col in voxel_block.closest_columns(local_pos, dist) {
                 if let Some((mat, pos)) = voxel_block.material_in_col(col, r.material_mask) {
-                    r.found_voxel =
-                        Some((mat, (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos));
+                    let full_pos = (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos;
+                    r.found_voxel = Some((mat, full_pos));
 
-                    println!("found voxel: {:?}", r.found_voxel);
+                    let real_dist =
+                        (full_pos.xz().as_vec2() - radar_ipos.as_vec2()).length_squared();
+
+                    println!(
+                        "found voxel: {:?} dist={dist} real_dist={real_dist} radar_local_pos={local_pos} found_local_pos={col}",
+                        r.found_voxel
+                    );
 
                     continue 'radars;
                 }
@@ -136,10 +155,12 @@ fn redraw_radars(
             continue;
         };
 
+        // println!("redrawing radar: {:?}", r);
+
         let dist = r.dist();
 
         // 2.0 is the scale of the radar scene
-        t.scale = Vec3::splat(dist / 2.0);
+        t.scale = Vec3::splat(dist * 2.0);
 
         // for ch in children {
         //     if let Ok(mut cube) = q_cubes.get_mut(*ch) {

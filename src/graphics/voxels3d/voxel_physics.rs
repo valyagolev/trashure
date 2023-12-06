@@ -53,7 +53,8 @@ impl VoxelBlock {
             return;
         }
 
-        let z_place = (0..VOXEL_BLOCK_SIZE).find(|z| self[IVec3::new(pos_xz.x, *z, pos_xz.y)].is_none());
+        let z_place =
+            (0..VOXEL_BLOCK_SIZE).find(|z| self[IVec3::new(pos_xz.x, *z, pos_xz.y)].is_none());
 
         let Some(z_place) = z_place else {
             let close = DIRS_AROUND.iter().map(|p| *p + pos_xz).collect_vec();
@@ -110,6 +111,41 @@ impl VoxelBlock {
         }
 
         self._add_block(local_pos, mat);
+    }
+
+    pub fn steal_block(
+        &mut self,
+        local_pos: IVec3,
+        change_collector: &mut VoxelBlockChanges,
+        rand: &mut impl Rng,
+    ) -> GameMaterial {
+        assert!(Self::within_bounds(local_pos));
+
+        let mt = self
+            ._take_block(local_pos)
+            .take()
+            .expect("Stealing an empty block");
+
+        let mut mats = vec![];
+
+        for y in local_pos.y + 1..VOXEL_BLOCK_SIZE {
+            let lp = IVec3::new(local_pos.x, y, local_pos.z);
+
+            mats.push(self._take_block(lp).take());
+        }
+
+        let mut y = local_pos.y;
+
+        for m in mats {
+            if let Some(m) = m {
+                let lp = IVec3::new(local_pos.x, y, local_pos.z);
+                y += 1;
+
+                self._add_block(lp, m);
+            }
+        }
+
+        mt
     }
 }
 
