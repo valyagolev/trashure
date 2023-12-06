@@ -72,9 +72,13 @@ pub fn setup_menu(
     let currently_creating_text = currently_creating(&mut commands);
     let tpbm = to_pick_building_menu(&mut commands, q_mtypes);
 
-    commands
-        .entity(menu_root)
-        .push_children(&[currently_creating_text, tpbm]);
+    let selected_building_text = selected_building(&mut commands);
+
+    commands.entity(menu_root).push_children(&[
+        currently_creating_text,
+        tpbm,
+        selected_building_text,
+    ]);
 
     commands
         .entity(ui_root)
@@ -130,7 +134,7 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                 text: Text::from_sections([
                     TextSection {
                         // Currently building: {}. Press R to rotate.
-                        value: "Currently building: ".into(),
+                        value: "Selected: ".into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,

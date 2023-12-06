@@ -3,7 +3,11 @@ use bevy::{prelude::*, utils::Instant};
 use crate::{
     game::Direction2D,
     graphics::{
-        cursor::CursorOver, lazyworld::LazyWorld, recolor::Tinted,
+        cursor::CursorOver,
+        gamemenu::{GameMenu, GameMenuState},
+        lazyworld::LazyWorld,
+        recolor::Tinted,
+        selectable::CurrentlySelected,
         voxels3d::VoxelBlock,
     },
 };
@@ -116,6 +120,9 @@ fn place_ghost(
     mut mghost: ResMut<MachineGhost>,
     // mut q_machines: Query<&mut MyMachine, Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
+
+    mut selected: ResMut<CurrentlySelected>,
+    mut menu_state: ResMut<GameMenu>,
 ) {
     if !mghost.1 {
         return;
@@ -134,6 +141,9 @@ fn place_ghost(
             .entity(ghost)
             .insert((BuiltMachine, Tinted::empty(), Radar::new()));
         mghost.0 = None;
+
+        selected.0 = Some(ghost);
+        menu_state.0 = GameMenuState::SelectedMachine;
     }
 }
 

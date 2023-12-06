@@ -46,6 +46,7 @@ fn main() {
             graphics::machines::MachinesPlugin,
             graphics::cursor::CursorPlugin,
             graphics::recolor::RecolorPlugin,
+            graphics::selectable::SelectablePlugin,
         ))
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)

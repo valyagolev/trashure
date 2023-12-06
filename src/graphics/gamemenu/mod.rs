@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use super::{
     cursor::CursorOver,
-    machines::{building::MachineGhost, MachineType},
+    machines::{building::MachineGhost, MachineType, MyMachine},
+    selectable::CurrentlySelected,
 };
 
 pub struct GameMenuPlugin;
@@ -23,7 +24,7 @@ pub enum GameMenuState {
 }
 
 #[derive(Resource)]
-struct GameMenu(GameMenuState);
+pub struct GameMenu(pub GameMenuState);
 
 #[derive(Component)]
 struct LeftBottomUiNode;
@@ -69,6 +70,8 @@ fn redraw_menu(
     mut q_menu_parts: Query<(Option<&mut Text>, &mut Visibility, &GameMenuPart)>,
     ghost: Res<MachineGhost>,
     q_types: Query<&MachineType>,
+    selected: Res<CurrentlySelected>,
+    q_machines: Query<&MyMachine>,
 ) {
     let state = menu_state.0;
 
@@ -99,12 +102,14 @@ fn redraw_menu(
         GameMenuState::SelectedMachine => {
             let mut text = current_text.unwrap();
 
-            let Some((tp, _)) = ghost.0 else {
+            let Some(tp) = selected.0 else {
                 text.sections[1].value = "(bug: No machine selected.)".into();
                 return;
             };
 
-            let tp = q_types.get(tp).unwrap();
+            let mm = q_machines.get(tp).unwrap();
+
+            let tp = q_types.get(mm.tp).unwrap();
 
             text.sections[1].value = tp.name.to_string();
         }

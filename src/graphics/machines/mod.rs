@@ -1,14 +1,10 @@
 use std::borrow::Cow;
 
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
 use crate::game::Direction2D;
 
 // use self::recolor::RecoloredScenes;
-
-
-
-
 
 pub mod building;
 mod colors;
@@ -52,10 +48,10 @@ pub struct MachineType {
 
 #[derive(Debug, Component, Reflect)]
 pub struct MyMachine {
-    tp: Entity,
-    pos: IVec2,
-    direction: Direction2D,
-    dims: IVec2,
+    pub tp: Entity,
+    pub pos: IVec2,
+    pub direction: Direction2D,
+    pub dims: IVec2,
 }
 
 impl MyMachine {
@@ -101,7 +97,10 @@ pub fn load_machines(
         name: "Recycler".into(),
         scene: ass.load("objects/recycler.glb#Scene0"),
         // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
-        dims: IVec2 { x: 7, y: 12 },
+        // dims: IVec2 { x: 7, y: 12 },
+
+        // always square for now
+        dims: IVec2 { x: 12, y: 12 },
     });
 
     commands.spawn((

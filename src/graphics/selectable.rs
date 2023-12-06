@@ -12,4 +12,4 @@ impl Plugin for SelectablePlugin {
 pub struct Selectable;
 
 #[derive(Resource)]
-pub struct CurrentlySelected(Option<Entity>);
+pub struct CurrentlySelected(pub Option<Entity>);
