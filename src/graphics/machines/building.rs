@@ -43,7 +43,7 @@ impl MachineGhost {
         machine_type: &MachineType,
     ) -> Self {
         let ent = commands
-            .spawn((
+            .spawn::<(Tinted, _)>((
                 Tinted::from(MachineRecolor::Ghost.into()),
                 // BuiltMachine,
                 MyMachine {
