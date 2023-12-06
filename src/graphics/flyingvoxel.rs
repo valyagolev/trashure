@@ -21,6 +21,7 @@ pub struct FlyingVoxel {
     pub target: IVec3,
     pub target_mailbox: Entity,
     pub material: GameMaterial,
+    pub payload: usize,
 }
 
 #[derive(Debug, Component)]
@@ -38,6 +39,8 @@ fn initialize_voxel(
     vres: Res<VoxelResources>,
 ) {
     for (e, fv) in q_fv.iter() {
+        println!("new target:{:?}", fv.target_mailbox);
+
         let target_reorig = fv.target.as_vec3() - fv.origin.as_vec3();
         let target_reorig_vertical_plane: Vec2 =
             Vec2::new(target_reorig.xz().length(), target_reorig.y);
@@ -76,9 +79,11 @@ fn fly_voxel(
         if t >= 1.0 {
             commands.entity(e).despawn_recursive();
 
+            // println!("sedning to: {:?}", fv.target_mailbox);
+
             let mut mb = q_mailboxes.get_mut(fv.target_mailbox).unwrap();
 
-            mb.0.push((fv.target, fv.material));
+            mb.0.push_back((fv.target, fv.material, fv.payload));
         }
 
         let target = fv.target.as_vec3();

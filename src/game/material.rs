@@ -36,6 +36,15 @@ impl GameMaterial {
         }
     }
 
+    pub fn random_recycle(rng: &mut impl Rng) -> Self {
+        match rng.gen_range(0..=15) {
+            0 => Self::Golden,
+            1..=3 => Self::Reddish,
+            4..=8 => Self::Greenish,
+            _ => Self::Blueish,
+        }
+    }
+
     #[inline]
     pub fn any_of_mask(of: &[GameMaterial]) -> u8 {
         of.iter().fold(0, |acc, &m| acc | m as u8)

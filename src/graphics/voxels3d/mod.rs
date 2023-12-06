@@ -3,7 +3,7 @@ use std::{
     time::Instant,
 };
 
-use crate::game::material::GameMaterial;
+use crate::game::{material::GameMaterial, voxelmailbox::VoxelMailbox};
 
 use bevy::{
     diagnostic::{
@@ -40,7 +40,7 @@ impl Plugin for Voxels3dPlugin {
         app.add_systems(Startup, setup)
             .add_systems(Update, update_meshes)
             .add_plugins(voxel_physics::VoxelPhysics)
-            .add_systems(Update, apply_changes)
+            .add_systems(Update, (apply_changes, consume_mailbox))
             .insert_resource(VoxelBlockChanges::default())
             .register_diagnostic(Diagnostic::new(APPLIED_CHANGES, "applied_changes", 10))
             .register_diagnostic(Diagnostic::new(POSTPONED_CHANGES, "postponed_changes", 10))
@@ -183,6 +183,7 @@ pub struct VoxelBlockBundle {
     pub voxel_block: VoxelBlock,
     pub pbr_bundle: PbrBundle,
     // pub wireframe: Wireframe,
+    pub mailbox: VoxelMailbox,
 }
 
 pub fn generate_voxel_block(
@@ -244,6 +245,7 @@ pub fn generate_voxel_block(
             material: voxel_resources.voxel_material.clone(),
             ..default()
         },
+        mailbox: VoxelMailbox::default(),
         // wireframe: Wireframe,
     }
 }
@@ -518,5 +520,20 @@ mod test {
         dbg!(VoxelBlock::real_pos(IVec2::new(0, 1), IVec3::new(0, 0, 0)));
 
         dbg!(VoxelBlock::real_pos(IVec2::new(0, 1), IVec3::new(1, 0, 1)));
+    }
+}
+
+fn consume_mailbox(
+    mut q_machines: Query<&mut VoxelMailbox, With<VoxelBlock>>,
+    mut changes: ResMut<VoxelBlockChanges>,
+) {
+    for mut mailbox in q_machines.iter_mut() {
+        let Some((target, vc, _)) = mailbox.0.pop_front() else {
+            continue;
+        };
+
+        let (block_pos, inner_pos) = VoxelBlock::normalize_pos(IVec2::ZERO, target);
+
+        changes.register_change(block_pos, inner_pos, vc);
     }
 }

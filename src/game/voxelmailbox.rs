@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use bevy::prelude::*;
 
 use crate::conf::Configuration;
@@ -12,5 +14,5 @@ impl Plugin for VoxelMailboxPlugin {
     }
 }
 
-#[derive(Debug, Component)]
-pub struct VoxelMailbox(pub Vec<(IVec3, GameMaterial)>);
+#[derive(Debug, Component, Default)]
+pub struct VoxelMailbox(pub VecDeque<(IVec3, GameMaterial, usize)>);

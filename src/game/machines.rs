@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::prelude::Rng;
 use strum::EnumDiscriminants;
 
 use crate::graphics::{
@@ -7,7 +8,15 @@ use crate::graphics::{
     voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
 };
 
-use super::{material::GameMaterial, Direction2D};
+use super::{material::GameMaterial, voxelmailbox::VoxelMailbox, Direction2D};
+
+pub struct MachinesPlugin;
+
+impl Plugin for MachinesPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, (consume_radars, consume_mailbox));
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, EnumDiscriminants)]
 #[strum_discriminants(derive(Reflect))]
@@ -33,14 +42,6 @@ impl GameMachineSettings {
         };
 
         commands.entity(ghost).insert(BuiltMachine(set));
-    }
-}
-
-pub struct MachinesPlugin;
-
-impl Plugin for MachinesPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, consume_radars);
     }
 }
 
@@ -75,6 +76,75 @@ pub fn consume_radars(
                     target: mach.pos.extend(3).xzy(),
                     target_mailbox: e,
                     material: mat,
+                    payload: 1, // 1==recycling
+                });
+            }
+        }
+    }
+}
+
+fn consume_mailbox(
+    mut commands: Commands,
+    lazy_world: Res<LazyWorld>,
+    mut q_machines: Query<(
+        Entity,
+        &mut VoxelMailbox,
+        &BuiltMachine,
+        &MyMachine,
+        &Direction2D,
+    )>,
+    q_blocks: Query<&VoxelBlock>,
+) {
+    let rand = &mut rand::thread_rng();
+    for (e, mut mailbox, bm, mm, dir) in q_machines.iter_mut() {
+        // println!("mailbox: {:?} {e:?}", mailbox.0);
+        let Some((_, mut vc, pl)) = mailbox.0.pop_front() else {
+            continue;
+        };
+
+        println!("got mail:{} {:?} {}", mm.pos, vc, pl);
+
+        match bm.0 {
+            GameMachineSettings::Recycler { .. } => {
+                assert!(pl == 1);
+
+                if vc == GameMaterial::Brownish {
+                    if rand.gen_range(0..3) == 0 {
+                        vc = GameMaterial::random_recycle(rand);
+                    } else {
+                        continue;
+                    }
+                }
+
+                let back_dir = -dir;
+
+                let mut found = None;
+
+                for i in 1.. {
+                    let target = mm.pos + back_dir.random_in_cone(i / 5 + 1, rand);
+
+                    let (block_p, local_p) =
+                        VoxelBlock::normalize_pos(IVec2::ZERO, target.extend(0).xzy());
+
+                    let block_e = lazy_world.known_parts[&block_p];
+                    let block = q_blocks.get(block_e).unwrap();
+
+                    if let Some(local_p) = block.empty_at_col(local_p.xz(), rand) {
+                        found = Some((block_p, local_p, block_e));
+                        break;
+                    }
+                }
+
+                let (block_p, local_p, block_e) = found.unwrap();
+
+                println!("sending recycled to: {:?}", block_e);
+
+                commands.spawn(FlyingVoxel {
+                    origin: mm.pos.extend(3).xzy(),
+                    target: VoxelBlock::real_pos(block_p, local_p).as_ivec3(),
+                    target_mailbox: block_e,
+                    material: vc,
+                    payload: 0,
                 });
             }
         }

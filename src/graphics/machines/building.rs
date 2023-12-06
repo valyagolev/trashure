@@ -51,7 +51,7 @@ impl MachineGhost {
     ) -> Self {
         let ent = commands
             .spawn((
-                VoxelMailbox(vec![]),
+                VoxelMailbox(default()),
                 Into::<Tinted>::into(MachineRecolor::Ghost),
                 // BuiltMachine,
                 MyMachine {

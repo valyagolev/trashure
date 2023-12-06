@@ -1,4 +1,7 @@
-use std::{f32::consts::PI, ops::Mul};
+use std::{
+    f32::consts::PI,
+    ops::{Mul, Neg},
+};
 
 use bevy::{
     app::Plugin,
@@ -26,6 +29,14 @@ pub enum Direction2D {
     Right = 1,
     Backward = 2,
     Left = 3,
+}
+
+impl Neg for &Direction2D {
+    type Output = Direction2D;
+
+    fn neg(self) -> Self::Output {
+        ((*self as usize) + 2).into()
+    }
 }
 
 impl From<&Direction2D> for Quat {
@@ -77,6 +88,17 @@ impl Direction2D {
             Direction2D::Backward => pos.y > 0 && pos.x.abs() < pos.y,
             Direction2D::Left => pos.x < 0 && pos.y.abs() < -pos.x,
             Direction2D::Right => pos.x > 0 && pos.y.abs() < pos.x,
+        }
+    }
+
+    pub fn random_in_cone(self, max_d: i32, rng: &mut impl rand::Rng) -> IVec2 {
+        // too lazy for trigonometry lmao
+        loop {
+            let pos = IVec2::new(rng.gen_range(-max_d..=max_d), rng.gen_range(-max_d..=max_d));
+
+            if self.within_cone(pos) {
+                return pos;
+            }
         }
     }
 }

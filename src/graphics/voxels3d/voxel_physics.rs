@@ -80,18 +80,24 @@ impl VoxelBlock {
         }
 
         if local_pos.y > 0 {
-            let empty_belows = AROUND_AND_THIS
-                .iter()
-                .map(|p| p.extend(-1).xzy() + local_pos)
-                .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
-                .collect_vec();
+            // let empty_belows = AROUND_AND_THIS
+            //     .iter()
+            //     .map(|p| p.extend(-1).xzy() + local_pos)
+            //     .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
+            //     .collect_vec();
 
-            if rand.gen_range(0..9) < empty_belows.len()
-                || rand.gen_range(0..9) < empty_belows.len()
-                || rand.gen_range(0..9) < empty_belows.len()
-            {
-                let below = empty_belows.choose(rand).unwrap();
+            // if rand.gen_range(0..9) < empty_belows.len()
+            //     || rand.gen_range(0..9) < empty_belows.len()
+            //     || rand.gen_range(0..9) < empty_belows.len()
+            // {
+            //     let below = empty_belows.choose(rand).unwrap();
 
+            //     return self.drop_block(below.xz(), mat, change_collector, rand);
+            // }
+
+            let below = IVec3::new(local_pos.x, local_pos.y - 1, local_pos.z);
+
+            if self[below].is_none() {
                 return self.drop_block(below.xz(), mat, change_collector, rand);
             }
         }
@@ -99,15 +105,31 @@ impl VoxelBlock {
         if self.forbidden_columns[local_pos.x as usize][local_pos.z as usize]
             || self[local_pos].is_some()
         {
-            let arounds = DIRS_AROUND
+            let mut arounds = DIRS_AROUND
                 .iter()
                 .map(|p| p.extend(1).xzy() + local_pos)
-                .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
+                // .filter(|p| !Self::within_bounds(*p) || self[*p].is_none())
                 .collect_vec();
 
-            let pos = arounds.choose(rand).unwrap();
+            loop {
+                let empty_arounds = arounds
+                    .iter()
+                    .filter(|&p| !Self::within_bounds(*p) || self[*p].is_none())
+                    .collect_vec();
 
-            return self.push_block(*pos, mat, change_collector, rand);
+                if empty_arounds.is_empty() {
+                    arounds = arounds
+                        .iter()
+                        .flat_map(|p| DIRS_AROUND.iter().map(move |d| *p + d.extend(0).xzy()))
+                        .collect_vec();
+
+                    continue;
+                }
+
+                let pos = empty_arounds.choose(rand).unwrap();
+
+                return self.push_block(**pos, mat, change_collector, rand);
+            }
         }
 
         self._add_block(local_pos, mat);
@@ -148,24 +170,22 @@ impl VoxelBlock {
         mt
     }
 
-    pub fn empty_around_col(&self, col: IVec2, rand: &mut impl Rng) -> IVec3 {
+    pub fn empty_at_col(&self, col: IVec2, rand: &mut impl Rng) -> Option<IVec3> {
+        if self.forbidden_columns[col.x as usize][col.y as usize] {
+            return None;
+        }
+
         let mut empty = IVec3::new(col.x, 0, col.y);
 
         for y in 0..VOXEL_BLOCK_SIZE {
             empty.y = y;
 
             if self[empty].is_some() {
-                return empty;
+                return Some(empty);
             }
         }
 
-        let around = DIRS_AROUND
-            .iter()
-            .map(|p| *p + col)
-            .filter(|p| !Self::within_bounds(p.extend(0)))
-            .collect_vec();
-
-        self.empty_around_col(*around.choose(rand).unwrap(), rand)
+        None
     }
 }
 
