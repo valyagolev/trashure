@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::Instant};
 
 use crate::{
-    game::Direction2D,
+    game::{material::GameMaterial, Direction2D},
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
@@ -52,6 +52,7 @@ impl MachineGhost {
                 // BuiltMachine,
                 MyMachine {
                     tp,
+                    gmt: machine_type.gmt,
                     dims: machine_type.dims,
                     pos: cursor.block.xz(),
                     direction: Direction2D::Backward,
@@ -137,9 +138,11 @@ fn place_ghost(
     };
 
     if cursor.just_released(MouseButton::Left) {
-        commands
-            .entity(ghost)
-            .insert((BuiltMachine, Tinted::empty(), Radar::new()));
+        commands.entity(ghost).insert((
+            BuiltMachine,
+            Tinted::empty(),
+            Radar::new(&[GameMaterial::Brownish]),
+        ));
         mghost.0 = None;
 
         selected.0 = Some(ghost);

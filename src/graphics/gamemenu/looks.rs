@@ -7,6 +7,9 @@ use crate::graphics::{
     machines::MachineType,
 };
 
+// whiteish-blue
+const HIGHLIGHTED_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 1.0);
+
 use super::{GameMenuPart, GameMenuState};
 
 pub fn setup_menu(
@@ -105,7 +108,7 @@ fn currently_creating(commands: &mut Commands<'_, '_>) -> Entity {
                         value: "?".into(),
                         style: TextStyle {
                             font_size: 20.0,
-                            color: Color::BLUE,
+                            color: HIGHLIGHTED_TEXT_COLOR,
                             ..default()
                         },
                     },
@@ -145,7 +148,7 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                         value: "?".into(),
                         style: TextStyle {
                             font_size: 20.0,
-                            color: Color::BLUE,
+                            color: HIGHLIGHTED_TEXT_COLOR,
                             ..default()
                         },
                     },

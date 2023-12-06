@@ -57,7 +57,7 @@ impl Plugin for Voxels3dPlugin {
 pub struct VoxelResources {
     // pub mesh: Handle<Mesh>,
     // materials: [Handle<StandardMaterial>; 4],
-    meshes: [Mesh; 4],
+    meshes: [Mesh; 5],
     pub voxel_material: Handle<StandardMaterial>,
     pub debug_voxel_material: Handle<StandardMaterial>,
 }
@@ -79,7 +79,7 @@ impl VoxelRegistry for VoxelResources {
             return VoxelMesh::Null;
         };
 
-        VoxelMesh::NormalCube(&self.meshes[(*v as usize) - 1])
+        VoxelMesh::NormalCube(&self.meshes[v.as_usize()])
     }
 
     fn is_covering(&self, voxel: &Self::Voxel, _side: prelude::Face) -> bool {
@@ -125,6 +125,7 @@ fn setup(
             generate_colored_mesh(Color::rgb(0.5, 0.8, 0.4)),
             generate_colored_mesh(Color::rgb(0.4, 0.5, 0.8)),
             generate_colored_mesh(Color::rgb(0.8, 0.7, 0.6)),
+            generate_colored_mesh(Color::rgb(0.8, 0.7, 0.2)),
         ],
         voxel_material: materials.add(StandardMaterial {
             // base_color: Color::LIME_GREEN,
@@ -331,6 +332,34 @@ impl VoxelBlock {
         assert!(pos.x >= 0 && pos.x < VOXEL_BLOCK_SIZE);
 
         self[pos.extend(0).xzy()].is_none()
+    }
+
+    /// pos in *local* coordinates
+    pub fn closest_columns(&self, pos: IVec2, dist: f32) -> impl Iterator<Item = IVec2> {
+        let dist_sq = dist * dist;
+        let pos = pos.as_vec2();
+
+        (0..VOXEL_BLOCK_SIZE)
+            .map(|x| (0..VOXEL_BLOCK_SIZE).map(move |z| IVec2::new(x, z)))
+            .flatten()
+            .filter(move |col| {
+                let dist = (col.as_vec2() - pos).length_squared();
+
+                dist <= dist * dist
+            })
+    }
+
+    pub fn material_in_col(&self, pos: IVec2, mask: u8) -> Option<(GameMaterial, IVec3)> {
+        for y in 0..VOXEL_BLOCK_SIZE {
+            let p = pos.extend(y).xzy();
+            if let Some(mat) = self[p] {
+                if mat.mask_contains(mask) {
+                    return Some((mat, p));
+                }
+            }
+        }
+
+        None
     }
 }
 

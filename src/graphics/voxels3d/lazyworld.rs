@@ -41,6 +41,29 @@ pub struct LazyWorld {
     pub known_parts: HashMap<IVec2, Entity>,
 }
 
+impl LazyWorld {
+    pub fn lookup_around(
+        &self,
+        center: IVec2,
+        radius: f32,
+    ) -> impl Iterator<Item = (IVec2, Entity)> + '_ {
+        // to bigblock-space
+        // a bit more to handle close columns of far blocks
+        let radius = radius / VOXEL_BLOCK_SIZE as f32 + 1.42;
+        let radius2 = radius * radius;
+        let center = center.as_vec2() / VOXEL_BLOCK_SIZE as f32;
+
+        self.known_parts.iter().filter_map(move |(part, &entity)| {
+            let dist = (part.as_vec2() - center).length_squared() as f32;
+            if dist <= radius2 {
+                Some((*part, entity))
+            } else {
+                None
+            }
+        })
+    }
+}
+
 static AROUND_2D: &[IVec2] = &[
     IVec2::new(0, 0),
     IVec2::new(-1, -1),

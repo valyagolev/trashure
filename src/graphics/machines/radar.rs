@@ -2,7 +2,13 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::*, time::Stopwatch};
 
-use crate::graphics::recolor::Tinted;
+use crate::{
+    game::material::GameMaterial,
+    graphics::{
+        recolor::Tinted,
+        voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
+    },
+};
 
 use super::{DebugCube, MachineResources};
 
@@ -10,34 +16,45 @@ pub struct RadarPlugin;
 
 impl Plugin for RadarPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (setup_radars, update_radars.after(setup_radars)));
+        app.add_systems(
+            Update,
+            (
+                setup_radars,
+                radar_search.after(setup_radars),
+                redraw_radars.after(radar_search),
+            ),
+        );
     }
 }
 
 #[derive(Component)]
 pub struct Radar {
+    material_mask: u8,
     watch: Stopwatch,
     scene: Option<Entity>,
+
+    found_voxel: Option<(GameMaterial, IVec3)>,
 }
 
 #[derive(Component)]
 pub struct RadarScene;
 
 impl Radar {
-    pub fn new() -> Self {
+    pub fn new(mats: &[GameMaterial]) -> Self {
         Radar {
+            material_mask: GameMaterial::any_of_mask(mats),
             watch: Stopwatch::new(),
             scene: None,
+            found_voxel: None,
         }
     }
 
     fn dist(&self) -> f32 {
-        //todo
         30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
     }
 }
 
-pub fn setup_radars(
+fn setup_radars(
     mut commands: Commands,
     mut q_radars: Query<(Entity, &mut Radar), Added<Radar>>,
     res: Res<MachineResources>,
@@ -72,15 +89,49 @@ pub fn setup_radars(
     }
 }
 
-pub fn update_radars(
+fn radar_search(
     time: Res<Time>,
-    mut q_radars: Query<(&mut Radar, &Children)>,
+    mut q_radars: Query<(&mut Radar, &GlobalTransform)>,
+    lazyworld: Res<LazyWorld>,
+    q_blocks: Query<&VoxelBlock>,
+) {
+    'radars: for (mut r, gt) in q_radars.iter_mut() {
+        if r.found_voxel.is_some() {
+            continue;
+        }
+
+        r.watch.tick(time.delta());
+
+        let dist = r.dist();
+
+        let radar_ipos = gt.translation().xz().as_ivec2();
+        for (bigblock_pos, ent) in lazyworld.lookup_around(radar_ipos, dist) {
+            let Ok(voxel_block) = q_blocks.get(ent) else {
+                continue;
+            };
+
+            let local_pos = bigblock_pos * VOXEL_BLOCK_SIZE - radar_ipos;
+
+            for col in voxel_block.closest_columns(local_pos, dist) {
+                if let Some((mat, pos)) = voxel_block.material_in_col(col, r.material_mask) {
+                    r.found_voxel =
+                        Some((mat, (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos));
+
+                    println!("found voxel: {:?}", r.found_voxel);
+
+                    continue 'radars;
+                }
+            }
+        }
+    }
+}
+
+fn redraw_radars(
+    q_radars: Query<(&Radar, &Children)>,
     mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
     // mut q_cubes: Query<&mut Transform, (With<DebugCube>, Without<RadarScene>)>,
 ) {
-    for (mut r, _children) in q_radars.iter_mut() {
-        r.watch.tick(time.delta());
-
+    for (r, _children) in q_radars.iter() {
         let Ok(mut t) = q_scenes.get_mut(r.scene.unwrap()) else {
             continue;
         };

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use bevy::prelude::*;
 
-use crate::game::Direction2D;
+use crate::game::{machines::GameMachineType, Direction2D};
 
 // use self::recolor::RecoloredScenes;
 
@@ -41,6 +41,7 @@ pub struct BuiltMachine;
 
 #[derive(Debug, Component, Reflect)]
 pub struct MachineType {
+    pub gmt: GameMachineType,
     pub name: Cow<'static, str>,
     scene: Handle<Scene>,
     pub dims: IVec2,
@@ -48,6 +49,7 @@ pub struct MachineType {
 
 #[derive(Debug, Component, Reflect)]
 pub struct MyMachine {
+    pub gmt: GameMachineType,
     pub tp: Entity,
     pub pos: IVec2,
     pub direction: Direction2D,
@@ -94,6 +96,7 @@ pub fn load_machines(
     });
 
     commands.spawn(MachineType {
+        gmt: GameMachineType::Recycler,
         name: "Recycler".into(),
         scene: ass.load("objects/recycler.glb#Scene0"),
         // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
