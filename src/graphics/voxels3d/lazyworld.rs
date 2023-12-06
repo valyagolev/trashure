@@ -13,8 +13,8 @@ use uuid::uuid;
 use crate::game::material::GameMaterial;
 
 use super::{
-    camera3d::CAMERA_OFFSET,
-    voxels3d::{generate_voxel_block, VoxelBlockChanges, VoxelResources, VOXEL_BLOCK_SIZE},
+    super::camera3d::CAMERA_OFFSET,
+    {generate_voxel_block, VoxelBlockChanges, VoxelResources, VOXEL_BLOCK_SIZE},
 };
 
 pub struct LazyWorldPlugin;

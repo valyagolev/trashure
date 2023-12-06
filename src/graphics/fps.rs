@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 
-use super::lazyworld::UNAPPLIED_CHANGES;
-use super::lazyworld::WORLD_PARTS_DIAGNOSTIC;
+use super::voxels3d::lazyworld::UNAPPLIED_CHANGES;
+use super::voxels3d::lazyworld::WORLD_PARTS_DIAGNOSTIC;
 use super::voxels3d::APPLIED_CHANGES;
 use super::voxels3d::CHANGED_BLOCKS;
 use super::voxels3d::POSTPONED_CHANGES;

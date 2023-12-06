@@ -5,9 +5,9 @@ use crate::{
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
-        lazyworld::LazyWorld,
         recolor::Tinted,
         selectable::CurrentlySelected,
+        voxels3d::lazyworld::LazyWorld,
         voxels3d::VoxelBlock,
     },
 };

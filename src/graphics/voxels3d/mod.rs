@@ -15,6 +15,7 @@ use self::voxel_mesh::generate_colored_voxel_mesh;
 use uuid::uuid;
 
 // mod meshem;
+pub mod lazyworld;
 mod voxel_mesh;
 pub mod voxel_physics;
 

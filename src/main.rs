@@ -38,7 +38,7 @@ fn main() {
         // .add_plugins(TrashExperimentPlugin)
         .add_plugins(graphics::animated::AnimatedPlugin)
         // .add_plugins(graphics::pieces::PiecesPlugin)
-        .add_plugins(graphics::lazyworld::LazyWorldPlugin)
+        .add_plugins(graphics::voxels3d::lazyworld::LazyWorldPlugin)
         .add_plugins((graphics::fps::FpsPlugin, graphics::dbgtext::DbgTextPlugin))
         .add_plugins((
             game::GameUtilsPlugin,

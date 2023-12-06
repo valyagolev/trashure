@@ -11,7 +11,6 @@ pub mod voxels3d;
 
 // pub mod pieces;
 
-pub mod lazyworld;
 pub mod machines;
 
 pub mod dbgtext;
