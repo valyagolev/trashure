@@ -20,4 +20,5 @@ pub mod gamemenu;
 pub mod recolor;
 pub mod selectable;
 
+pub mod debug3d;
 pub mod flyingvoxel;

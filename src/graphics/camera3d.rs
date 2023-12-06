@@ -1,7 +1,4 @@
-use bevy::{
-    pbr::DirectionalLightShadowMap, prelude::*,
-    render::camera::ScalingMode,
-};
+use bevy::{pbr::DirectionalLightShadowMap, prelude::*, render::camera::ScalingMode};
 // use bevy_inspector_egui::bevy_egui::EguiContext;
 
 use crate::conf::Configuration;
@@ -16,6 +13,9 @@ impl Plugin for Camera3dPlugin {
             .add_systems(Update, handle_camera_move);
     }
 }
+
+#[derive(Component)]
+pub struct MainCamera;
 
 fn camera_setup(
     conf: Res<Configuration>,
@@ -51,18 +51,22 @@ fn setup(mut commands: Commands, _conf: Res<Configuration>) {
     });
 
     commands
-        .spawn(Camera3dBundle {
-            projection: OrthographicProjection {
-                scale: 20.0,
-                scaling_mode: ScalingMode::FixedVertical(2.0),
-                // near: -1000.0,
-                near: 0.0,
+        .spawn((
+            MainCamera,
+            Camera3dBundle {
+                projection: OrthographicProjection {
+                    scale: 20.0,
+                    scaling_mode: ScalingMode::FixedVertical(2.0),
+                    // near: -1000.0,
+                    near: 0.0,
+                    ..default()
+                }
+                .into(),
+                transform: Transform::from_translation(CAMERA_OFFSET)
+                    .looking_at(Vec3::ZERO, Vec3::Y),
                 ..default()
-            }
-            .into(),
-            transform: Transform::from_translation(CAMERA_OFFSET).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        })
+            },
+        ))
         .with_children(|_b| {
             // b.spawn(PointLightBundle {
             //     point_light: PointLight {

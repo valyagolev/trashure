@@ -3674,6 +3674,7 @@ dependencies = [
  "bevy_egui",
  "bevy_meshem",
  "itertools",
+ "once_cell",
  "rand",
  "serde",
  "strum",

@@ -10,7 +10,7 @@ use bevy::{
 use rand::Rng;
 use uuid::uuid;
 
-use crate::game::material::GameMaterial;
+use crate::{game::material::GameMaterial, graphics::camera3d::MainCamera};
 
 use super::{
     super::camera3d::CAMERA_OFFSET,
@@ -130,7 +130,7 @@ fn generate_part(
 }
 
 fn handle_camera(
-    q_camera: Query<&GlobalTransform, With<Camera3d>>,
+    q_camera: Query<&GlobalTransform, With<MainCamera>>,
     mut lazy_world: ResMut<LazyWorld>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

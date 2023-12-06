@@ -39,7 +39,7 @@ fn initialize_voxel(
     vres: Res<VoxelResources>,
 ) {
     for (e, fv) in q_fv.iter() {
-        println!("new target:{:?}", fv.target_mailbox);
+        // println!("new target:{:?}", fv.target_mailbox);
 
         let target_reorig = fv.target.as_vec3() - fv.origin.as_vec3();
         let target_reorig_vertical_plane: Vec2 =

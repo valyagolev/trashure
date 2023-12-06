@@ -49,6 +49,7 @@ fn main() {
             graphics::selectable::SelectablePlugin,
             graphics::flyingvoxel::FlyingVoxelPlugin,
             game::voxelmailbox::VoxelMailboxPlugin,
+            graphics::debug3d::Debug3dPlugin,
         ))
         // .add_plugins(graphics::voxels::VoxelsPlugin)
         // .add_plugins(graphics::positions::IntegerPositionedPlugin)

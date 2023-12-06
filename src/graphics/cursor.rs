@@ -1,6 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use super::{
+    camera3d::MainCamera,
     dbgtext::DebugTexts,
     voxels3d::{VoxelBlock, VOXEL_BLOCK_SIZE},
 };
@@ -24,7 +25,7 @@ pub struct CursorOver {
 
 fn handle_cursor(
     q_windows: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 
     mut cursor: ResMut<CursorOver>,
 

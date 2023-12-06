@@ -3,6 +3,7 @@ use rand::prelude::Rng;
 use strum::EnumDiscriminants;
 
 use crate::graphics::{
+    debug3d,
     flyingvoxel::FlyingVoxel,
     machines::{radar::Radar, BuiltMachine, MyMachine},
     voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
@@ -137,7 +138,7 @@ fn consume_mailbox(
 
                 let (block_p, local_p, block_e) = found.unwrap();
 
-                println!("sending recycled to: {:?}", block_e);
+                // println!("sending recycled to: {:?}", block_e);
 
                 commands.spawn(FlyingVoxel {
                     origin: mm.pos.extend(3).xzy(),
@@ -145,6 +146,12 @@ fn consume_mailbox(
                     target_mailbox: block_e,
                     material: vc,
                     payload: 0,
+                });
+
+                let rp = VoxelBlock::real_pos(block_p, local_p);
+
+                debug3d::draw_gizmos(2.0, move |gizmos| {
+                    gizmos.sphere(rp, Quat::IDENTITY, 3.0, Color::RED);
                 });
             }
         }

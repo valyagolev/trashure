@@ -6,6 +6,7 @@ use rand::{seq::SliceRandom, Rng};
 use crate::{
     game::{material::GameMaterial, Direction2D},
     graphics::{
+        debug3d,
         recolor::Tinted,
         voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
     },
@@ -66,7 +67,7 @@ impl Radar {
 
     fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
-        self.watch.elapsed().as_secs_f32() * 5.0
+        self.watch.elapsed().as_secs_f32() * 5.0 * 3.0
     }
 }
 
@@ -184,17 +185,33 @@ fn radar_search(
             // );
 
             r.found_voxel = Some(*winner);
+
+            // debug3d::draw_gizmos_labeled("radar found", 1.0, move |gizmos| {
+            //     for c in &candidates {
+            //         let real_pos = VoxelBlock::real_pos(IVec2::ZERO, c.1);
+
+            //         gizmos
+            //             .sphere(
+            //                 real_pos,
+            //                 Quat::IDENTITY,
+            //                 1.0,
+            //                 Color::rgba(0.0, 1.0, 0.0, 0.5),
+            //             )
+            //             // .line(tr, c.1, Quat::IDENTITY, Color::rgba(0.0, 1.0, 0.0, 0.5))
+            //             ;
+            //     }
+            // });
         }
     }
 }
 
 fn redraw_radars(
     q_radars: Query<(&Radar, &Children)>,
-    mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
+    mut q_scenes: Query<(&mut Transform, &GlobalTransform), (With<RadarScene>, Without<DebugCube>)>,
     // mut q_cubes: Query<&mut Transform, (With<DebugCube>, Without<RadarScene>)>,
 ) {
     for (r, _children) in q_radars.iter() {
-        let Ok(mut t) = q_scenes.get_mut(r.scene.unwrap()) else {
+        let Ok((mut t, gl)) = q_scenes.get_mut(r.scene.unwrap()) else {
             continue;
         };
 
@@ -204,6 +221,15 @@ fn redraw_radars(
 
         // 2.0 is the scale of the radar scene
         t.scale = Vec3::splat(dist * 2.0);
+
+        // let tr = gl.translation();
+
+        // debug3d::draw_gizmos_labeled("radar sphere", 1.0, move |gizmos| {
+        //     gizmos
+        //         .sphere(tr, Quat::IDENTITY, dist * 2.0, Color::RED)
+        //         // .circle_segments(64)
+        //         ;
+        // });
 
         // for ch in children {
         //     if let Ok(mut cube) = q_cubes.get_mut(*ch) {

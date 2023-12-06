@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
-use crate::{conf::Configuration, game::material::GameMaterial};
+use crate::{conf::Configuration, game::material::GameMaterial, graphics::debug3d};
 
 use super::{VoxelBlock, VoxelBlockChanges, VOXEL_BLOCK_SIZE};
 
@@ -131,6 +131,11 @@ impl VoxelBlock {
                 return self.push_block(**pos, mat, change_collector, rand);
             }
         }
+
+        let rp = Self::real_pos(self.pos, local_pos);
+        debug3d::draw_gizmos(2.0, move |gizmos| {
+            gizmos.sphere(rp, Quat::IDENTITY, 3.0, Color::BLUE);
+        });
 
         self._add_block(local_pos, mat);
     }
