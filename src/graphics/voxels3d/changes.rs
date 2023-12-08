@@ -8,7 +8,10 @@ use bevy::{
 
 use crate::game::material::GameMaterial;
 
-use super::{VoxelBlock, APPLIED_CHANGES, CHANGED_BLOCKS, POSTPONED_CHANGES};
+use super::{
+    lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock, APPLIED_CHANGES, CHANGED_BLOCKS,
+    POSTPONED_CHANGES,
+};
 
 #[derive(Resource, Default)]
 pub struct VoxelBlockChanges {
@@ -16,8 +19,8 @@ pub struct VoxelBlockChanges {
 }
 
 impl VoxelBlockChanges {
-    pub fn register_change(&mut self, voxel_block_pos: IVec2, inner_pos: IVec3, mat: GameMaterial) {
-        let (voxel_block_pos, inner_pos) = VoxelBlock::normalize_pos(voxel_block_pos, inner_pos);
+    pub fn register_change(&mut self, global_pos: IVec3, mat: GameMaterial) {
+        let (voxel_block_pos, inner_pos) = VoxelBlock::normalize_pos(IVec2::ZERO, global_pos);
 
         self.added
             .entry(voxel_block_pos)
@@ -30,7 +33,13 @@ pub fn apply_changes(
     mut changes: ResMut<VoxelBlockChanges>,
     mut blocks: Query<&mut VoxelBlock>,
     mut diagnostics: ResMut<DiagnosticsStore>,
+    lazy_world: Res<LazyWorld>,
 ) {
+    let mut whole_world = WholeBlockWorld {
+        lazy_world,
+        blocks: blocks,
+    };
+
     let mut total_changes = 0;
     let mut total_postponed = 0;
     let mut changed_blocks = 0;
@@ -38,15 +47,16 @@ pub fn apply_changes(
     let rand = &mut rand::thread_rng();
     let mut new_changes = VoxelBlockChanges::default();
 
-    for mut b in blocks.iter_mut() {
-        if let Some(changes) = changes.added.remove(&b.pos) {
-            if !changes.is_empty() {
-                changed_blocks += 1;
-            }
+    for (block_pos, mut changes) in changes.added.iter_mut() {
+        if whole_world.is_initialized_by_blockpos(*block_pos) {
+            changed_blocks += 1;
 
-            for (pos, mat) in changes {
+            for (local_pos, mat) in changes.drain(..) {
                 total_changes += 1;
-                b.push_block(pos, mat, &mut new_changes, rand)
+
+                let global_pos = VoxelBlock::global_pos(*block_pos, local_pos);
+
+                whole_world.push_block(global_pos, mat, &mut new_changes, rand);
             }
         }
     }

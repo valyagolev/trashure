@@ -6,7 +6,9 @@ use crate::graphics::{
     debug3d,
     flyingvoxel::FlyingVoxel,
     machines::{radar::Radar, BuiltMachine, MyMachine},
-    voxels3d::{changes::VoxelBlockChanges, lazyworld::LazyWorld, VoxelBlock},
+    voxels3d::{
+        changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
+    },
 };
 
 use super::{material::GameMaterial, voxelmailbox::VoxelMailbox, Direction2D};
@@ -54,6 +56,11 @@ pub fn consume_radars(
     mut q_blocks: Query<&mut VoxelBlock>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
+    let mut whole_world = WholeBlockWorld {
+        lazy_world: lazy_world,
+        blocks: q_blocks,
+    };
+
     let rand = &mut rand::thread_rng();
     for (e, m, mach) in q_machines.iter() {
         match m.0 {
@@ -66,11 +73,11 @@ pub fn consume_radars(
                     continue;
                 };
 
-                let (gp, lp) = VoxelBlock::normalize_pos(IVec2::ZERO, vc);
+                // let (gp, lp) = VoxelBlock::normalize_pos(IVec2::ZERO, vc);
 
-                let mut block = q_blocks.get_mut(lazy_world.known_parts[&gp]).unwrap();
+                // let mut block = q_blocks.get_mut(lazy_world.known_parts[&gp]).unwrap();
 
-                let mat = block.steal_block(lp, &mut blockchanges, rand);
+                let mat = whole_world.steal_block(vc, &mut blockchanges, rand);
 
                 commands.spawn(FlyingVoxel {
                     origin: vc,
@@ -130,7 +137,7 @@ fn consume_mailbox(
                     let block_e = lazy_world.known_parts[&block_p];
                     let block = q_blocks.get(block_e).unwrap();
 
-                    if let Some(local_p) = block.empty_at_col(local_p.xz(), rand) {
+                    if let Some(local_p) = block.empty_at_col(local_p.xz()) {
                         found = Some((block_p, local_p, block_e));
                         break;
                     }

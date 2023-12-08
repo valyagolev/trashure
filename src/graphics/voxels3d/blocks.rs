@@ -127,7 +127,11 @@ impl VoxelBlock {
     }
 
     pub fn real_pos(voxel_block_pos: IVec2, inner_pos: IVec3) -> Vec3 {
-        ((voxel_block_pos * VOXEL_BLOCK_SIZE).extend(0) + inner_pos).as_vec3()
+        ((voxel_block_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + inner_pos).as_vec3()
+    }
+
+    pub fn global_pos(voxel_block_pos: IVec2, inner_pos: IVec3) -> IVec3 {
+        (voxel_block_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + inner_pos
     }
 
     pub fn inner_pos(pos: Vec3) -> (IVec2, IVec3) {

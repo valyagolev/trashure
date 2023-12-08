@@ -119,9 +119,14 @@ fn generate_part(
             // let cnt = 1;
             for _z in 0..cnt {
                 // vb._add_block(pos + IVec3::new(0, z, 0), GameMaterial::random(rand))
-                bundle
-                    .voxel_block
-                    .drop_block(pos.xz(), GameMaterial::random(rand), changes, rand);
+                // bundle
+                //     .voxel_block
+                //     .drop_block(pos.xz(), GameMaterial::random(rand), changes, rand);
+
+                changes.register_change(
+                    pos.extend(VOXEL_BLOCK_SIZE).xzy(),
+                    GameMaterial::random(rand),
+                );
             }
         }
     }

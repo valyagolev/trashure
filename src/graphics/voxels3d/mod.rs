@@ -27,6 +27,7 @@ mod voxel_mesh;
 pub mod voxel_physics;
 pub use blocks::VoxelBlock;
 pub mod changes;
+pub mod wholeworld;
 
 pub const VOXEL_BLOCK_SIZE: i32 = 32;
 const CHUNK_LEN: usize = (VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE * VOXEL_BLOCK_SIZE) as usize;
@@ -298,8 +299,6 @@ fn consume_mailbox(
             continue;
         };
 
-        let (block_pos, inner_pos) = VoxelBlock::normalize_pos(IVec2::ZERO, target);
-
-        changes.register_change(block_pos, inner_pos, vc);
+        changes.register_change(target, vc);
     }
 }
