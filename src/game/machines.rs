@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{core_pipeline::blit, prelude::*};
 use rand::prelude::Rng;
 use strum::EnumDiscriminants;
 
@@ -12,6 +12,7 @@ use crate::graphics::{
     },
     voxels3d::{
         changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
+        VOXEL_BLOCK_SIZE,
     },
 };
 
@@ -74,7 +75,7 @@ fn consume_radars(
     lazy_world: Res<LazyWorld>,
     q_machines: Query<(Entity, &BuiltMachine, &MyMachine)>,
     mut q_radars: Query<&mut Radar>,
-    mut q_blocks: Query<&mut VoxelBlock>,
+    q_blocks: Query<&mut VoxelBlock>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
     let mut whole_world = WholeBlockWorld {
@@ -154,6 +155,7 @@ fn consume_mailbox(
         &MyMachine,
         &Direction2D,
     )>,
+    targets: Query<&Target>,
     q_blocks: Query<&VoxelBlock>,
 ) {
     let rand = &mut rand::thread_rng();
@@ -166,8 +168,20 @@ fn consume_mailbox(
         println!("got mail:{} {:?} {}", mm.pos, vc, pl);
 
         match bm.0 {
-            GameMachineSettings::Plower { plowing_radar } => {
-                // todo!()
+            GameMachineSettings::Plower { .. } => {
+                let target = targets.get(e).unwrap();
+                let target = target.global_pos.extend(VOXEL_BLOCK_SIZE).xzy();
+
+                let (block_pos, _) = VoxelBlock::normalize_pos(IVec2::ZERO, target);
+                let block_e = lazy_world.known_parts[&block_pos];
+
+                commands.spawn(FlyingVoxel {
+                    origin: mm.pos.extend(3).xzy(),
+                    target,
+                    target_mailbox: block_e,
+                    material: vc,
+                    payload: 0,
+                });
             }
             GameMachineSettings::Recycler { .. } => {
                 assert!(pl == 1);
@@ -211,11 +225,11 @@ fn consume_mailbox(
                     payload: 0,
                 });
 
-                let rp = VoxelBlock::real_pos(block_p, local_p);
+                // let rp = VoxelBlock::real_pos(block_p, local_p);
 
-                debug3d::draw_gizmos(2.0, move |gizmos| {
-                    gizmos.sphere(rp, Quat::IDENTITY, 3.0, Color::RED);
-                });
+                // debug3d::draw_gizmos(2.0, move |gizmos| {
+                //     gizmos.sphere(rp, Quat::IDENTITY, 3.0, Color::RED);
+                // });
             }
         }
     }

@@ -32,7 +32,7 @@ struct TargetBeingMoved(Option<(Entity, Vec2)>);
 
 #[derive(Component)]
 pub struct Target {
-    global_pos: IVec2,
+    pub global_pos: IVec2,
     instantiated: Option<Entity>,
 }
 

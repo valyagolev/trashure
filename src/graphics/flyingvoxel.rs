@@ -6,7 +6,7 @@ use crate::{
     game::{material::GameMaterial, voxelmailbox::VoxelMailbox},
 };
 
-use super::{machines::MachineResources, voxels3d::VoxelResources};
+use super::{debug3d, machines::MachineResources, voxels3d::VoxelResources};
 
 pub struct FlyingVoxelPlugin;
 impl Plugin for FlyingVoxelPlugin {
@@ -101,5 +101,9 @@ fn fly_voxel(
         let real_pos = origin + Vec3::new(real_xz.x, y, real_xz.y);
 
         tr.translation = real_pos;
+
+        debug3d::draw_gizmos(1.0, move |gz| {
+            gz.sphere(real_pos, Quat::IDENTITY, 0.1, Color::RED);
+        });
     }
 }

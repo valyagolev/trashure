@@ -12,7 +12,8 @@
 
 game stages:
 
-5. - you build a "Plower" to send more stuff in the way of the Recycler
+5. DONE you build a "Plower" to send more stuff in the way of the Recycler
+6. "Plower" has to move when it can
 
 6. - "Plower" needs "red" maintenance, so you send it back
 7. - then you wanna build something to send it to the "Plower" ("Relay"?)

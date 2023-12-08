@@ -29,8 +29,7 @@ fn handle_cursor(
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 
     mut cursor: ResMut<CursorOver>,
-
-    mut texts: ResMut<DebugTexts>,
+    // mut texts: ResMut<DebugTexts>,
 ) {
     if let Some(viewport) = q_windows.single().cursor_position() {
         let (camera, camera_transform) = q_camera.single();
@@ -61,6 +60,6 @@ fn handle_cursor(
             ray,
         };
 
-        texts.set("cursor", format!("{:#?}", *cursor));
+        // texts.set("cursor", format!("{:#?}", *cursor));
     }
 }
