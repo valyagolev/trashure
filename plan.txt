@@ -1,11 +1,13 @@
 1. DONE Fix the voxel spawning algo, they spawn too far away from where they originate
+    it interferes with the speed of clearing up, we need to get that fixed
 
-2. it interferes with the speed of clearing up, we need to get that fixed
+2. adjust radar "cone", change it to much narrower :-(
+
 3. probably adjust the radar to take several voxels at a time
     we want to clear enough for another car (~12x12? make it smaller?) quickly, and then it should get slow. maybe use a specific function with this shape
 
 
-4. let's have "red" as "golden", stop spawning it in the beginning
+4. DONE let's have "red" as "golden", stop spawning it in the beginning
 
 
 game stages:

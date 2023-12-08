@@ -5,7 +5,10 @@ use strum::EnumDiscriminants;
 use crate::graphics::{
     debug3d,
     flyingvoxel::FlyingVoxel,
-    machines::{radar::Radar, BuiltMachine, MyMachine},
+    machines::{
+        radar::{Radar, RadarBundle},
+        BuiltMachine, MyMachine,
+    },
     voxels3d::{
         changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
     },
@@ -25,6 +28,7 @@ impl Plugin for MachinesPlugin {
 #[strum_discriminants(derive(Reflect))]
 pub enum GameMachineSettings {
     Recycler { recycling_radar: Entity },
+    Plower { plowing_radar: Entity },
 }
 
 impl GameMachineSettings {
@@ -32,9 +36,9 @@ impl GameMachineSettings {
         let set = match mc.gmt {
             GameMachineSettingsDiscriminants::Recycler => {
                 let recycling_radar = commands
-                    .spawn((
-                        Radar::new(GameMaterial::all(), Some(Direction2D::Forward)),
-                        TransformBundle::default(),
+                    .spawn(RadarBundle::new(
+                        GameMaterial::all(),
+                        Some(Direction2D::Forward),
                     ))
                     .id();
 
@@ -42,13 +46,25 @@ impl GameMachineSettings {
 
                 GameMachineSettings::Recycler { recycling_radar }
             }
+            GameMachineSettingsDiscriminants::Plower => {
+                let plowing_radar = commands
+                    .spawn(RadarBundle::new(
+                        GameMaterial::all(),
+                        Some(Direction2D::Forward),
+                    ))
+                    .id();
+
+                commands.entity(ghost).add_child(plowing_radar);
+
+                GameMachineSettings::Plower { plowing_radar }
+            }
         };
 
         commands.entity(ghost).insert(BuiltMachine(set));
     }
 }
 
-pub fn consume_radars(
+fn consume_radars(
     mut commands: Commands,
     lazy_world: Res<LazyWorld>,
     q_machines: Query<(Entity, &BuiltMachine, &MyMachine)>,
@@ -65,30 +81,62 @@ pub fn consume_radars(
     for (e, m, mach) in q_machines.iter() {
         match m.0 {
             GameMachineSettings::Recycler { recycling_radar } => {
-                let Ok(mut r) = q_radars.get_mut(recycling_radar) else {
-                    continue;
-                };
-
-                let Some((mat, vc)) = r.take_voxel() else {
-                    continue;
-                };
-
-                // let (gp, lp) = VoxelBlock::normalize_pos(IVec2::ZERO, vc);
-
-                // let mut block = q_blocks.get_mut(lazy_world.known_parts[&gp]).unwrap();
-
-                let mat = whole_world.steal_block(vc, &mut blockchanges, rand);
-
-                commands.spawn(FlyingVoxel {
-                    origin: vc,
-                    target: mach.pos.extend(3).xzy(),
-                    target_mailbox: e,
-                    material: mat,
-                    payload: 1, // 1==recycling
-                });
+                consume_voxel(
+                    &mut q_radars,
+                    recycling_radar,
+                    &mut whole_world,
+                    &mut blockchanges,
+                    rand,
+                    &mut commands,
+                    mach,
+                    e,
+                );
+            }
+            GameMachineSettings::Plower { plowing_radar } => {
+                consume_voxel(
+                    &mut q_radars,
+                    plowing_radar,
+                    &mut whole_world,
+                    &mut blockchanges,
+                    rand,
+                    &mut commands,
+                    mach,
+                    e,
+                );
             }
         }
     }
+}
+
+fn consume_voxel(
+    q_radars: &mut Query<'_, '_, &mut Radar>,
+    radar: Entity,
+    whole_world: &mut WholeBlockWorld<'_, '_, '_, '_>,
+    blockchanges: &mut ResMut<'_, VoxelBlockChanges>,
+    rand: &mut rand::prelude::ThreadRng,
+    commands: &mut Commands<'_, '_>,
+    mach: &MyMachine,
+    e: Entity,
+) {
+    let Ok(mut r) = q_radars.get_mut(radar) else {
+        return;
+    };
+
+    let Some((_mat, vc)) = r.take_voxel() else {
+        return;
+    };
+
+    let mat = whole_world.steal_block(vc, blockchanges, rand);
+
+    // todo: check the material?
+
+    commands.spawn(FlyingVoxel {
+        origin: vc,
+        target: mach.pos.extend(3).xzy(),
+        target_mailbox: e,
+        material: mat,
+        payload: 1, // 1==recycling
+    });
 }
 
 fn consume_mailbox(
@@ -113,6 +161,9 @@ fn consume_mailbox(
         println!("got mail:{} {:?} {}", mm.pos, vc, pl);
 
         match bm.0 {
+            GameMachineSettings::Plower { plowing_radar } => {
+                todo!()
+            }
             GameMachineSettings::Recycler { .. } => {
                 assert!(pl == 1);
 

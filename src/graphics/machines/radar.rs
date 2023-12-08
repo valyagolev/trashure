@@ -30,7 +30,22 @@ impl Plugin for RadarPlugin {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Bundle)]
+pub struct RadarBundle {
+    radar: Radar,
+    transform_bundle: TransformBundle,
+}
+
+impl RadarBundle {
+    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>) -> Self {
+        RadarBundle {
+            radar: Radar::new(mats, direction),
+            transform_bundle: TransformBundle::default(),
+        }
+    }
+}
+
+#[derive(Component)]
 pub struct Radar {
     material_mask: u8,
     watch: Stopwatch,
@@ -90,19 +105,6 @@ fn setup_radars(
             .id();
         r.scene = Some(radar_e);
         commands.entity(e).add_child(radar_e);
-
-        // let cube = commands
-        //     .spawn((
-        //         DebugCube,
-        //         PbrBundle {
-        //             mesh: res.selection_cube.clone(),
-        //             material: res.debug_reddish.clone(),
-        //             // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
-        //             ..default()
-        //         },
-        //     ))
-        //     .id();
-        // commands.entity(e).add_child(cube);
     }
 }
 
@@ -178,29 +180,7 @@ fn radar_search(
         if !candidates.is_empty() {
             let winner = candidates.choose(rand).unwrap();
 
-            // println!(
-            //     "found voxel: {:?} dist={dist} (out of {} candidates)",
-            //     r.found_voxel,
-            //     candidates.len()
-            // );
-
             r.found_voxel = Some(*winner);
-
-            // debug3d::draw_gizmos_labeled("radar found", 1.0, move |gizmos| {
-            //     for c in &candidates {
-            //         let real_pos = VoxelBlock::real_pos(IVec2::ZERO, c.1);
-
-            //         gizmos
-            //             .sphere(
-            //                 real_pos,
-            //                 Quat::IDENTITY,
-            //                 1.0,
-            //                 Color::rgba(0.0, 1.0, 0.0, 0.5),
-            //             )
-            //             // .line(tr, c.1, Quat::IDENTITY, Color::rgba(0.0, 1.0, 0.0, 0.5))
-            //             ;
-            //     }
-            // });
         }
     }
 }
@@ -221,20 +201,5 @@ fn redraw_radars(
 
         // 2.0 is the scale of the radar scene
         t.scale = Vec3::splat(dist * 2.0);
-
-        // let tr = gl.translation();
-
-        // debug3d::draw_gizmos_labeled("radar sphere", 1.0, move |gizmos| {
-        //     gizmos
-        //         .sphere(tr, Quat::IDENTITY, dist * 2.0, Color::RED)
-        //         // .circle_segments(64)
-        //         ;
-        // });
-
-        // for ch in children {
-        //     if let Ok(mut cube) = q_cubes.get_mut(*ch) {
-        //         cube.scale = Vec3::splat(dist);
-        //     }
-        // }
     }
 }

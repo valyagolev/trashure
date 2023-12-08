@@ -112,15 +112,16 @@ pub fn load_machines(
         dims: IVec2 { x: 12, y: 12 },
     });
 
-    // commands.spawn((
-    //     DebugCube,
-    //     PbrBundle {
-    //         mesh: cube,
-    //         material: debug_reddish,
-    //         // transform: Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32)),
-    //         ..default()
-    //     },
-    // ));
+    commands.spawn(MachineType {
+        gmt: GameMachineSettingsDiscriminants::Plower,
+        name: "Plower".into(),
+        scene: ass.load("objects/plower.glb#Scene0"),
+        // scenes: RecoloredScenes::new(ass, "objects/recycler.glb#Scene0"),
+        // dims: IVec2 { x: 7, y: 12 },
+
+        // always square for now
+        dims: IVec2 { x: 6, y: 6 },
+    });
 }
 
 fn update_machines(

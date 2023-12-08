@@ -21,8 +21,10 @@
     uuid                    = "1.6.1"
 
 [features]
-    default = ["dbg"]
-    dbg     = ["bevy-inspector-egui", "bevy_egui"]
+    default = [
+        # "dbg"
+    ]
+    dbg = ["bevy-inspector-egui", "bevy_egui"]
 
 [profile.dev]
     opt-level = 1
