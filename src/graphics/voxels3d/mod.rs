@@ -14,6 +14,7 @@ use bevy::{
     utils::HashMap,
 };
 use bevy_meshem::{prelude::*, Dimensions};
+use rand::prelude::Rng;
 
 use self::{
     changes::{apply_changes, VoxelBlockChanges},
@@ -74,7 +75,7 @@ pub struct VoxelResources {
     pub debug_voxel_material: Handle<StandardMaterial>,
 }
 
-impl VoxelRegistry for VoxelResources {
+impl VoxelRegistry for &VoxelResources {
     type Voxel = Option<GameMaterial>;
 
     fn get_mesh(&self, voxel: &Self::Voxel) -> VoxelMesh<&Mesh> {
@@ -201,7 +202,7 @@ pub fn generate_mesh_grid(
         // &[Face::Bottom, Face::Back, Face::Left],
         &[],
         grid,
-        voxel_resources.as_ref(), //.into_inner(),
+        &voxel_resources.as_ref(),
         MeshingAlgorithm::Culling,
         // MeshingAlgorithm::Naive,
         None,
@@ -258,22 +259,25 @@ fn update_meshes(
     mut blocks: Query<(&mut VoxelBlock, &mut Handle<Mesh>), Changed<VoxelBlock>>,
     voxel_resources: Res<VoxelResources>,
 ) {
-    let vr = voxel_resources.into_inner();
+    // let vr = voxel_resources.into_inner();
+    let rand = &mut rand::thread_rng();
 
     for (mut block, mut mesh) in blocks.iter_mut() {
-        let Some(mesh) = meshes.get_mut(block.mesh_id) else {
-            continue;
-        };
+        if rand.gen_range(0..=4) > 0 {
+            let Some(mesh) = meshes.get_mut(block.mesh_id) else {
+                continue;
+            };
 
-        update_mesh(mesh, &mut block.meta, vr);
+            update_mesh(mesh, &mut block.meta, &&*voxel_resources);
+        } else {
+            let (culled_mesh, metadata) = generate_mesh_grid(&voxel_resources, &block.grid);
+            let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
 
-        // let (culled_mesh, metadata) = generate_mesh_grid(&voxel_resources, &block.grid);
-        // let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
+            block.meta = metadata;
+            block.mesh_id = culled_mesh_handle.id();
 
-        // block.meta = metadata;
-        // block.mesh_id = culled_mesh_handle.id();
-
-        // *mesh = culled_mesh_handle;
+            *mesh = culled_mesh_handle;
+        }
     }
 }
 

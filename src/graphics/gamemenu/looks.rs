@@ -10,7 +10,7 @@ use crate::graphics::{
 // whiteish-blue
 const HIGHLIGHTED_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 1.0);
 
-use super::{GameMenuPart, GameMenuState};
+use super::{GameMenuButton, GameMenuPart, GameMenuState};
 
 pub fn setup_menu(
     mut commands: Commands,
@@ -54,6 +54,8 @@ pub fn setup_menu(
 
     let tutorial_root = make_tutorial_root(&mut commands);
 
+    let menu_buttons = make_menu_buttons(&mut commands);
+
     let menu_root = commands
         .spawn((
             GameMenuNode,
@@ -61,7 +63,8 @@ pub fn setup_menu(
                 background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
                 z_index: ZIndex::Global(i32::MAX),
                 style: Style {
-                    margin: UiRect::all(Val::Px(4.0)),
+                    // margin: UiRect::all(Val::Px(4.0)),
+                    margin: UiRect::px(4.0, 4.0, 0.0, 4.0),
                     padding: UiRect::all(Val::Px(4.0)),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,
@@ -85,7 +88,55 @@ pub fn setup_menu(
 
     commands
         .entity(ui_root)
-        .push_children(&[tutorial_root, menu_root]);
+        .push_children(&[tutorial_root, menu_buttons, menu_root]);
+}
+
+fn make_menu_buttons(commands: &mut Commands<'_, '_>) -> Entity {
+    let menu_buttons = commands
+        .spawn((NodeBundle {
+            style: Style {
+                margin: UiRect::px(4.0, 4.0, 4.0, 0.0),
+                // padding: UiRect::all(Val::Px(4.0)),
+                flex_direction: FlexDirection::Row,
+                // align_items: AlignItems::FlexStart,
+                ..Default::default()
+            },
+            ..default()
+        },))
+        .with_children(|commands| {
+            for (st, txt) in [
+                (GameMenuState::ToPickBuilding, "Build Menu"),
+                (GameMenuState::SelectedMachine, "Selected Machine"),
+            ] {
+                commands
+                    .spawn((
+                        GameMenuButton(st),
+                        ButtonBundle {
+                            style: Style {
+                                margin: UiRect::top(Val::Px(4.0)),
+                                padding: UiRect::all(Val::Px(4.0)),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                    ))
+                    .with_children(|c| {
+                        c.spawn(TextBundle {
+                            text: Text::from_sections([TextSection {
+                                value: txt.to_owned(),
+                                style: TextStyle {
+                                    font_size: 20.0,
+                                    color: Color::RED,
+                                    ..default()
+                                },
+                            }]),
+                            ..Default::default()
+                        });
+                    });
+            }
+        })
+        .id();
+    menu_buttons
 }
 
 fn currently_creating(commands: &mut Commands<'_, '_>) -> Entity {
@@ -240,7 +291,7 @@ fn to_pick_building_menu(
             },));
 
             for (e, tp) in q_mtypes.iter() {
-                println!("Adding button for {:?}", tp.name);
+                // println!("Adding button for {:?}", tp.name);
                 commands
                     .spawn((
                         GameMenuToPickBuildingForMachineButton(e),

@@ -12,18 +12,28 @@ impl Plugin for GameMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameMenu(GameMenuState::ToPickBuilding))
             .add_systems(Update, looks::setup_menu)
-            .add_systems(Update, (handle_build_click, redraw_menu));
+            .add_systems(
+                Update,
+                (
+                    handle_build_click,
+                    redraw_menu,
+                    redraw_tabs,
+                    handle_tabs_click,
+                ),
+            )
+            .register_type::<GameMenuButton>()
+            .register_type::<GameMenuState>();
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
 pub enum GameMenuState {
     ToPickBuilding,
     CurrentlyCreating,
     SelectedMachine,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Deref)]
 pub struct GameMenu(pub GameMenuState);
 
 #[derive(Component)]
@@ -35,11 +45,14 @@ struct TutorialNode;
 #[derive(Component)]
 struct GameMenuNode;
 
-#[derive(Component)]
+#[derive(Component, Deref)]
 struct GameMenuPart(GameMenuState);
 
-#[derive(Component)]
+#[derive(Component, Deref)]
 struct GameMenuToPickBuildingForMachineButton(Entity);
+
+#[derive(Component, Deref, Reflect)]
+pub struct GameMenuButton(GameMenuState);
 
 fn handle_build_click(
     mut commands: Commands,
@@ -114,5 +127,73 @@ fn redraw_menu(
             text.sections[1].value = tp.name.to_string();
         }
         _ => {}
+    }
+}
+
+fn redraw_tabs(
+    menu_state: Res<GameMenu>,
+    mut q_menu_buttons: Query<(&GameMenuButton, &mut BackgroundColor, &Children)>,
+    mut q_menu_button_texts: Query<&mut Text>,
+    selected: Res<CurrentlySelected>,
+    q_machines: Query<&Name, With<MyMachine>>,
+) {
+    for (button, mut color, children) in q_menu_buttons.iter_mut() {
+        if button.0 == menu_state.0 {
+            color.0 = Color::BLACK.with_a(0.8);
+        } else {
+            color.0 = Color::WHITE;
+        }
+
+        for child in children.iter() {
+            if let Ok(mut text) = q_menu_button_texts.get_mut(*child) {
+                if button.0 == menu_state.0 {
+                    text.sections[0].style.color = Color::WHITE;
+                } else {
+                    text.sections[0].style.color = Color::RED;
+                }
+
+                if button.0 == GameMenuState::SelectedMachine {
+                    if let Some(selected) = selected.0 {
+                        let selected_name = q_machines
+                            .get(selected)
+                            .map(|name| name.as_str())
+                            .unwrap_or("Nameless");
+
+                        text.sections[0].value = format!("Selected: {}", selected_name);
+                    } else {
+                        text.sections[0].value = "Selected: None".into();
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn handle_tabs_click(
+    mut menu_state: ResMut<GameMenu>,
+    mut q_menu_buttons: Query<(&GameMenuButton, &Interaction)>,
+    mut selected: ResMut<CurrentlySelected>,
+) {
+    let Some(clicked_state) = q_menu_buttons
+        .iter_mut()
+        .find(|(_, interaction)| **interaction == Interaction::Pressed)
+        .map(|(button, _)| button.0)
+    else {
+        return;
+    };
+
+    match clicked_state {
+        GameMenuState::CurrentlyCreating => todo!(),
+        GameMenuState::ToPickBuilding => {
+            selected.0 = None;
+            menu_state.0 = GameMenuState::ToPickBuilding;
+        }
+        GameMenuState::SelectedMachine => {
+            if selected.0.is_none() {
+                return;
+            }
+
+            menu_state.0 = GameMenuState::SelectedMachine;
+        }
     }
 }
