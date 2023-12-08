@@ -6,6 +6,13 @@ use crate::game::material::GameMaterial;
 
 use super::{changes::VoxelBlockChanges, lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlockState {
+    Empty,
+    Full(GameMaterial),
+    Forbidden,
+}
+
 pub struct WholeBlockWorld<'qres, 'qq, 'world, 'state> {
     pub lazy_world: Res<'qres, LazyWorld>,
     pub blocks: Query<'world, 'state, &'qq mut VoxelBlock>,
@@ -21,6 +28,18 @@ fn blocks_around(pos: IVec3, dist: i32) -> impl Iterator<Item = IVec3> {
 impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
     pub fn is_initialized_by_blockpos(&self, block_pos: IVec2) -> bool {
         self.lazy_world.known_parts.contains_key(&block_pos)
+            && self
+                .blocks
+                .get(self.lazy_world.known_parts[&block_pos])
+                .is_ok()
+    }
+
+    pub fn is_in_forbidden_column(&mut self, global_pos: IVec3) -> bool {
+        let Some((block, local_pos)) = self.get_voxel_block_for_pos(global_pos) else {
+            return false;
+        };
+
+        block.forbidden_columns[local_pos.x as usize][local_pos.z as usize]
     }
 
     pub fn get_voxel_block_for_pos(
@@ -36,10 +55,20 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         Some((block, local_pos))
     }
 
-    pub fn get_block_value(&mut self, global_pos: IVec3) -> Option<GameMaterial> {
-        let (block, local_pos) = self.get_voxel_block_for_pos(global_pos)?;
+    pub fn get_block_value(&mut self, global_pos: IVec3) -> BlockState {
+        if self.is_in_forbidden_column(global_pos) {
+            return BlockState::Forbidden;
+        }
 
-        block[local_pos]
+        let Some((block, local_pos)) = self.get_voxel_block_for_pos(global_pos) else {
+            return BlockState::Empty;
+        };
+
+        if let Some(mat) = block[local_pos] {
+            BlockState::Full(mat)
+        } else {
+            BlockState::Empty
+        }
     }
 
     pub fn steal_block(
@@ -91,16 +120,13 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         change_collector: &mut VoxelBlockChanges,
         rand: &mut impl Rng,
     ) {
-        let Some((block, local_pos)) = self.get_voxel_block_for_pos(global_pos) else {
+        let Some((_, local_pos)) = self.get_voxel_block_for_pos(global_pos) else {
             change_collector.register_change(global_pos, mat);
             return;
         };
 
         if local_pos.y == VOXEL_BLOCK_SIZE {
-            if self
-                .get_block_value(global_pos - IVec3::new(0, 1, 0))
-                .is_none()
-            {
+            if self.get_block_value(global_pos - IVec3::new(0, 1, 0)) == BlockState::Empty {
                 return self.push_block(
                     global_pos - IVec3::new(0, 1, 0),
                     mat,
@@ -111,7 +137,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
 
             for rad in 1..30 {
                 let empties_below = blocks_around(local_pos - IVec3::new(0, 1, 0), rad)
-                    .filter(|p| self.get_block_value(*p).is_none())
+                    .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                     .collect_vec();
 
                 if !empties_below.is_empty() {
@@ -131,7 +157,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         if local_pos.y > 0 {
             let empties_below = blocks_around(local_pos - IVec3::new(0, 1, 0), 1)
                 .chain([local_pos - IVec3::new(0, 1, 0)])
-                .filter(|p| self.get_block_value(*p).is_none())
+                .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                 .collect_vec();
 
             if empties_below.len() == 9 {
@@ -157,7 +183,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
             }
         }
 
-        if self.get_block_value(global_pos).is_none() {
+        if self.get_block_value(global_pos) == BlockState::Empty {
             let (mut block, local_pos) = self.get_voxel_block_for_pos(global_pos).unwrap();
 
             block._add_block(local_pos, mat);
@@ -167,7 +193,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
 
         for rad in 1..30 {
             let empties_around = blocks_around(local_pos, rad)
-                .filter(|p| self.get_block_value(*p).is_none())
+                .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                 .collect_vec();
 
             if !empties_around.is_empty() {
