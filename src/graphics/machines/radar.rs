@@ -67,7 +67,7 @@ impl Radar {
 
     fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
-        self.watch.elapsed().as_secs_f32() * 5.0 * 3.0
+        self.watch.elapsed().as_secs_f32() * 5.0 * 6.0
     }
 }
 

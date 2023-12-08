@@ -1,0 +1,42 @@
+1. Fix the voxel spawning algo, they spawn too far away from where they originate
+2. it interferes with the speed of clearing up, we need to get that fixed
+3. probably adjust the radar to take several voxels at a time
+    we want to clear the initial stuff quickly, and then it should get slow. maybe use a specific function with this shape
+
+
+4. let's have "red" as "golden", stop spawning it in the beginning
+
+
+game stages:
+
+5. - you build a "Plower" to send more stuff in the way of the Recycler
+
+6. - "Plower" needs "red" maintenance, so you send it back
+7. - then you wanna build something to send it to the "Plower" ("Relay"?)
+
+8. as a different plot, "Recycler" won't throw away stuff when it's clogged, so you make another Plower to clear it out
+
+9. make it all into a tutorial?
+
+
+more:
+
+visuals/ui:
+1. redo radars? custom shader? ;-)
+2. add "input" and "output" empties to the machine models
+3. move camera on mouse near edge
+4. list of your buildings to come back to them
+5. building "states" as in clogged/needs maintenance/waits for fuel...
+6. remodel stuff
+
+nice to have
+1. fix the "a" value for the flying voxel
+2. investigate why we run in 30fps
+
+refactorings (probably useless)
+1. events instead of voxelmailbox?
+2. use SceneInstanceReady instead of guessing systems
+3. investigate Archetypes...
+4. ignore events when "egui wants mouse/keyboard"
+5. turn on "ambiguity detector"
+6. show/hide dbg stuff on a button?
