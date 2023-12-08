@@ -258,22 +258,22 @@ fn update_meshes(
     mut blocks: Query<(&mut VoxelBlock, &mut Handle<Mesh>), Changed<VoxelBlock>>,
     voxel_resources: Res<VoxelResources>,
 ) {
-    // let vr = voxel_resources.into_inner();
+    let vr = voxel_resources.into_inner();
 
     for (mut block, mut mesh) in blocks.iter_mut() {
-        // let Some(mesh) = meshes.get_mut(block.mesh_id) else {
-        //     continue;
-        // };
+        let Some(mesh) = meshes.get_mut(block.mesh_id) else {
+            continue;
+        };
 
-        // update_mesh(mesh, &mut block.meta, vr);
+        update_mesh(mesh, &mut block.meta, vr);
 
-        let (culled_mesh, metadata) = generate_mesh_grid(&voxel_resources, &block.grid);
-        let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
+        // let (culled_mesh, metadata) = generate_mesh_grid(&voxel_resources, &block.grid);
+        // let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
 
-        block.meta = metadata;
-        block.mesh_id = culled_mesh_handle.id();
+        // block.meta = metadata;
+        // block.mesh_id = culled_mesh_handle.id();
 
-        *mesh = culled_mesh_handle;
+        // *mesh = culled_mesh_handle;
     }
 }
 

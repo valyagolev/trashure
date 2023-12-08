@@ -1,11 +1,9 @@
-use std::time::Instant;
-
 use bevy::{
     diagnostic::{
         Diagnostic, DiagnosticId, DiagnosticMeasurement, DiagnosticsStore, RegisterDiagnostic,
     },
     prelude::*,
-    utils::HashMap,
+    utils::{HashMap, Instant},
 };
 use rand::Rng;
 use uuid::uuid;

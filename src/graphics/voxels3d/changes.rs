@@ -1,9 +1,7 @@
-use std::time::Instant;
-
 use bevy::{
     diagnostic::{DiagnosticMeasurement, DiagnosticsStore},
     prelude::*,
-    utils::HashMap,
+    utils::{HashMap, Instant},
 };
 
 use crate::game::material::GameMaterial;
