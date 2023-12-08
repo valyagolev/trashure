@@ -17,10 +17,11 @@ impl Plugin for CursorPlugin {
 
 #[derive(Resource, Debug, Default)]
 pub struct CursorOver {
-    pub ground: Vec3,
+    pub ground: Vec2,
     pub block: IVec3,
     pub lazy_block: (IVec2, IVec3),
     pub viewport: Vec2,
+    pub ray: Ray,
 }
 
 fn handle_cursor(
@@ -53,10 +54,11 @@ fn handle_cursor(
         let full_block = (block * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos;
 
         *cursor = CursorOver {
-            ground,
+            ground: ground.xz(),
             block: full_block,
             lazy_block: (block, pos),
             viewport,
+            ray,
         };
 
         texts.set("cursor", format!("{:#?}", *cursor));

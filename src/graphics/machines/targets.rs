@@ -1,18 +1,24 @@
 use bevy::prelude::*;
+use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
+
+use crate::graphics::{cursor::CursorOver, recolor::Tinted};
 pub struct TargetsPlugin;
 
 impl Plugin for TargetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, Self::setup).add_systems(
-            Update,
-            (
-                Self::make_targets,
-                // Self::update_visibility,
-                Self::update_location,
-                // Self::handle_move,
-                // Self::debug,
-            ),
-        );
+        app.add_systems(Startup, Self::setup)
+            .add_systems(
+                Update,
+                (
+                    Self::make_targets,
+                    // Self::on_scene_load,
+                    // Self::update_visibility,
+                    Self::handle_move_start,
+                    Self::handle_move.after(Self::handle_move_start),
+                    Self::update_location.after(Self::handle_move),
+                ),
+            )
+            .insert_resource(TargetBeingMoved(None));
     }
 }
 
@@ -21,11 +27,15 @@ struct TargetResources {
     scene: Handle<Scene>,
 }
 
+#[derive(Resource, Deref, DerefMut)]
+struct TargetBeingMoved(Option<(Entity, Vec2)>);
+
 #[derive(Component)]
 pub struct Target {
     global_pos: IVec2,
     instantiated: Option<Entity>,
 }
+
 impl Target {
     pub fn new(global_pos: IVec2) -> Self {
         Target {
@@ -36,22 +46,12 @@ impl Target {
 }
 
 #[derive(Component)]
-pub struct TargetInst;
+pub struct TargetInst(Entity);
+
+// #[derive(Component)]
+// pub struct TargetSubMesh;
 
 impl TargetsPlugin {
-    // fn debug(
-    //     q_ihv: Query<(&InheritedVisibility, &Parent)>,
-    //     q_noihv: Query<Entity, (Without<InheritedVisibility>, With<Children>)>,
-    //     // reg: Res<AppTypeRegistry>,
-    //     world: &World,
-    // ) {
-    //     for (ihv, p) in q_ihv.iter() {
-    //         if let Ok(noihv) = q_noihv.get(p.get()) {
-    //             println!("{:#?}", world.inspect_entity(noihv));
-    //         }
-    //     }
-    // }
-
     fn setup(mut commands: Commands, ass: Res<AssetServer>) {
         commands.insert_resource(TargetResources {
             scene: ass.load("objects/target.glb#Scene0"),
@@ -68,7 +68,9 @@ impl TargetsPlugin {
                 println!("spawning");
                 let spawned = commands
                     .spawn((
-                        TargetInst,
+                        Name::new("target inst"),
+                        Tinted::empty(),
+                        TargetInst(e),
                         SceneBundle {
                             scene: tres.scene.clone(),
                             transform: Transform::from_translation(
@@ -95,5 +97,98 @@ impl TargetsPlugin {
                 q_scene.translation = q_target.global_pos.extend(0).xzy().as_vec3();
             }
         }
+    }
+
+    fn handle_move_start(
+        mut raycast: Raycast,
+        mut q_targets: Query<
+            (
+                Entity,
+                &GlobalTransform,
+                &ViewVisibility,
+                &TargetInst,
+                &mut Tinted,
+            ),
+            // With<TargetInst>,
+        >,
+        mouse: Res<CursorOver>,
+        parent_query: Query<&Parent>,
+        mouse_inp: Res<Input<MouseButton>>,
+        mut target_being_moved: ResMut<TargetBeingMoved>,
+    ) {
+        if target_being_moved.is_some() {
+            return;
+        }
+
+        let valid_entities = q_targets
+            .iter()
+            .filter(|tpl| tpl.2.get())
+            .map(|tpl| tpl.0)
+            .collect::<Vec<_>>();
+
+        if valid_entities.is_empty() {
+            return;
+        }
+        let hit = raycast
+            .cast_ray(
+                mouse.ray.into(),
+                &RaycastSettings {
+                    visibility: RaycastVisibility::MustBeVisible,
+                    filter: &|entity: Entity| {
+                        parent_query
+                            .iter_ancestors(entity)
+                            .find(|anc| valid_entities.contains(&anc))
+                            .is_some()
+                    },
+                    early_exit_test: &|_| true,
+                },
+            )
+            .get(0);
+
+        let hovered_inst = hit.and_then(|hit| {
+            parent_query
+                .iter_ancestors(hit.0)
+                .find(|anc| valid_entities.contains(&anc))
+        });
+
+        for t in valid_entities {
+            let mut tpl = q_targets.get_mut(t).unwrap();
+
+            if hovered_inst == Some(t) {
+                *tpl.4 = Tinted::new(Color::rgb(0.3, 0.0, 0.1));
+            } else {
+                *tpl.4 = Tinted::empty();
+            }
+        }
+
+        if mouse_inp.pressed(MouseButton::Left) {
+            if let Some(hovered_inst) = hovered_inst {
+                let tpl = q_targets.get(hovered_inst).unwrap();
+
+                let delta = mouse.ground - tpl.1.translation().xz();
+
+                target_being_moved.0 = Some((tpl.3 .0, delta));
+            }
+        }
+    }
+
+    fn handle_move(
+        mut q_target_confs: Query<&mut Target>,
+        mouse: Res<CursorOver>,
+        mouse_inp: Res<Input<MouseButton>>,
+        target_being_moved: ResMut<TargetBeingMoved>,
+    ) {
+        let Some((target, delta)) = target_being_moved.0 else {
+            return;
+        };
+
+        if !mouse_inp.pressed(MouseButton::Left) {
+            return;
+        }
+
+        let new_pos = (mouse.ground - delta).as_ivec2();
+        let mut conf = q_target_confs.get_mut(target).unwrap();
+
+        conf.global_pos = new_pos;
     }
 }
