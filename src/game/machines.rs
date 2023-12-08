@@ -149,7 +149,7 @@ fn consume_mailbox(
 
                 commands.spawn(FlyingVoxel {
                     origin: mm.pos.extend(3).xzy(),
-                    target: VoxelBlock::real_pos(block_p, local_p).as_ivec3(),
+                    target: VoxelBlock::real_pos(block_p, local_p).as_ivec3() + IVec3::new(0, 3, 0),
                     target_mailbox: block_e,
                     material: vc,
                     payload: 0,

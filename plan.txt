@@ -1,4 +1,5 @@
-1. Fix the voxel spawning algo, they spawn too far away from where they originate
+1. DONE Fix the voxel spawning algo, they spawn too far away from where they originate
+
 2. it interferes with the speed of clearing up, we need to get that fixed
 3. probably adjust the radar to take several voxels at a time
     we want to clear the initial stuff quickly, and then it should get slow. maybe use a specific function with this shape

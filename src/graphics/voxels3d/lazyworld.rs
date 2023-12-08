@@ -81,7 +81,7 @@ fn generate_part(
     part: IVec2,
     meshes: &mut ResMut<Assets<Mesh>>,
     voxel_resources: &Res<VoxelResources>,
-    mut changes: &mut VoxelBlockChanges,
+    changes: &mut VoxelBlockChanges,
 ) -> Entity {
     let center = (part * VOXEL_BLOCK_SIZE).extend(0).xzy();
 
@@ -118,13 +118,10 @@ fn generate_part(
             };
             // let cnt = 1;
             for _z in 0..cnt {
-                // vb._add_block(pos + IVec3::new(0, z, 0), GameMaterial::random(rand))
-                // bundle
-                //     .voxel_block
-                //     .drop_block(pos.xz(), GameMaterial::random(rand), changes, rand);
+                let global_pos = center + pos;
 
                 changes.register_change(
-                    pos.extend(VOXEL_BLOCK_SIZE).xzy(),
+                    global_pos + IVec3::new(0, VOXEL_BLOCK_SIZE, 0),
                     GameMaterial::random(rand),
                 );
             }

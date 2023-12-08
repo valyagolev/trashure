@@ -56,7 +56,7 @@ pub fn apply_changes(
 
                 let global_pos = VoxelBlock::global_pos(*block_pos, local_pos);
 
-                whole_world.push_block(global_pos, mat, &mut new_changes, rand);
+                whole_world.push_block(global_pos, mat, &mut new_changes, rand, Some(Color::BLUE));
             }
         }
     }

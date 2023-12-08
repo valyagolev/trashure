@@ -1,8 +1,9 @@
 pub use bevy::prelude::*;
+use bevy::tasks::ParallelIterator;
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
-use crate::game::material::GameMaterial;
+use crate::{game::material::GameMaterial, graphics::debug3d};
 
 use super::{changes::VoxelBlockChanges, lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE};
 
@@ -106,7 +107,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
                 let gp = (block_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + lp;
 
                 // self._add_block(lp, m);
-                self.push_block(gp, m, change_collector, rand);
+                self.push_block(gp, m, change_collector, rand, Some(Color::FUCHSIA));
             }
         }
 
@@ -119,89 +120,126 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         mat: GameMaterial,
         change_collector: &mut VoxelBlockChanges,
         rand: &mut impl Rng,
+        debug_color: Option<Color>,
     ) {
-        let Some((_, local_pos)) = self.get_voxel_block_for_pos(global_pos) else {
-            change_collector.register_change(global_pos, mat);
-            return;
-        };
+        // dbg!(global_pos);
 
-        if local_pos.y == VOXEL_BLOCK_SIZE {
+        if global_pos.y >= VOXEL_BLOCK_SIZE {
             if self.get_block_value(global_pos - IVec3::new(0, 1, 0)) == BlockState::Empty {
+                // println!("1");
                 return self.push_block(
-                    global_pos - IVec3::new(0, 1, 0),
+                    // global_pos - IVec3::new(0, 1, 0),
+                    IVec3::new(global_pos.x, VOXEL_BLOCK_SIZE - 1, global_pos.z),
                     mat,
                     change_collector,
                     rand,
+                    debug_color,
                 );
             }
 
             for rad in 1..30 {
-                let empties_below = blocks_around(local_pos - IVec3::new(0, 1, 0), rad)
+                let empties_below = blocks_around(global_pos - IVec3::new(0, 1, 0), rad)
                     .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                     .collect_vec();
 
                 if !empties_below.is_empty() {
+                    // println!("2:{rad}");
                     return self.push_block(
                         *empties_below.choose(rand).unwrap(),
                         mat,
                         change_collector,
                         rand,
+                        debug_color,
                     );
                 }
             }
 
-            warn!("no empty space found, discarding block");
+            warn!("no empty space found below, discarding block");
             return;
         }
 
-        if local_pos.y > 0 {
-            let empties_below = blocks_around(local_pos - IVec3::new(0, 1, 0), 1)
-                .chain([local_pos - IVec3::new(0, 1, 0)])
-                .filter(|p| self.get_block_value(*p) == BlockState::Empty)
+        if global_pos.y > 0 {
+            let cells_below = blocks_around(global_pos - IVec3::new(0, 1, 0), 1)
+                .chain([global_pos - IVec3::new(0, 1, 0)])
+                .map(|p| (p, self.get_block_value(p)))
                 .collect_vec();
 
-            if empties_below.len() == 9 {
+            let empties_below = cells_below
+                .iter()
+                .filter(|(_, s)| *s == BlockState::Empty)
+                .copied()
+                .collect_vec();
+
+            let allowed_below = cells_below
+                .iter()
+                .filter(|(_, s)| *s != BlockState::Forbidden)
+                .count();
+
+            if empties_below.len() == allowed_below {
+                // println!("3");
                 // don't wiggle in the air
                 return self.push_block(
                     global_pos - IVec3::new(0, 1, 0),
                     mat,
                     change_collector,
                     rand,
+                    debug_color,
                 );
             }
 
-            let must_fall =
-                empties_below.len() > 0 && (rand.gen_range(0..=9) > empties_below.len());
+            // println!("empties below: {}/{allowed_below} ", empties_below.len());
+
+            let must_fall = empties_below.len() > 0
+                && (self.get_block_value(global_pos - IVec3::new(0, 1, 0)) == BlockState::Empty
+                    || empties_below.len() >= allowed_below - 1
+                    || rand.gen_range(0..=allowed_below) > empties_below.len()
+                    || rand.gen_range(0..=allowed_below) > empties_below.len()
+                    || rand.gen_range(0..=allowed_below) > empties_below.len());
 
             if must_fall {
+                // println!("4");
                 return self.push_block(
-                    *empties_below.choose(rand).unwrap(),
+                    empties_below.choose(rand).unwrap().0,
                     mat,
                     change_collector,
                     rand,
+                    debug_color,
                 );
             }
         }
 
         if self.get_block_value(global_pos) == BlockState::Empty {
-            let (mut block, local_pos) = self.get_voxel_block_for_pos(global_pos).unwrap();
+            if let Some((mut block, local_pos)) = self.get_voxel_block_for_pos(global_pos) {
+                // debug3d::draw_gizmos(2.0, move |gizmos| {
+                //     gizmos.sphere(
+                //         global_pos.as_vec3(),
+                //         Quat::IDENTITY,
+                //         3.0,
+                //         debug_color.unwrap_or(Color::BLUE),
+                //     );
+                // });
 
-            block._add_block(local_pos, mat);
+                block._add_block(local_pos, mat);
+            } else {
+                change_collector.register_change(global_pos, mat);
+            }
 
             return;
         }
 
         for rad in 1..30 {
-            let empties_around = blocks_around(local_pos, rad)
+            let empties_around = blocks_around(global_pos, rad)
                 .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                 .collect_vec();
 
             if !empties_around.is_empty() {
+                // println!("6 :{rad}");
                 return self.push_block(
                     *empties_around.choose(rand).unwrap(),
                     mat,
                     change_collector,
                     rand,
+                    debug_color,
                 );
             }
         }
@@ -222,6 +260,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
             mat,
             change_collector,
             rand,
+            Some(Color::RED),
         );
     }
 }

@@ -1,4 +1,5 @@
 use std::{
+    fs::Metadata,
     ops::{Index, IndexMut},
     time::Instant,
 };
@@ -90,6 +91,7 @@ impl VoxelRegistry for VoxelResources {
 
     fn get_center(&self) -> [f32; 3] {
         [0.0, 0.0, 0.0]
+        // [0.5, 0.5, 0.5]
     }
 
     fn get_voxel_dimensions(&self) -> [f32; 3] {
@@ -184,6 +186,29 @@ pub struct VoxelBlockBundle {
     pub mailbox: VoxelMailbox,
 }
 
+pub fn generate_mesh_grid(
+    voxel_resources: &Res<VoxelResources>,
+    grid: &[Option<GameMaterial>; 32768],
+) -> (Mesh, MeshMD<Option<GameMaterial>>) {
+    let dims: Dimensions = (
+        VOXEL_BLOCK_SIZE as usize,
+        VOXEL_BLOCK_SIZE as usize,
+        VOXEL_BLOCK_SIZE as usize,
+    );
+
+    mesh_grid(
+        dims,
+        // &[Face::Bottom, Face::Back, Face::Left],
+        &[],
+        grid,
+        voxel_resources.as_ref(), //.into_inner(),
+        MeshingAlgorithm::Culling,
+        // MeshingAlgorithm::Naive,
+        None,
+    )
+    .unwrap()
+}
+
 pub fn generate_voxel_block(
     pos: IVec2,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -191,42 +216,10 @@ pub fn generate_voxel_block(
 ) -> VoxelBlockBundle {
     let _rand = &mut rand::thread_rng();
 
-    // let grid = (0..VOXEL_BLOCK_SIZE)
-    //     .map(|x| {
-    //         (0..VOXEL_BLOCK_SIZE)
-    //             .map(|y| {
-    //                 (0..VOXEL_BLOCK_SIZE)
-    //                     .map(|z| {
-    //                         if x <= 3 && rand.gen::<bool>() {
-    //                             Some(GameMaterial::random(rand))
-    //                         } else {
-    //                             None
-    //                         }
-    //                     })
-    //                     .collect_vec()
-    //             })
-    //             .collect_vec()
-    //     })
-    //     .flatten()
-    //     .flatten()
-    //     .collect_vec();
     let g: [_; CHUNK_LEN] = [None; CHUNK_LEN]; // grid.try_into().unwrap();
-    let dims: Dimensions = (
-        VOXEL_BLOCK_SIZE as usize,
-        VOXEL_BLOCK_SIZE as usize,
-        VOXEL_BLOCK_SIZE as usize,
-    );
+
     // let texture_mesh = asset_server.load("array_texture.png");
-    let (culled_mesh, metadata) = mesh_grid(
-        dims,
-        // &[Face::Bottom, Face::Back, Face::Left],
-        &[],
-        &g,
-        voxel_resources.as_ref(), //.into_inner(),
-        MeshingAlgorithm::Culling,
-        None,
-    )
-    .unwrap();
+    let (culled_mesh, metadata) = generate_mesh_grid(voxel_resources, &g);
 
     let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
 
@@ -262,15 +255,25 @@ pub fn generate_voxel_block(
 
 fn update_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
-    mut blocks: Query<&mut VoxelBlock, Changed<VoxelBlock>>,
+    mut blocks: Query<(&mut VoxelBlock, &mut Handle<Mesh>), Changed<VoxelBlock>>,
     voxel_resources: Res<VoxelResources>,
 ) {
-    let vr = voxel_resources.into_inner();
+    // let vr = voxel_resources.into_inner();
 
-    for mut block in blocks.iter_mut() {
-        let mesh = meshes.get_mut(block.mesh_id).unwrap();
+    for (mut block, mut mesh) in blocks.iter_mut() {
+        // let Some(mesh) = meshes.get_mut(block.mesh_id) else {
+        //     continue;
+        // };
 
-        update_mesh(mesh, &mut block.meta, vr);
+        // update_mesh(mesh, &mut block.meta, vr);
+
+        let (culled_mesh, metadata) = generate_mesh_grid(&voxel_resources, &block.grid);
+        let culled_mesh_handle: Handle<Mesh> = meshes.add(culled_mesh.clone());
+
+        block.meta = metadata;
+        block.mesh_id = culled_mesh_handle.id();
+
+        *mesh = culled_mesh_handle;
     }
 }
 
