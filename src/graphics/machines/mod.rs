@@ -14,25 +14,30 @@ use super::selectable::CurrentlySelected;
 pub mod building;
 mod colors;
 pub mod radar;
+pub mod targets;
 
 pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((building::MachinesBuildingPlugin, radar::RadarPlugin))
-            .add_systems(Startup, load_machines)
-            // .add_systems(Update, debug_keyboard)
-            .add_systems(
-                Update,
-                (
-                    update_machines,
-                    //  update_boxes,
-                    update_colors,
-                    rotate_selected_machine,
-                ),
-            )
-            .register_type::<MyMachine>()
-            .register_type::<MachineType>();
+        app.add_plugins((
+            building::MachinesBuildingPlugin,
+            radar::RadarPlugin,
+            targets::TargetsPlugin,
+        ))
+        .add_systems(Startup, load_machines)
+        // .add_systems(Update, debug_keyboard)
+        .add_systems(
+            Update,
+            (
+                update_machines,
+                //  update_boxes,
+                update_colors,
+                rotate_selected_machine,
+            ),
+        )
+        .register_type::<MyMachine>()
+        .register_type::<MachineType>();
     }
 }
 

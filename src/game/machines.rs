@@ -7,6 +7,7 @@ use crate::graphics::{
     flyingvoxel::FlyingVoxel,
     machines::{
         radar::{Radar, RadarBundle},
+        targets::Target,
         BuiltMachine, MyMachine,
     },
     voxels3d::{
@@ -55,6 +56,10 @@ impl GameMachineSettings {
                     .id();
 
                 commands.entity(ghost).add_child(plowing_radar);
+
+                commands
+                    .entity(ghost)
+                    .insert(Target::new(mc.pos + IVec2::new(10, 10)));
 
                 GameMachineSettings::Plower { plowing_radar }
             }
@@ -162,7 +167,7 @@ fn consume_mailbox(
 
         match bm.0 {
             GameMachineSettings::Plower { plowing_radar } => {
-                todo!()
+                // todo!()
             }
             GameMachineSettings::Recycler { .. } => {
                 assert!(pl == 1);

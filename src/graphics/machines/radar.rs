@@ -34,6 +34,7 @@ impl Plugin for RadarPlugin {
 pub struct RadarBundle {
     radar: Radar,
     transform_bundle: TransformBundle,
+    visibility_bundle: VisibilityBundle,
 }
 
 impl RadarBundle {
@@ -41,6 +42,7 @@ impl RadarBundle {
         RadarBundle {
             radar: Radar::new(mats, direction),
             transform_bundle: TransformBundle::default(),
+            visibility_bundle: VisibilityBundle::default(),
         }
     }
 }

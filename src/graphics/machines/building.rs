@@ -147,7 +147,9 @@ fn place_ghost(
     };
 
     if cursor.just_released(MouseButton::Left) {
-        commands.entity(ghost).insert((Tinted::empty(),));
+        commands
+            .entity(ghost)
+            .insert((Tinted::empty(), VisibilityBundle::default()));
 
         GameMachineSettings::instantiate(ghost, &mut commands, m);
 
