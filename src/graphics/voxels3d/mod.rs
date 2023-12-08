@@ -68,8 +68,8 @@ impl Plugin for Voxels3dPlugin {
 pub struct VoxelResources {
     // pub mesh: Handle<Mesh>,
     // materials: [Handle<StandardMaterial>; 4],
-    pub meshes: [Mesh; 5],
-    pub material_handles: [Handle<StandardMaterial>; 5],
+    pub meshes: [Mesh; 4],
+    pub material_handles: [Handle<StandardMaterial>; 4],
     pub voxel_material: Handle<StandardMaterial>,
     pub debug_voxel_material: Handle<StandardMaterial>,
 }

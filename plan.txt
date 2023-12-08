@@ -2,7 +2,7 @@
 
 2. it interferes with the speed of clearing up, we need to get that fixed
 3. probably adjust the radar to take several voxels at a time
-    we want to clear the initial stuff quickly, and then it should get slow. maybe use a specific function with this shape
+    we want to clear enough for another car (~12x12? make it smaller?) quickly, and then it should get slow. maybe use a specific function with this shape
 
 
 4. let's have "red" as "golden", stop spawning it in the beginning
@@ -28,7 +28,7 @@ visuals/ui:
 3. move camera on mouse near edge
 4. list of your buildings to come back to them
 5. building "states" as in clogged/needs maintenance/waits for fuel...
-6. remodel stuff
+6. FAILED. remodel mesh (doesn't help)
 
 nice to have
 1. fix the "a" value for the flying voxel

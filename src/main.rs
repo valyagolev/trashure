@@ -3,6 +3,7 @@ mod conf;
 mod debugeditor;
 mod game;
 mod graphics;
+use bevy::window::PresentMode;
 #[allow(unused_imports)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
@@ -16,7 +17,15 @@ fn main() {
     App::new()
         .insert_resource(AssetMetaCheck::Never)
         // outside
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins, //     .set(WindowPlugin {
+                            //     primary_window: Some(Window {
+                            //         present_mode: PresentMode::AutoNoVsync,
+                            //         ..default()
+                            //     }),
+                            //     ..default()
+                            // })
+        )
         // .insert_resource(Time::<Fixed>::from_seconds(0.1))
         // .add_plugins(bevy::pbr::wireframe::WireframePlugin)
         .add_plugins(bevy_debug_text_overlay::OverlayPlugin {
@@ -56,5 +65,5 @@ fn main() {
         // .add_plugins(TrainPlugin)
         // .add_systems(Startup, (setup_camera, ui::setup))
         // .add_systems(Update, (mouse_button_input, ui::check_config_changed))
-        .run();
+        .run()
 }
