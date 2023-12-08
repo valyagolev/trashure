@@ -6,7 +6,7 @@ use crate::graphics::{
     debug3d,
     flyingvoxel::FlyingVoxel,
     machines::{radar::Radar, BuiltMachine, MyMachine},
-    voxels3d::{lazyworld::LazyWorld, VoxelBlock, VoxelBlockChanges},
+    voxels3d::{changes::VoxelBlockChanges, lazyworld::LazyWorld, VoxelBlock},
 };
 
 use super::{material::GameMaterial, voxelmailbox::VoxelMailbox, Direction2D};
