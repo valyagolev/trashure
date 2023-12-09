@@ -1,13 +1,7 @@
-
 use bevy::prelude::*;
-
-
 
 use bevy::utils::HashMap;
 use itertools::Itertools;
-
-
-
 
 pub struct DbgTextPlugin;
 

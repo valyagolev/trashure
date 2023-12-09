@@ -6,7 +6,6 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::render_resource::PrimitiveTopology;
 
-
 /// Function that generates the mesh of a voxel.
 pub fn generate_colored_voxel_mesh(
     voxel_dims: [f32; 3],

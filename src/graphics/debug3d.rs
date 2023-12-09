@@ -4,8 +4,7 @@ use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
     prelude::*,
     render::{camera::ScalingMode, view::RenderLayers},
-    transform::commands,
-    utils::{HashMap, Instant},
+    utils::Instant,
 };
 use once_cell::sync::Lazy;
 
@@ -38,7 +37,7 @@ pub fn draw_gizmos_labeled(
     let mut st = STORE.lock().unwrap();
     st.retain(|(n, _, _)| n.as_ref() != Some(&name));
     st.push((
-        Some(name.into()),
+        Some(name),
         Box::new(cb),
         Instant::now() + Duration::from_secs_f32(secs),
     ));

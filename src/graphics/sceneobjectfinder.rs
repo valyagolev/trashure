@@ -1,12 +1,6 @@
 use std::borrow::Cow;
 
-use bevy::{
-    prelude::*,
-    render::view::RenderLayers,
-    scene::{SceneInstance, SceneInstanceReady},
-    transform::commands,
-    utils::HashMap,
-};
+use bevy::{prelude::*, scene::SceneInstance, utils::HashMap};
 use itertools::Itertools;
 
 pub struct SceneObjectFinderPlugin;
@@ -47,7 +41,7 @@ impl SceneObjectFinderPlugin {
                 let Ok(name) = names.get(ent) else {
                     continue;
                 };
-                let name: &str = &*name;
+                let name: &str = name;
 
                 // println!("checking {}", name);
 

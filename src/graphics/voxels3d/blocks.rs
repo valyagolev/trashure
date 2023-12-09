@@ -156,8 +156,7 @@ impl VoxelBlock {
         let pos = pos.as_vec2();
 
         (0..VOXEL_BLOCK_SIZE)
-            .map(|x| (0..VOXEL_BLOCK_SIZE).map(move |z| IVec2::new(x, z)))
-            .flatten()
+            .flat_map(|x| (0..VOXEL_BLOCK_SIZE).map(move |z| IVec2::new(x, z)))
             .filter(move |col| {
                 let dist = (col.as_vec2() - pos).length_squared();
 

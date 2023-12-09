@@ -1,10 +1,7 @@
-use bevy::{prelude::*, render::view::RenderLayers, transform::commands, utils::Instant};
+use bevy::{prelude::*, render::view::RenderLayers, utils::Instant};
 
 use crate::{
-    game::{
-        machines::GameMachineSettings, material::GameMaterial, voxelmailbox::VoxelMailbox,
-        Direction2D,
-    },
+    game::{machines::GameMachineSettings, voxelmailbox::VoxelMailbox, Direction2D},
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
@@ -16,7 +13,7 @@ use crate::{
     },
 };
 
-use super::{colors::MachineRecolor, radar::Radar, BuiltMachine, MachineType, MyMachine};
+use super::{colors::MachineRecolor, BuiltMachine, MachineType, MyMachine};
 
 pub struct MachinesBuildingPlugin;
 
@@ -127,7 +124,7 @@ fn move_ghost(
 fn place_ghost(
     mut commands: Commands,
     mut mghost: ResMut<MachineGhost>,
-    mut q_machines: Query<&MyMachine, Without<BuiltMachine>>,
+    q_machines: Query<&MyMachine, Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
 
     mut selected: ResMut<CurrentlySelected>,

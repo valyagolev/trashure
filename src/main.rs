@@ -5,7 +5,6 @@ mod game;
 mod graphics;
 #[allow(unused_imports)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
-use bevy::{log::LogPlugin, window::PresentMode};
 
 // use game::train::TrainPlugin;
 // use graphics::{

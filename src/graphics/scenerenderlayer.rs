@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::view::RenderLayers, scene::SceneInstance, transform::commands};
+use bevy::{prelude::*, render::view::RenderLayers, scene::SceneInstance};
 
 pub struct SceneRenderLayersPlugin;
 
@@ -22,7 +22,7 @@ impl SceneRenderLayersPlugin {
     ) {
         for (inst, layers) in q_scenes.iter() {
             for i in scene_spawner.iter_instance_entities(**inst) {
-                commands.entity(i).insert(layers.0.clone());
+                commands.entity(i).insert(layers.0);
             }
         }
     }

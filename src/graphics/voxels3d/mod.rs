@@ -1,17 +1,8 @@
-use std::{
-    fs::Metadata,
-    ops::{Index, IndexMut},
-    time::Instant,
-};
-
 use crate::game::{material::GameMaterial, voxelmailbox::VoxelMailbox};
 
 use bevy::{
-    diagnostic::{
-        Diagnostic, DiagnosticId, DiagnosticMeasurement, DiagnosticsStore, RegisterDiagnostic,
-    },
+    diagnostic::{Diagnostic, DiagnosticId, RegisterDiagnostic},
     prelude::*,
-    utils::HashMap,
 };
 use bevy_meshem::{prelude::*, Dimensions};
 use rand::prelude::Rng;

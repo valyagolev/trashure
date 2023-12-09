@@ -1,9 +1,8 @@
-use bevy::{core_pipeline::blit, prelude::*};
+use bevy::prelude::*;
 use rand::prelude::Rng;
 use strum::EnumDiscriminants;
 
 use crate::graphics::{
-    debug3d,
     flyingvoxel::FlyingVoxel,
     machines::{
         radar::{Radar, RadarBundle},
@@ -87,7 +86,7 @@ fn consume_radars(
     q_scene_object_transforms: Query<&GlobalTransform, (Without<Radar>, Without<VoxelBlock>)>,
 ) {
     let mut whole_world = WholeBlockWorld {
-        lazy_world: lazy_world,
+        lazy_world,
         blocks: q_blocks,
     };
 
@@ -282,10 +281,7 @@ fn move_machines(
     )>,
     blocks: Query<'_, '_, &mut VoxelBlock, ()>,
 ) {
-    let mut wbw = WholeBlockWorld {
-        lazy_world: lazy_world,
-        blocks,
-    };
+    let mut wbw = WholeBlockWorld { lazy_world, blocks };
 
     for (bm, mut mm, dir) in q_machines.iter_mut() {
         if matches!(bm.0, GameMachineSettings::Recycler { .. }) {

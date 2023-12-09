@@ -1,9 +1,9 @@
 pub use bevy::prelude::*;
-use bevy::{ecs::query::WorldQuery, tasks::ParallelIterator};
+use bevy::tasks::ParallelIterator;
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
-use crate::{game::material::GameMaterial, graphics::debug3d};
+use crate::game::material::GameMaterial;
 
 use super::{changes::VoxelBlockChanges, lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE};
 
@@ -190,7 +190,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
 
             // println!("empties below: {}/{allowed_below} ", empties_below.len());
 
-            let must_fall = empties_below.len() > 0
+            let must_fall = !empties_below.is_empty()
                 && (self.get_block_value(global_pos - IVec3::new(0, 1, 0)) == BlockState::Empty
                     || empties_below.len() >= allowed_below - 1
                     || rand.gen_range(0..=allowed_below) > empties_below.len()
@@ -252,7 +252,6 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         }
 
         warn!("no empty space found, discarding block");
-        return;
     }
 
     pub fn drop_block(

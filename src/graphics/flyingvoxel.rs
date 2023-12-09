@@ -1,13 +1,9 @@
-use bevy::{prelude::*, render::mesh::shape::Plane, time::Stopwatch};
+use bevy::{prelude::*, time::Stopwatch};
 use rand::prelude::Rng;
 
-use crate::{
-    conf::Configuration,
-    game::{material::GameMaterial, voxelmailbox::VoxelMailbox},
-};
+use crate::game::{material::GameMaterial, voxelmailbox::VoxelMailbox};
 
 use super::{
-    debug3d,
     machines::MachineResources,
     voxels3d::{VoxelResources, VOXEL_BLOCK_SIZE},
 };

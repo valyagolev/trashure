@@ -29,14 +29,11 @@ impl VoxelBlockChanges {
 
 pub fn apply_changes(
     mut changes: ResMut<VoxelBlockChanges>,
-    mut blocks: Query<&mut VoxelBlock>,
+    blocks: Query<&mut VoxelBlock>,
     mut diagnostics: ResMut<DiagnosticsStore>,
     lazy_world: Res<LazyWorld>,
 ) {
-    let mut whole_world = WholeBlockWorld {
-        lazy_world,
-        blocks: blocks,
-    };
+    let mut whole_world = WholeBlockWorld { lazy_world, blocks };
 
     let mut total_changes = 0;
     let mut total_postponed = 0;
@@ -45,7 +42,7 @@ pub fn apply_changes(
     let rand = &mut rand::thread_rng();
     let mut new_changes = VoxelBlockChanges::default();
 
-    for (block_pos, mut changes) in changes.added.iter_mut() {
+    for (block_pos, changes) in changes.added.iter_mut() {
         if whole_world.is_initialized_by_blockpos(*block_pos) {
             changed_blocks += 1;
 

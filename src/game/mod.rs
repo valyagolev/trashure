@@ -50,9 +50,9 @@ impl From<&Direction2D> for Quat {
     }
 }
 
-impl Into<IVec2> for Direction2D {
-    fn into(self) -> IVec2 {
-        match self {
+impl From<Direction2D> for IVec2 {
+    fn from(val: Direction2D) -> Self {
+        match val {
             Direction2D::Forward => IVec2::new(0, -1),
             Direction2D::Backward => IVec2::new(0, 1),
             Direction2D::Left => IVec2::new(-1, 0),

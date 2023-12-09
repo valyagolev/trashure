@@ -71,8 +71,7 @@ fn handle_selection(
                 filter: &|entity: Entity| {
                     parent_query
                         .iter_ancestors(entity)
-                        .find(|anc| valid_entities.contains(&anc))
-                        .is_some()
+                        .any(|anc| valid_entities.contains(&anc))
                 },
                 early_exit_test: &|_| true,
             },
@@ -82,7 +81,7 @@ fn handle_selection(
     let Some(hovered_inst) = hit.and_then(|hit| {
         parent_query
             .iter_ancestors(hit.0)
-            .find(|anc| valid_entities.contains(&anc))
+            .find(|anc| valid_entities.contains(anc))
     }) else {
         return;
     };

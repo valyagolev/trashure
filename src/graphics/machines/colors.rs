@@ -1,5 +1,3 @@
-
-
 use bevy::prelude::*;
 
 use crate::graphics::recolor::Tinted;

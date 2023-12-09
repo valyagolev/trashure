@@ -8,12 +8,9 @@ use bevy::{
 use rand::Rng;
 use uuid::uuid;
 
-use crate::{game::material::GameMaterial, graphics::camera3d::MainCamera};
+use crate::game::material::GameMaterial;
 
-use super::{
-    super::camera3d::CAMERA_OFFSET,
-    {generate_voxel_block, VoxelBlockChanges, VoxelResources, VOXEL_BLOCK_SIZE},
-};
+use super::{generate_voxel_block, VoxelBlockChanges, VoxelResources, VOXEL_BLOCK_SIZE};
 
 pub struct LazyWorldPlugin;
 
@@ -52,7 +49,7 @@ impl LazyWorld {
         let center = center.as_vec2() / VOXEL_BLOCK_SIZE as f32;
 
         self.known_parts.iter().filter_map(move |(part, &entity)| {
-            let dist = (part.as_vec2() - center).length_squared() as f32;
+            let dist = (part.as_vec2() - center).length_squared();
             if dist <= radius2 {
                 Some((*part, entity))
             } else {

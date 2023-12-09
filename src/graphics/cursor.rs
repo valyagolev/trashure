@@ -2,7 +2,6 @@ use bevy::{prelude::*, window::PrimaryWindow};
 
 use super::{
     camera3d::MainCamera,
-    dbgtext::DebugTexts,
     voxels3d::{VoxelBlock, VOXEL_BLOCK_SIZE},
 };
 

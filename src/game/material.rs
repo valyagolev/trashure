@@ -10,9 +10,9 @@ pub enum GameMaterial {
     // Golden = 0b10000,
 }
 
-impl Into<Color> for &GameMaterial {
-    fn into(self) -> Color {
-        match self {
+impl From<&GameMaterial> for Color {
+    fn from(val: &GameMaterial) -> Self {
+        match val {
             GameMaterial::Reddish => Color::rgb(0.9, 0.4, 0.3),
             GameMaterial::Greenish => Color::rgb(0.5, 0.8, 0.4),
             GameMaterial::Blueish => Color::rgb(0.4, 0.5, 0.8),

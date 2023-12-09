@@ -1,8 +1,6 @@
 use bevy::prelude::*;
-use itertools::Itertools;
-use rand::{seq::SliceRandom, Rng};
 
-use crate::{conf::Configuration, game::material::GameMaterial, graphics::debug3d};
+use crate::game::material::GameMaterial;
 
 use super::{VoxelBlock, VoxelBlockChanges, VOXEL_BLOCK_SIZE};
 
