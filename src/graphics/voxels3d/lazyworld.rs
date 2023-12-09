@@ -130,45 +130,49 @@ fn generate_part(
 }
 
 #[derive(Component)]
-pub struct WorldGenTrigger(pub IVec2);
+pub struct WorldGenTrigger(pub Vec2);
 
 fn handle_camera(
     // q_camera: Query<&GlobalTransform, With<MainCamera>>,
+    q_trigger: Query<(&WorldGenTrigger, &GlobalTransform)>,
     mut lazy_world: ResMut<LazyWorld>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     voxel_resources: Res<VoxelResources>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
 ) {
-    let camera = q_camera.single();
+    // let camera = q_camera.single();
 
-    // let center = ((camera.translation() - CAMERA_OFFSET).xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
+    for (trigger, trans) in q_trigger.iter() {
+        // let center = ((camera.translation() - CAMERA_OFFSET).xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
+        let center = ((trans.translation().xz() - trigger.0) / VOXEL_BLOCK_SIZE as f32).as_ivec2();
 
-    let all_around = AROUND_2D
+        let all_around = AROUND_2D
         .iter()
         .map(|&offset| center + offset)
         .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
         // .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
         ;
 
-    for part in all_around {
-        // println!("Checking part {:?}", part);
-        if !lazy_world.known_parts.contains_key(&part) {
-            // println!("Generating part {:?} around {center:?}", part);
+        for part in all_around {
+            // println!("Checking part {:?}", part);
+            if !lazy_world.known_parts.contains_key(&part) {
+                // println!("Generating part {:?} around {center:?}", part);
 
-            lazy_world.known_parts.insert(
-                part,
-                generate_part(
-                    &mut commands,
+                lazy_world.known_parts.insert(
                     part,
-                    &mut meshes,
-                    &voxel_resources,
-                    &mut blockchanges,
-                ),
-            );
+                    generate_part(
+                        &mut commands,
+                        part,
+                        &mut meshes,
+                        &voxel_resources,
+                        &mut blockchanges,
+                    ),
+                );
+                // break;
+            }
             // break;
         }
-        // break;
     }
 }
 

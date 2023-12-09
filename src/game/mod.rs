@@ -94,7 +94,7 @@ impl Direction2D {
     }
 
     pub fn within_cone(self, pos: IVec2, min_dims: IVec2) -> bool {
-        dbg!(&self, pos, min_dims);
+        // dbg!(&self, pos, min_dims);
         match self {
             Direction2D::Forward => pos.y < 0 && pos.x.abs() <= (-pos.y).max(min_dims.x / 2),
             Direction2D::Backward => pos.y > 0 && pos.x.abs() <= pos.y.max(min_dims.x / 2),

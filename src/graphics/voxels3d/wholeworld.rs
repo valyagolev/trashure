@@ -234,20 +234,26 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         }
 
         for rad in 1..30 {
-            let empties_around = blocks_around(global_pos, rad)
+            let mut empties_around = blocks_around(global_pos, rad)
                 .filter(|p| self.get_block_value(*p) == BlockState::Empty)
                 .collect_vec();
 
-            if !empties_around.is_empty() {
-                // println!("6 :{rad}");
-                return self.push_block(
-                    *empties_around.choose(rand).unwrap(),
-                    mat,
-                    change_collector,
-                    rand,
-                    debug_color,
-                );
-            }
+            let global_pos_above = global_pos + IVec3::new(0, 2, 0);
+
+            empties_around.push(global_pos_above);
+            empties_around.push(global_pos_above);
+            empties_around.push(global_pos_above);
+
+            // if !empties_around.is_empty() {
+            // println!("6 :{rad}");
+            return self.push_block(
+                *empties_around.choose(rand).unwrap(),
+                mat,
+                change_collector,
+                rand,
+                debug_color,
+            );
+            // }
         }
 
         warn!("no empty space found, discarding block");

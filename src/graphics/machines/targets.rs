@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    render::view::RenderLayers,
+    scene::{SceneInstance, SceneInstanceReady},
+};
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
 use crate::graphics::{cursor::CursorOver, recolor::Tinted};
@@ -11,7 +15,7 @@ impl Plugin for TargetsPlugin {
                 Update,
                 (
                     Self::make_targets,
-                    // Self::on_scene_load,
+                    Self::on_scene_load,
                     // Self::update_visibility,
                     Self::handle_move_start,
                     Self::handle_move.after(Self::handle_move_start),
@@ -71,6 +75,7 @@ impl TargetsPlugin {
                         Name::new("target inst"),
                         Tinted::empty(),
                         TargetInst(e),
+                        RenderLayers::layer(6),
                         SceneBundle {
                             scene: tres.scene.clone(),
                             transform: Transform::from_translation(
@@ -84,6 +89,23 @@ impl TargetsPlugin {
                 t.instantiated = Some(spawned);
 
                 // commands.entity(e).add_child(spawned);
+            }
+        }
+    }
+
+    fn on_scene_load(
+        mut commands: Commands,
+        mut events: EventReader<SceneInstanceReady>,
+        targets: Query<&SceneInstance, With<TargetInst>>,
+        spawner: Res<SceneSpawner>,
+    ) {
+        for event in events.read() {
+            let Ok(scene) = targets.get(event.parent) else {
+                continue;
+            };
+
+            for i in spawner.iter_instance_entities(**scene) {
+                commands.entity(i).insert(RenderLayers::layer(6));
             }
         }
     }

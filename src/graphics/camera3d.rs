@@ -1,7 +1,14 @@
-use bevy::{pbr::DirectionalLightShadowMap, prelude::*, render::camera::ScalingMode};
+use bevy::{
+    core_pipeline::clear_color::ClearColorConfig,
+    pbr::DirectionalLightShadowMap,
+    prelude::*,
+    render::{camera::ScalingMode, view::RenderLayers},
+};
 // use bevy_inspector_egui::bevy_egui::EguiContext;
 
 use crate::conf::Configuration;
+
+use super::voxels3d::lazyworld::WorldGenTrigger;
 
 pub static CAMERA_OFFSET: Vec3 = Vec3::new(50.0, 50.0, 50.0);
 
@@ -53,6 +60,7 @@ fn setup(mut commands: Commands, _conf: Res<Configuration>) {
     commands
         .spawn((
             MainCamera,
+            WorldGenTrigger(CAMERA_OFFSET.xz()),
             Camera3dBundle {
                 projection: OrthographicProjection {
                     scale: 20.0,
@@ -67,7 +75,32 @@ fn setup(mut commands: Commands, _conf: Res<Configuration>) {
                 ..default()
             },
         ))
-        .with_children(|_b| {
+        .with_children(|b| {
+            b.spawn((
+                RenderLayers::layer(6),
+                Camera3dBundle {
+                    camera: Camera {
+                        order: 200,
+                        ..default()
+                    },
+                    camera_3d: Camera3d {
+                        clear_color: ClearColorConfig::None,
+                        ..default()
+                    },
+                    projection: OrthographicProjection {
+                        scale: 20.0,
+                        scaling_mode: ScalingMode::FixedVertical(2.0),
+                        // near: -1000.0,
+                        near: 0.0,
+                        ..default()
+                    }
+                    .into(),
+                    //transform:// Transform::from_translation(CAMERA_OFFSET)
+                    //.looking_at(Vec3::ZERO, Vec3::Y)
+                    //  ,
+                    ..default()
+                },
+            ));
             // b.spawn(PointLightBundle {
             //     point_light: PointLight {
             //         intensity: 11000.0,
