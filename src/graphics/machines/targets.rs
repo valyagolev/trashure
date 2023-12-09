@@ -5,7 +5,7 @@ use bevy::{
 };
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
-use crate::graphics::{cursor::CursorOver, recolor::Tinted};
+use crate::graphics::{cursor::CursorOver, recolor::Tinted, selectable::CurrentlySelected};
 pub struct TargetsPlugin;
 
 impl Plugin for TargetsPlugin {
@@ -16,7 +16,7 @@ impl Plugin for TargetsPlugin {
                 (
                     Self::make_targets,
                     Self::on_scene_load,
-                    // Self::update_visibility,
+                    Self::update_visibility,
                     Self::handle_move_start,
                     Self::handle_move.after(Self::handle_move_start),
                     Self::update_location.after(Self::handle_move),
@@ -107,6 +107,19 @@ impl TargetsPlugin {
             for i in spawner.iter_instance_entities(**scene) {
                 commands.entity(i).insert(RenderLayers::layer(6));
             }
+        }
+    }
+
+    fn update_visibility(
+        mut q_target_inst: Query<(&TargetInst, &mut Visibility)>,
+        selected: Res<CurrentlySelected>,
+    ) {
+        for (t, mut v) in q_target_inst.iter_mut() {
+            *v = if selected.0 == Some(t.0) {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            };
         }
     }
 

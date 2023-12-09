@@ -165,7 +165,7 @@ fn consume_mailbox(
             continue;
         };
 
-        println!("got mail:{} {:?} {}", mm.pos, vc, pl);
+        // println!("got mail:{} {:?} {}", mm.pos, vc, pl);
 
         match bm.0 {
             GameMachineSettings::Plower { .. } => {
