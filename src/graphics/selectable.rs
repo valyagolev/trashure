@@ -1,10 +1,11 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::view::RenderLayers};
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
 use super::{
     cursor::CursorOver,
     gamemenu::{GameMenu, GameMenuState},
     recolor::Tinted,
+    scenerenderlayer::SceneRenderLayers,
 };
 
 pub struct SelectablePlugin;
@@ -23,14 +24,16 @@ pub struct Selectable;
 pub struct CurrentlySelected(pub Option<Entity>);
 
 fn recolor_selection(
-    mut q_targets: Query<(Entity, &mut Tinted), With<Selectable>>,
+    mut q_targets: Query<(Entity, &mut Tinted, &mut SceneRenderLayers), With<Selectable>>,
     currently_selected: Res<CurrentlySelected>,
 ) {
-    for (ent, mut tpl) in q_targets.iter_mut() {
+    for (ent, mut tpl, mut layers) in q_targets.iter_mut() {
         if Some(ent) == currently_selected.0 {
             *tpl = Tinted::new(Color::rgb(0.0, 0.0, 0.1));
+            *layers = SceneRenderLayers(RenderLayers::default().with(6))
         } else {
             *tpl = Tinted::empty();
+            *layers = SceneRenderLayers(RenderLayers::default())
         }
     }
 }

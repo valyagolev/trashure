@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::Instant};
+use bevy::{prelude::*, render::view::RenderLayers, utils::Instant};
 
 use crate::{
     game::{
@@ -9,6 +9,7 @@ use crate::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
         recolor::Tinted,
+        scenerenderlayer::SceneRenderLayers,
         selectable::{CurrentlySelected, Selectable},
         voxels3d::lazyworld::{LazyWorld, WorldGenTrigger},
         voxels3d::VoxelBlock,
@@ -148,9 +149,12 @@ fn place_ghost(
     };
 
     if cursor.just_released(MouseButton::Left) {
-        commands
-            .entity(ghost)
-            .insert((Tinted::empty(), VisibilityBundle::default(), Selectable));
+        commands.entity(ghost).insert((
+            Tinted::empty(),
+            VisibilityBundle::default(),
+            Selectable,
+            SceneRenderLayers(RenderLayers::default().with(6)),
+        ));
 
         GameMachineSettings::instantiate(ghost, &mut commands, m);
 
