@@ -145,11 +145,10 @@ fn handle_camera(
         let center = ((trans.translation().xz() - trigger.0) / VOXEL_BLOCK_SIZE as f32).as_ivec2();
 
         let all_around = AROUND_2D
-        .iter()
-        .map(|&offset| center + offset)
-        .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
-        // .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
-        ;
+            .iter()
+            .map(|&offset| center + offset)
+            .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset))
+            .flat_map(|o| AROUND_2D.iter().map(move |offset| o + *offset));
 
         for part in all_around {
             // println!("Checking part {:?}", part);

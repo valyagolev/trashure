@@ -25,6 +25,7 @@ impl Plugin for MachinesPlugin {
             building::MachinesBuildingPlugin,
             radar::RadarPlugin,
             targets::TargetsPlugin,
+            list::MachineListPlugin,
         ))
         .add_systems(Startup, load_machines)
         // .add_systems(Update, debug_keyboard)
