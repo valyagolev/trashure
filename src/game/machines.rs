@@ -60,7 +60,7 @@ impl GameMachineSettings {
 
                 commands
                     .entity(ghost)
-                    .insert(Target::new(mc.pos + IVec2::new(10, 10)));
+                    .insert(Target::new(mc.pos + IVec2::new(10, 15)));
 
                 GameMachineSettings::Plower { plowing_radar }
             }
@@ -170,14 +170,22 @@ fn consume_mailbox(
         match bm.0 {
             GameMachineSettings::Plower { .. } => {
                 let target = targets.get(e).unwrap();
-                let target = target.global_pos.extend(VOXEL_BLOCK_SIZE).xzy();
+                let target = target.global_pos;
 
-                let (block_pos, _) = VoxelBlock::normalize_pos(IVec2::ZERO, target);
+                let (block_pos, local_p) =
+                    VoxelBlock::normalize_pos(IVec2::ZERO, target.extend(0).xzy());
                 let block_e = lazy_world.known_parts[&block_pos];
+                let block = q_blocks.get(block_e).unwrap();
+
+                let y = if let Some(local_p) = block.empty_at_col(local_p.xz()) {
+                    local_p.y + 3
+                } else {
+                    VOXEL_BLOCK_SIZE
+                };
 
                 commands.spawn(FlyingVoxel {
                     origin: mm.pos.extend(3).xzy(),
-                    target,
+                    target: target.extend(y).xzy(),
                     target_mailbox: block_e,
                     material: vc,
                     payload: 0,

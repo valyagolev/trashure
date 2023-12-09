@@ -6,7 +6,11 @@ use crate::{
     game::{material::GameMaterial, voxelmailbox::VoxelMailbox},
 };
 
-use super::{debug3d, machines::MachineResources, voxels3d::VoxelResources};
+use super::{
+    debug3d,
+    machines::MachineResources,
+    voxels3d::{VoxelResources, VOXEL_BLOCK_SIZE},
+};
 
 pub struct FlyingVoxelPlugin;
 impl Plugin for FlyingVoxelPlugin {
@@ -45,9 +49,23 @@ fn initialize_voxel(
         let target_reorig_vertical_plane: Vec2 =
             Vec2::new(target_reorig.xz().length(), target_reorig.y);
 
-        let a = rand::thread_rng().gen_range(-0.5..-0.2);
-        let b = (target_reorig_vertical_plane.y - a * target_reorig_vertical_plane.x.powi(2))
-            / target_reorig_vertical_plane.x;
+        let (x0, y0) = target_reorig_vertical_plane.into();
+
+        let y1 = {
+            let min_max_y = target_reorig.y * 0.2;
+
+            let max_max_y = (VOXEL_BLOCK_SIZE as f32) * 0.8;
+
+            if max_max_y <= min_max_y {
+                min_max_y
+            } else {
+                rand::thread_rng().gen_range(min_max_y..max_max_y)
+            }
+        };
+        let x1 = x0 / 2.0;
+
+        let a = (-x0 * y1 + x1 * y0) / (x0 * x0 * x1 - x0 * x1 * x1);
+        let b = (y0 - a * x0.powi(2)) / x0;
 
         commands.entity(e).insert((
             FlyingVoxelState {
