@@ -9,7 +9,7 @@ use crate::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
         recolor::Tinted,
-        selectable::CurrentlySelected,
+        selectable::{CurrentlySelected, Selectable},
         voxels3d::lazyworld::{LazyWorld, WorldGenTrigger},
         voxels3d::VoxelBlock,
     },
@@ -54,6 +54,7 @@ impl MachineGhost {
                 VoxelMailbox(default()),
                 Into::<Tinted>::into(MachineRecolor::Ghost),
                 WorldGenTrigger(Vec2::ZERO),
+                Selectable,
                 // BuiltMachine,
                 MyMachine {
                     tp,
