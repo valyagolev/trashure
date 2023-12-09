@@ -34,7 +34,7 @@ impl Plugin for MachinesPlugin {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect, EnumDiscriminants)]
-#[strum_discriminants(derive(Reflect))]
+#[strum_discriminants(derive(Reflect, Hash))]
 pub enum GameMachineSettings {
     Recycler { recycling_radar: Entity },
     Plower { plowing_radar: Entity },

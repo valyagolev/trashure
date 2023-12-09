@@ -8,15 +8,21 @@ final steps:
 
 3. highlight taken floor when building a machine
 
-4. refactor radar consupmtion
+4. DONE refactor radar consupmtion
 
-5. "bulding in progress" mechanics
+5. DONE machine names
 
-6. "fuel" mechanics
+6. "bulding in progress" mechanics
 
-7. "maintenance" mechanics
+7. "fuel" mechanics
 
-8. tutorial
+8. "maintenance" mechanics
+
+9. tutorial
+
+----
+
+10. radar looks??
 
 ========================
 

@@ -1,7 +1,15 @@
-use bevy::{prelude::*, render::view::RenderLayers, utils::Instant};
+use bevy::{
+    prelude::*,
+    render::view::RenderLayers,
+    utils::{HashMap, Instant},
+};
 
 use crate::{
-    game::{machines::GameMachineSettings, voxelmailbox::VoxelMailbox, Direction2D},
+    game::{
+        machines::{GameMachineSettings, GameMachineSettingsDiscriminants},
+        voxelmailbox::VoxelMailbox,
+        Direction2D,
+    },
     graphics::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
@@ -34,13 +42,17 @@ impl Plugin for MachinesBuildingPlugin {
             None,
             false,
             Instant::now() + std::time::Duration::from_millis(200),
-        ));
+        ))
+        .insert_resource(MachineCounter(HashMap::default()));
     }
 }
 
 #[derive(Debug, Resource, Reflect)]
 /// MachineType, MyMachine
 pub struct MachineGhost(pub Option<(Entity, Entity)>, pub bool, pub Instant);
+
+#[derive(Resource)]
+pub struct MachineCounter(pub HashMap<GameMachineSettingsDiscriminants, usize>);
 
 impl MachineGhost {
     pub fn start(
@@ -51,6 +63,7 @@ impl MachineGhost {
     ) -> Self {
         let ent = commands
             .spawn((
+                Name::new(format!("{} Ghost", machine_type.name)),
                 VoxelMailbox(default()),
                 Into::<Tinted>::into(MachineRecolor::Ghost),
                 WorldGenTrigger(Vec2::ZERO),
@@ -105,6 +118,8 @@ fn place_ghost(
     mut menu_state: ResMut<GameMenu>,
 
     q_found_transforms: Query<&Transform, With<SceneFoundObject>>,
+
+    mut machine_counter: ResMut<MachineCounter>,
 ) {
     if !mghost.1 {
         return;
@@ -123,7 +138,14 @@ fn place_ghost(
     };
 
     if cursor.just_released(MouseButton::Left) {
+        let v = machine_counter
+            .0
+            .entry(m.gmt)
+            .and_modify(|c| *c += 1)
+            .or_insert(1);
+
         commands.entity(ghost).insert((
+            Name::new(format!("{:?} ({})", m.gmt, v)),
             Tinted::empty(),
             VisibilityBundle::default(),
             Selectable,
