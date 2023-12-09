@@ -1,3 +1,27 @@
+final steps:
+
+1. adjust plowing speed:
+        Plower must be slower
+        Recycler must clear out in front of it a bit faster (maybe do it by adjusting radar shape)
+
+2. show list of machines
+
+3. highlight taken floor when building a machine
+
+4. refactor radar consupmtion
+
+5. "bulding in progress" mechanics
+
+6. "fuel" mechanics
+
+7. "maintenance" mechanics
+
+8. tutorial
+
+========================
+
+
+
 1. DONE. fix the "a" value for the flying voxel!
 
 
@@ -14,7 +38,7 @@
 
 ---
 
-5. make a component to make Scenes inherit render layers
+5. DONE make a component to make Scenes inherit render layers
 6. make a list of buildings
 
 game stages:

@@ -6,7 +6,6 @@ use rand::{seq::SliceRandom, Rng};
 use crate::{
     game::{material::GameMaterial, Direction2D},
     graphics::{
-        debug3d,
         recolor::Tinted,
         voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
     },
@@ -56,6 +55,7 @@ pub struct Radar {
     found_voxel: Option<(GameMaterial, IVec3)>,
 
     pub direction: Option<Direction2D>,
+    pub paused: bool,
 }
 
 impl Radar {
@@ -79,6 +79,7 @@ impl Radar {
             scene: None,
             found_voxel: None,
             direction,
+            paused: false,
         }
     }
 
@@ -120,13 +121,11 @@ fn radar_search(
     let rand = &mut rand::thread_rng();
 
     for (mut r, rpar, gt) in q_radars.iter_mut() {
-        if r.found_voxel.is_some() {
+        if r.paused || r.found_voxel.is_some() {
             continue;
         }
 
         let (rpardir, machine) = q_parent_machines.get(**rpar).unwrap();
-
-        // println!("checking radar: {:?}", r);
 
         r.watch.tick(time.delta());
 
@@ -172,20 +171,16 @@ fn radar_search(
 }
 
 fn redraw_radars(
-    q_radars: Query<(&Radar, &Children)>,
-    mut q_scenes: Query<(&mut Transform, &GlobalTransform), (With<RadarScene>, Without<DebugCube>)>,
-    // mut q_cubes: Query<&mut Transform, (With<DebugCube>, Without<RadarScene>)>,
+    q_radars: Query<&Radar>,
+    mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
 ) {
-    for (r, _children) in q_radars.iter() {
-        let Ok((mut t, gl)) = q_scenes.get_mut(r.scene.unwrap()) else {
+    for r in q_radars.iter() {
+        let Ok(mut t) = q_scenes.get_mut(r.scene.unwrap()) else {
             continue;
         };
 
-        // println!("redrawing radar: {:?}", r);
-
         let dist = r.dist();
 
-        // 2.0 is the scale of the radar scene
         t.scale = Vec3::splat(dist * 2.0);
     }
 }

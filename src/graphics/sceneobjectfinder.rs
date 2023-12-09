@@ -21,7 +21,7 @@ impl Plugin for SceneObjectFinderPlugin {
 pub struct SceneObjectFinder(Vec<Cow<'static, str>>);
 
 #[derive(Component)]
-pub struct SceneObjectsFound(HashMap<Cow<'static, str>, Entity>);
+pub struct SceneObjectsFound(pub HashMap<Cow<'static, str>, Entity>);
 
 impl SceneObjectFinder {
     pub fn new<S: Into<Cow<'static, str>>>(strs: impl IntoIterator<Item = S>) -> Self {

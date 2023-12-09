@@ -21,11 +21,11 @@ impl Plugin for FlyingVoxelPlugin {
 
 #[derive(Debug, Component)]
 pub struct FlyingVoxel {
-    pub origin: IVec3,
-    pub target: IVec3,
+    pub origin: Vec3,
+    pub target: Vec3,
     pub target_mailbox: Entity,
     pub material: GameMaterial,
-    pub payload: usize,
+    pub payload: (IVec3, usize),
 }
 
 #[derive(Debug, Component)]
@@ -45,7 +45,7 @@ fn initialize_voxel(
     for (e, fv) in q_fv.iter() {
         // println!("new target:{:?}", fv.target_mailbox);
 
-        let target_reorig = fv.target.as_vec3() - fv.origin.as_vec3();
+        let target_reorig = fv.target - fv.origin;
         let target_reorig_vertical_plane: Vec2 =
             Vec2::new(target_reorig.xz().length(), target_reorig.y);
 
@@ -101,11 +101,11 @@ fn fly_voxel(
 
             let mut mb = q_mailboxes.get_mut(fv.target_mailbox).unwrap();
 
-            mb.0.push_back((fv.target, fv.material, fv.payload));
+            mb.0.push_back((fv.payload.0, fv.material, fv.payload.1));
         }
 
-        let target = fv.target.as_vec3();
-        let origin = fv.origin.as_vec3();
+        let target = fv.target;
+        let origin = fv.origin;
 
         let target_reorig = target - origin;
         let target_reorig_vertical_plane: Vec2 =

@@ -12,8 +12,14 @@ pub struct SelectablePlugin;
 
 impl Plugin for SelectablePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(CurrentlySelected(None))
-            .add_systems(Update, (handle_selection, recolor_selection));
+        app.insert_resource(CurrentlySelected(None)).add_systems(
+            Update,
+            (
+                handle_selection,
+                recolor_selection,
+                // handle_deselection
+            ),
+        );
     }
 }
 

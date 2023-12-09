@@ -68,6 +68,7 @@ pub fn setup_menu(
                     padding: UiRect::all(Val::Px(4.0)),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,
+                    min_width: Val::Px(400.0),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -164,7 +165,7 @@ fn currently_creating(commands: &mut Commands<'_, '_>) -> Entity {
                         },
                     },
                     TextSection {
-                        value: " Press R to rotate.".into(),
+                        value: "\nPress R to rotate.\nPress Esc to cancel.".into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,
@@ -204,7 +205,7 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                         },
                     },
                     TextSection {
-                        value: " Press R to rotate.".into(),
+                        value: "\nPress R to rotate.\nPress Esc to deselect.".into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,

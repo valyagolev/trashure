@@ -10,7 +10,7 @@ use crate::graphics::{
         targets::Target,
         BuiltMachine, MyMachine,
     },
-    sceneobjectfinder::SceneObjectFinder,
+    sceneobjectfinder::{SceneObjectFinder, SceneObjectsFound},
     voxels3d::{
         changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
         VOXEL_BLOCK_SIZE,
@@ -83,6 +83,8 @@ fn consume_radars(
     mut q_radars: Query<&mut Radar>,
     q_blocks: Query<&mut VoxelBlock>,
     mut blockchanges: ResMut<VoxelBlockChanges>,
+    q_scene_object_finder: Query<&SceneObjectsFound>,
+    q_scene_object_transforms: Query<&GlobalTransform, (Without<Radar>, Without<VoxelBlock>)>,
 ) {
     let mut whole_world = WholeBlockWorld {
         lazy_world: lazy_world,
@@ -93,6 +95,13 @@ fn consume_radars(
     for (e, m, mach) in q_machines.iter() {
         match m.0 {
             GameMachineSettings::Recycler { recycling_radar } => {
+                let rec_entry = q_scene_object_finder
+                    .get(e)
+                    .ok()
+                    .and_then(|f| f.0.get("RecyclingTarget"))
+                    .and_then(|e| q_scene_object_transforms.get(*e).ok())
+                    .map(|t| t.translation());
+
                 consume_voxel(
                     &mut q_radars,
                     recycling_radar,
@@ -102,6 +111,7 @@ fn consume_radars(
                     &mut commands,
                     mach,
                     e,
+                    rec_entry,
                 );
             }
             GameMachineSettings::Plower { plowing_radar } => {
@@ -114,6 +124,7 @@ fn consume_radars(
                     &mut commands,
                     mach,
                     e,
+                    None,
                 );
             }
         }
@@ -129,6 +140,7 @@ fn consume_voxel(
     commands: &mut Commands<'_, '_>,
     mach: &MyMachine,
     e: Entity,
+    override_target: Option<Vec3>,
 ) {
     let Ok(mut r) = q_radars.get_mut(radar) else {
         return;
@@ -144,12 +156,14 @@ fn consume_voxel(
 
     // todo: check the material?
 
+    let tp = mach.pos.extend(3).xzy();
+
     commands.spawn(FlyingVoxel {
-        origin: vc,
-        target: mach.pos.extend(3).xzy(),
+        origin: vc.as_vec3(),
+        target: override_target.unwrap_or_else(|| tp.as_vec3()),
         target_mailbox: e,
         material: mat,
-        payload: 1, // 1==recycling
+        payload: (tp, 1), // 1==recycling
     });
 }
 
@@ -165,15 +179,14 @@ fn consume_mailbox(
     )>,
     targets: Query<&Target>,
     q_blocks: Query<&VoxelBlock>,
+    q_scene_object_finder: Query<&SceneObjectsFound>,
+    q_scene_object_transforms: Query<&GlobalTransform, (Without<Radar>, Without<VoxelBlock>)>,
 ) {
     let rand = &mut rand::thread_rng();
     for (e, mut mailbox, bm, mm, dir) in q_machines.iter_mut() {
-        // println!("mailbox: {:?} {e:?}", mailbox.0);
         let Some((_, mut vc, pl)) = mailbox.0.pop_front() else {
             continue;
         };
-
-        // println!("got mail:{} {:?} {}", mm.pos, vc, pl);
 
         match bm.0 {
             GameMachineSettings::Plower { .. } => {
@@ -192,15 +205,22 @@ fn consume_mailbox(
                 };
 
                 commands.spawn(FlyingVoxel {
-                    origin: mm.pos.extend(3).xzy(),
-                    target: target.extend(y).xzy(),
+                    origin: mm.pos.extend(3).xzy().as_vec3(),
+                    target: target.extend(y).xzy().as_vec3(),
                     target_mailbox: block_e,
                     material: vc,
-                    payload: 0,
+                    payload: (target.extend(y).xzy(), 0),
                 });
             }
             GameMachineSettings::Recycler { .. } => {
                 assert!(pl == 1);
+
+                let rec_exit = q_scene_object_finder
+                    .get(e)
+                    .ok()
+                    .and_then(|f| f.0.get("RecycledOrigin"))
+                    .and_then(|e| q_scene_object_transforms.get(*e).ok())
+                    .map(|t| t.translation());
 
                 if vc == GameMaterial::Brownish {
                     if rand.gen_range(0..3) == 0 {
@@ -232,13 +252,14 @@ fn consume_mailbox(
                 let (block_p, local_p, block_e) = found.unwrap();
 
                 // println!("sending recycled to: {:?}", block_e);
+                let tp = VoxelBlock::real_pos(block_p, local_p).as_ivec3() + IVec3::new(0, 3, 0);
 
                 commands.spawn(FlyingVoxel {
-                    origin: mm.pos.extend(3).xzy(),
-                    target: VoxelBlock::real_pos(block_p, local_p).as_ivec3() + IVec3::new(0, 3, 0),
+                    origin: rec_exit.unwrap_or_else(|| mm.pos.extend(3).xzy().as_vec3()),
+                    target: tp.as_vec3(),
                     target_mailbox: block_e,
                     material: vc,
-                    payload: 0,
+                    payload: (tp, 0),
                 });
 
                 // let rp = VoxelBlock::real_pos(block_p, local_p);

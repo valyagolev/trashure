@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::view::RenderLayers, utils::Instant};
+use bevy::{prelude::*, render::view::RenderLayers, transform::commands, utils::Instant};
 
 use crate::{
     game::{
@@ -29,6 +29,7 @@ impl Plugin for MachinesBuildingPlugin {
                 move_ghost,
                 check_placement,
                 place_ghost.after(check_placement),
+                handle_esc,
             ),
         )
         .insert_resource(MachineGhost(
@@ -220,4 +221,22 @@ fn check_placement(
     };
 
     mghost.1 = !bad;
+}
+
+fn handle_esc(
+    mut commands: Commands,
+    keyboard: Res<Input<KeyCode>>,
+    mut currently_building: ResMut<MachineGhost>,
+    mut selected: ResMut<CurrentlySelected>,
+    mut menu_state: ResMut<GameMenu>,
+) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        if let Some((_, ghost)) = currently_building.0 {
+            commands.entity(ghost).despawn_recursive();
+        }
+
+        currently_building.0 = None;
+        selected.0 = None;
+        menu_state.0 = GameMenuState::ToPickBuilding;
+    }
 }

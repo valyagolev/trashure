@@ -13,6 +13,7 @@ use super::selectable::CurrentlySelected;
 
 pub mod building;
 mod colors;
+mod list;
 pub mod radar;
 pub mod targets;
 
