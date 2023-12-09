@@ -38,9 +38,9 @@ impl GameMachineSettings {
         let set = match mc.gmt {
             GameMachineSettingsDiscriminants::Recycler => {
                 let recycling_radar = commands
-                    .spawn(RadarBundle::new(
-                        GameMaterial::all(),
-                        Some(Direction2D::Forward),
+                    .spawn((
+                        Name::new("recycling radar"),
+                        RadarBundle::new(GameMaterial::all(), Some(Direction2D::Forward)),
                     ))
                     .id();
 
@@ -50,9 +50,9 @@ impl GameMachineSettings {
             }
             GameMachineSettingsDiscriminants::Plower => {
                 let plowing_radar = commands
-                    .spawn(RadarBundle::new(
-                        GameMaterial::all(),
-                        Some(Direction2D::Forward),
+                    .spawn((
+                        Name::new("plowing radar"),
+                        RadarBundle::new(GameMaterial::all(), Some(Direction2D::Forward)),
                     ))
                     .id();
 

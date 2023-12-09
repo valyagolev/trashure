@@ -59,6 +59,7 @@ fn setup(mut commands: Commands, _conf: Res<Configuration>) {
 
     commands
         .spawn((
+            Name::new("main camera"),
             MainCamera,
             WorldGenTrigger(CAMERA_OFFSET.xz()),
             Camera3dBundle {
@@ -77,6 +78,7 @@ fn setup(mut commands: Commands, _conf: Res<Configuration>) {
         ))
         .with_children(|b| {
             b.spawn((
+                Name::new("layer 6 camera"),
                 RenderLayers::layer(6),
                 Camera3dBundle {
                     camera: Camera {
