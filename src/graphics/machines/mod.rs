@@ -151,8 +151,6 @@ fn update_machines(
                     transform: trans,
                     ..default()
                 });
-
-                // commands.entity(e).push_children(&[bx]);
             }
             Some(mut ts) => {
                 *ts = trans;
@@ -160,27 +158,6 @@ fn update_machines(
         }
     }
 }
-
-// fn update_boxes(
-//     // mut commands: Commands,
-//     // ass: Res<AssetServer>,
-//     q_machinetypes: Query<&MachineType>,
-//     mut q_machines: Query<(Entity, &MyMachine, &Children)>,
-//     mut q_cubes: Query<(&DebugCube, &mut Transform)>,
-//     // mres: Res<MachineResources>,
-// ) {
-//     for (e, machine, children) in q_machines.iter_mut() {
-//         let tp = q_machinetypes.get(machine.tp).unwrap();
-
-//         for ch in children {
-//             let Ok((cube, mut trans)) = q_cubes.get_mut(*ch) else {
-//                 continue;
-//             };
-
-//             *trans = Transform::from_scale(Vec3::new(tp.dims.x as f32, 32.0, tp.dims.y as f32));
-//         }
-//     }
-// }
 
 fn update_colors(
     // mut commands: Commands,

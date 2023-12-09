@@ -20,7 +20,7 @@ impl Plugin for DebugEditorPlugin {
             // .add_plugins(FilterQueryInspectorPlugin::<
             //     Or<(With<MyMachine>, With<MachineType>)>,
             // >::default())
-            .add_plugins(FilterQueryInspectorPlugin::<With<MyMachine>>::default());
+            .add_plugins(FilterQueryInspectorPlugin::<With<TargetInst>>::default());
         // .add_systems(Update, edit_stuff)
     }
 }

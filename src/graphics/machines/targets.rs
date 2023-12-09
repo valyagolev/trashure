@@ -127,7 +127,8 @@ impl TargetsPlugin {
         mut q_scenes: Query<&mut Transform, With<TargetInst>>,
     ) {
         for q_target in q_targets.iter() {
-            for mut q_scene in q_scenes.iter_mut() {
+            if let Some(mut q_scene) = q_target.instantiated.and_then(|e| q_scenes.get_mut(e).ok())
+            {
                 q_scene.translation = q_target.global_pos.extend(0).xzy().as_vec3();
             }
         }

@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use itertools::Itertools;
 
-use crate::graphics::selectable::CurrentlySelected;
+use crate::graphics::{
+    camera3d::CAMERA_OFFSET,
+    gamemenu::{GameMenu, GameMenuState},
+    selectable::CurrentlySelected,
+};
 
 use super::{BuiltMachine, MyMachine};
 
@@ -9,8 +13,14 @@ pub struct MachineListPlugin;
 
 impl Plugin for MachineListPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, Self::load_ui)
-            .add_systems(Update, (Self::add_ui_nodes, Self::redraw_ui_nodes));
+        app.add_systems(Startup, Self::load_ui).add_systems(
+            Update,
+            (
+                Self::add_ui_nodes,
+                Self::redraw_ui_nodes,
+                Self::handle_click,
+            ),
+        );
     }
 }
 
@@ -150,7 +160,24 @@ impl MachineListPlugin {
 
     fn handle_click(
         q_nodes: Query<(&MachineListUiMachine, &Interaction)>,
+        q_machines: Query<&GlobalTransform, With<BuiltMachine>>,
         mut selected: ResMut<CurrentlySelected>,
+        mut menu_state: ResMut<GameMenu>,
+        mut camera: Query<&mut Transform, (With<Camera3d>, Without<Parent>)>,
     ) {
+        for (node, inter) in q_nodes.iter() {
+            if *inter == Interaction::Pressed {
+                selected.0 = Some(node.0);
+                menu_state.0 = GameMenuState::SelectedMachine;
+
+                let tr = q_machines.get(node.0).unwrap();
+                let tr = Transform::from_translation(tr.translation() + CAMERA_OFFSET)
+                    .looking_at(tr.translation(), Vec3::Y);
+
+                for mut cam in camera.iter_mut() {
+                    *cam = tr;
+                }
+            }
+        }
     }
 }

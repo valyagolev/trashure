@@ -103,13 +103,13 @@ fn generate_part(
             let pos = IVec3::new(x, 0, z) + IVec3::new(half_chunk, 0, half_chunk);
 
             let cnt = {
-                // if rand.gen_range(1..50) == 1 {
-                //     rand.gen_range(80..=200)
-                // } else {
-                //     rand.gen_range(2..=3)
-                // }
+                if rand.gen_range(1..50) == 1 {
+                    rand.gen_range(5..=10)
+                } else {
+                    rand.gen_range(0..=2)
+                }
 
-                rand.gen_range(0..=2)
+                // rand.gen_range(0..=2)
             };
             // let cnt = 1;
             for _z in 0..cnt {
