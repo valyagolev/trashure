@@ -11,21 +11,27 @@ use crate::{
     },
 };
 
+use self::consumption::RadarConsumer;
+
 use super::{DebugCube, MachineResources, MyMachine};
+
+pub mod consumption;
 
 pub struct RadarPlugin;
 
 impl Plugin for RadarPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                setup_radars,
-                // radar_search.after(setup_radars),
-                redraw_radars.after(radar_search),
-            ),
-        )
-        .add_systems(FixedUpdate, radar_search);
+        app.add_plugins(consumption::RadarConsumptionPlugin)
+            .add_systems(
+                Update,
+                (
+                    setup_radars,
+                    // radar_search.after(setup_radars),
+                    redraw_radars.after(radar_search),
+                ),
+            )
+            .add_systems(FixedUpdate, radar_search)
+            .add_event::<RadarFoundVoxel>();
     }
 }
 
@@ -34,16 +40,29 @@ pub struct RadarBundle {
     radar: Radar,
     transform_bundle: TransformBundle,
     visibility_bundle: VisibilityBundle,
+    radar_consumer: RadarConsumer,
 }
 
 impl RadarBundle {
-    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>) -> Self {
+    pub fn new(
+        mats: &[GameMaterial],
+        direction: Option<Direction2D>,
+        radar_consumer: RadarConsumer,
+    ) -> Self {
         RadarBundle {
             radar: Radar::new(mats, direction),
             transform_bundle: TransformBundle::default(),
             visibility_bundle: VisibilityBundle::default(),
+            radar_consumer,
         }
     }
+}
+
+#[derive(Event)]
+pub struct RadarFoundVoxel {
+    pub radar: Entity,
+    pub material: GameMaterial,
+    pub pos: IVec3,
 }
 
 #[derive(Component)]
@@ -52,20 +71,8 @@ pub struct Radar {
     watch: Stopwatch,
     scene: Option<Entity>,
 
-    found_voxel: Option<(GameMaterial, IVec3)>,
-
     pub direction: Option<Direction2D>,
     pub paused: bool,
-}
-
-impl Radar {
-    pub fn take_voxel(&mut self) -> Option<(GameMaterial, IVec3)> {
-        let v = self.found_voxel.take()?;
-
-        self.watch.reset();
-
-        Some(v)
-    }
 }
 
 #[derive(Component)]
@@ -77,7 +84,6 @@ impl Radar {
             material_mask: GameMaterial::any_of_mask(mats),
             watch: Stopwatch::new(),
             scene: None,
-            found_voxel: None,
             direction,
             paused: false,
         }
@@ -112,16 +118,17 @@ fn setup_radars(
 }
 
 fn radar_search(
+    mut found_events: EventWriter<RadarFoundVoxel>,
     time: Res<Time>,
-    mut q_radars: Query<(&mut Radar, &Parent, &GlobalTransform)>,
+    mut q_radars: Query<(Entity, &mut Radar, &Parent, &GlobalTransform)>,
     q_parent_machines: Query<(&Direction2D, &MyMachine), With<Children>>,
     lazyworld: Res<LazyWorld>,
     q_blocks: Query<&VoxelBlock>,
 ) {
     let rand = &mut rand::thread_rng();
 
-    for (mut r, rpar, gt) in q_radars.iter_mut() {
-        if r.paused || r.found_voxel.is_some() {
+    for (e, mut r, rpar, gt) in q_radars.iter_mut() {
+        if r.paused {
             continue;
         }
 
@@ -165,7 +172,13 @@ fn radar_search(
         if !candidates.is_empty() {
             let winner = candidates.choose(rand).unwrap();
 
-            r.found_voxel = Some(*winner);
+            found_events.send(RadarFoundVoxel {
+                radar: e,
+                material: winner.0,
+                pos: winner.1,
+            });
+
+            r.watch.reset();
         }
     }
 }
@@ -175,7 +188,7 @@ fn redraw_radars(
     mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
 ) {
     for r in q_radars.iter() {
-        let Ok(mut t) = q_scenes.get_mut(r.scene.unwrap()) else {
+        let Some(mut t) = r.scene.and_then(|e| q_scenes.get_mut(e).ok()) else {
             continue;
         };
 

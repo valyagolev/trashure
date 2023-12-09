@@ -6,6 +6,7 @@ use crate::{
         cursor::CursorOver,
         gamemenu::{GameMenu, GameMenuState},
         recolor::Tinted,
+        sceneobjectfinder::{SceneFoundObject, SceneObjectFinder, SceneObjectsFound},
         scenerenderlayer::SceneRenderLayers,
         selectable::{CurrentlySelected, Selectable},
         voxels3d::lazyworld::{LazyWorld, WorldGenTrigger},
@@ -62,6 +63,7 @@ impl MachineGhost {
                     // direction: ,
                 },
                 Direction2D::Backward,
+                SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
             ))
             .id();
 
@@ -72,34 +74,6 @@ impl MachineGhost {
         )
     }
 }
-
-// fn debug_setup(
-//     mut commands: Commands,
-//     mut ghost: ResMut<MachineGhost>,
-//     q_types: Query<Entity, With<MachineType>>,
-//     // mut q_messages: ResMut<DebugTexts>,
-//     cursor: Res<CursorOver>,
-// ) {
-//     if ghost.0.is_none() {
-//         let Some(t) = q_types.iter().next() else {
-//             return;
-//         };
-
-//         let tp = commands
-//             .spawn((
-//                 Tinted::from(MachineRecolor::Ghost.into()),
-//                 // BuiltMachine,
-//                 MyMachine {
-//                     tp: t,
-//                     pos: cursor.block.xz(),
-//                     direction: Direction2D::Backward,
-//                 },
-//             ))
-//             .id();
-
-//         ghost.0 = Some((t, tp));
-//     }
-// }
 
 fn move_ghost(
     ghost: ResMut<MachineGhost>,
@@ -124,11 +98,13 @@ fn move_ghost(
 fn place_ghost(
     mut commands: Commands,
     mut mghost: ResMut<MachineGhost>,
-    q_machines: Query<&MyMachine, Without<BuiltMachine>>,
+    q_machines: Query<(&MyMachine, &SceneObjectsFound), Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
 
     mut selected: ResMut<CurrentlySelected>,
     mut menu_state: ResMut<GameMenu>,
+
+    q_found_transforms: Query<&Transform, With<SceneFoundObject>>,
 ) {
     if !mghost.1 {
         return;
@@ -142,7 +118,7 @@ fn place_ghost(
         return;
     };
 
-    let Ok(m) = q_machines.get(ghost) else {
+    let Ok((m, scob)) = q_machines.get(ghost) else {
         return;
     };
 
@@ -154,7 +130,7 @@ fn place_ghost(
             SceneRenderLayers(RenderLayers::default().with(6)),
         ));
 
-        GameMachineSettings::instantiate(ghost, &mut commands, m);
+        GameMachineSettings::instantiate(ghost, &mut commands, m, scob, &q_found_transforms);
 
         mghost.0 = None;
 
