@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-use super::{colors::MachineRecolor, BuiltMachine, MachineType, MyMachine};
+use super::{colors::MachineRecolor, BuiltMachine, MachineResources, MachineType, MyMachine};
 
 pub struct MachinesBuildingPlugin;
 
@@ -54,12 +54,16 @@ pub struct MachineGhost(pub Option<(Entity, Entity)>, pub bool, pub Instant);
 #[derive(Resource)]
 pub struct MachineCounter(pub HashMap<GameMachineSettingsDiscriminants, usize>);
 
+#[derive(Component)]
+pub struct GhostMachineFloor;
+
 impl MachineGhost {
     pub fn start(
         tp: Entity,
         commands: &mut Commands,
         cursor: &Res<CursorOver>,
         machine_type: &MachineType,
+        machine_res: &Res<MachineResources>,
     ) -> Self {
         let ent = commands
             .spawn((
@@ -73,11 +77,27 @@ impl MachineGhost {
                     gmt: machine_type.gmt,
                     dims: machine_type.dims,
                     pos: cursor.block.xz(),
-                    // direction: ,
+                    fuel: 0,
+                    max_fuel: machine_type.max_fuel,
                 },
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
             ))
+            .with_children(|b| {
+                b.spawn((
+                    GhostMachineFloor,
+                    PbrBundle {
+                        mesh: machine_res.floor.clone(),
+                        transform: Transform::from_scale(Vec3::new(
+                            machine_type.dims.x as f32,
+                            1.0,
+                            machine_type.dims.y as f32,
+                        )),
+                        material: machine_res.white_floor.clone(),
+                        ..Default::default()
+                    },
+                ));
+            })
             .id();
 
         Self(

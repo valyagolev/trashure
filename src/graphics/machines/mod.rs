@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use bevy::prelude::*;
+use bevy::prelude::{shape::Plane, *};
 
 use crate::game::{
     machines::{GameMachineSettings, GameMachineSettingsDiscriminants},
@@ -58,6 +58,7 @@ pub struct MachineType {
     pub name: Cow<'static, str>,
     scene: Handle<Scene>,
     pub dims: IVec2,
+    pub max_fuel: u8,
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -67,6 +68,8 @@ pub struct MyMachine {
     pub pos: IVec2,
     // pub direction: Direction2D,
     pub dims: IVec2,
+    pub fuel: u8,
+    pub max_fuel: u8,
 }
 
 impl MyMachine {
@@ -86,6 +89,8 @@ impl MyMachine {
 #[derive(Debug, Resource, Reflect)]
 pub struct MachineResources {
     pub cube: Handle<Mesh>,
+    pub floor: Handle<Mesh>,
+    pub white_floor: Handle<StandardMaterial>,
     debug_reddish: Handle<StandardMaterial>,
     radar: Handle<Scene>,
 }
@@ -104,6 +109,8 @@ pub fn load_machines(
 
     commands.insert_resource(MachineResources {
         cube: cube.clone(),
+        floor: meshes.add(Plane::from_size(1.0).into()),
+        white_floor: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into()),
         debug_reddish: debug_reddish.clone(),
         radar: ass.load("objects/radar.glb#Scene0"),
     });
@@ -117,6 +124,7 @@ pub fn load_machines(
 
         // always square for now
         dims: IVec2 { x: 12, y: 12 },
+        max_fuel: 10,
     });
 
     commands.spawn(MachineType {
@@ -128,6 +136,7 @@ pub fn load_machines(
 
         // always square for now
         dims: IVec2 { x: 6, y: 6 },
+        max_fuel: 5,
     });
 }
 

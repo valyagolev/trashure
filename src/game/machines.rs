@@ -110,7 +110,7 @@ fn consume_mailbox(
         Entity,
         &mut VoxelMailbox,
         &BuiltMachine,
-        &MyMachine,
+        &mut MyMachine,
         &Direction2D,
     )>,
     targets: Query<&Target>,
@@ -119,10 +119,15 @@ fn consume_mailbox(
     q_scene_object_transforms: Query<&GlobalTransform, (Without<Radar>, Without<VoxelBlock>)>,
 ) {
     let rand = &mut rand::thread_rng();
-    for (e, mut mailbox, bm, mm, dir) in q_machines.iter_mut() {
+    for (e, mut mailbox, bm, mut mm, dir) in q_machines.iter_mut() {
         let Some((_, mut vc, pl)) = mailbox.0.pop_front() else {
             continue;
         };
+
+        if vc == GameMaterial::Blueish && mm.fuel < mm.max_fuel {
+            mm.fuel += 1;
+            continue;
+        }
 
         match bm.0 {
             GameMachineSettings::Plower { .. } => {
@@ -224,6 +229,12 @@ fn move_machines(
         if matches!(bm.0, GameMachineSettings::Recycler { .. }) {
             continue;
         }
+
+        if mm.fuel < mm.max_fuel {
+            continue;
+        }
+
+        mm.fuel -= mm.max_fuel;
 
         if !dir
             .line_in_direction(mm.pos, mm.dims)

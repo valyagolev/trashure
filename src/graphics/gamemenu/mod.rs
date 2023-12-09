@@ -1,13 +1,17 @@
 use bevy::prelude::*;
 
+use self::textref::{QueryTexts, TextRefs};
+
 use super::{
     cursor::CursorOver,
-    machines::{building::MachineGhost, MachineType, MyMachine},
+    machines::{building::MachineGhost, MachineResources, MachineType, MyMachine},
     selectable::CurrentlySelected,
 };
 
 pub struct GameMenuPlugin;
 mod looks;
+mod textref;
+
 impl Plugin for GameMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GameMenu(GameMenuState::ToPickBuilding))
@@ -64,6 +68,7 @@ fn handle_build_click(
     mut menustate: ResMut<GameMenu>,
     mut ghost: ResMut<MachineGhost>,
     cursor: Res<CursorOver>,
+    machres: Res<MachineResources>,
 ) {
     for (entity, interaction) in q_interaction.iter() {
         if *interaction == Interaction::Pressed {
@@ -73,27 +78,27 @@ fn handle_build_click(
 
             menustate.0 = GameMenuState::CurrentlyCreating;
 
-            *ghost = MachineGhost::start(entity.0, &mut commands, &cursor, tp);
+            *ghost = MachineGhost::start(entity.0, &mut commands, &cursor, tp, &machres);
         }
     }
 }
 
 fn redraw_menu(
     menu_state: Res<GameMenu>,
-    mut q_menu_parts: Query<(Option<&mut Text>, &mut Visibility, &GameMenuPart)>,
+    mut q_menu_parts: Query<(&mut Visibility, &GameMenuPart, Option<&TextRefs>)>,
     ghost: Res<MachineGhost>,
     q_types: Query<&MachineType>,
     selected: Res<CurrentlySelected>,
-    q_machines: Query<&MyMachine>,
+    q_machines: Query<(&MyMachine, &Name)>,
+    mut q_texts: QueryTexts,
 ) {
     let state = menu_state.0;
+    let mut textref = None;
 
-    let mut current_text = None;
-
-    for (text, mut vis, part) in q_menu_parts.iter_mut() {
+    for (mut vis, part, textrefs) in q_menu_parts.iter_mut() {
         if part.0 == state {
             *vis = Visibility::Visible;
-            current_text = text;
+            textref = textrefs;
         } else {
             *vis = Visibility::Hidden;
         }
@@ -101,30 +106,34 @@ fn redraw_menu(
 
     match state {
         GameMenuState::CurrentlyCreating => {
-            let mut text = current_text.unwrap();
+            let textref = textref.unwrap();
 
             let Some((tp, _)) = ghost.0 else {
-                text.sections[1].value = "(bug: No machine selected.)".into();
+                // text.sections[1].value = "(bug: No machine selected.)".into();
                 return;
             };
 
             let tp = q_types.get(tp).unwrap();
 
-            text.sections[1].value = tp.name.to_string();
+            textref.update(&mut q_texts, "name", tp.name.to_string(), None);
         }
         GameMenuState::SelectedMachine => {
-            let mut text = current_text.unwrap();
+            let textref = textref.unwrap();
 
             let Some(tp) = selected.0 else {
-                text.sections[1].value = "(bug: No machine selected.)".into();
+                // text.sections[1].value = "(bug: No machine selected.)".into();
                 return;
             };
 
-            let mm = q_machines.get(tp).unwrap();
+            let (mm, name) = q_machines.get(tp).unwrap();
 
-            let tp = q_types.get(mm.tp).unwrap();
-
-            text.sections[1].value = tp.name.to_string();
+            textref.update(&mut q_texts, "name", name.to_string(), None);
+            textref.update(
+                &mut q_texts,
+                "fuel",
+                format!("{}/{}", mm.fuel, mm.max_fuel),
+                None,
+            );
         }
         _ => {}
     }

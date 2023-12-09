@@ -3,8 +3,11 @@ use rand::Rng;
 
 #[derive(Debug, Reflect, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameMaterial {
+    /// maintenance
     Reddish = 0b1,
+    /// building
     Greenish = 0b10,
+    /// fuel
     Blueish = 0b100,
     Brownish = 0b1000,
     // Golden = 0b10000,
@@ -28,10 +31,10 @@ impl GameMaterial {
     }
 
     pub fn random(rng: &mut impl Rng) -> Self {
-        match rng.gen_range(1..25) {
+        match rng.gen_range(1..200) {
             // 0 => Self::Reddish,
             1..=3 => Self::Greenish,
-            4..=8 => Self::Blueish,
+            10..=50 => Self::Blueish,
             _ => Self::Brownish,
         }
     }

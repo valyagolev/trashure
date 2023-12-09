@@ -10,7 +10,7 @@ use crate::graphics::{
 // whiteish-blue
 const HIGHLIGHTED_TEXT_COLOR: Color = Color::rgb(0.8, 0.8, 1.0);
 
-use super::{GameMenuButton, GameMenuPart, GameMenuState};
+use super::{textref::TextRefs, GameMenuButton, GameMenuPart, GameMenuState};
 
 pub fn setup_menu(
     mut commands: Commands,
@@ -177,6 +177,11 @@ fn currently_creating(commands: &mut Commands<'_, '_>) -> Entity {
             },
         ))
         .id();
+
+    commands
+        .entity(currently_creating_text)
+        .insert(TextRefs::new().with("name", currently_creating_text, 1));
+
     currently_creating_text
 }
 
@@ -205,10 +210,18 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                         },
                     },
                     TextSection {
-                        value: "\nPress R to rotate.\nPress Esc to deselect.".into(),
+                        value: "\nPress R to rotate.\nPress Esc to deselect.\n\nFuel: ".into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,
+                            ..default()
+                        },
+                    },
+                    TextSection {
+                        value: "?".into(),
+                        style: TextStyle {
+                            font_size: 20.0,
+                            color: HIGHLIGHTED_TEXT_COLOR,
                             ..default()
                         },
                     },
@@ -217,6 +230,13 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
             },
         ))
         .id();
+
+    commands.entity(selected_building_text).insert(
+        TextRefs::new()
+            .with("name", selected_building_text, 1)
+            .with("fuel", selected_building_text, 3),
+    );
+
     selected_building_text
 }
 

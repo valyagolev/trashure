@@ -4,7 +4,7 @@ final steps:
         Plower must be slower
         Recycler must clear out in front of it a bit faster (maybe do it by adjusting radar shape)
 
-2. show list of machines
+2. DONE show list of machines
 
 3. highlight taken floor when building a machine
 
@@ -14,11 +14,13 @@ final steps:
 
 6. "bulding in progress" mechanics
 
-7. "fuel" mechanics
+7. DONE "fuel" mechanics (will also limit the machines' speed)
 
-8. "maintenance" mechanics
+8. we'll need a separate radar for fuel (unlimited in range, but slow)
 
-9. tutorial
+9. "maintenance" mechanics
+
+10. tutorial
 
 ----
 
