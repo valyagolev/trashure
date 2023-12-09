@@ -70,12 +70,13 @@ fn ensure_stores(mut cmds: Commands, mut q_scenes: Query<(Entity, &Tinted), With
 fn update_colors(
     mut cmds: Commands,
     mut q_scenes: Query<(Entity, &SceneInstance, &mut Tinted, &mut TintedStore)>,
+    q_descendants: Query<&Children>,
     q_material_uses: Query<(Entity, &Handle<StandardMaterial>)>,
     scene_manager: Res<SceneSpawner>,
     mut pbr_materials: ResMut<Assets<StandardMaterial>>,
     mut custom_materials: ResMut<TintedMaterials>,
 ) {
-    for (_e, instance, tnted, mut tnted_store) in q_scenes.iter_mut() {
+    for (e, instance, tnted, mut tnted_store) in q_scenes.iter_mut() {
         if tnted_store.last_applied == (tnted.color, tnted.emissive, tnted.alpha_mode) {
             continue;
         }
@@ -83,8 +84,12 @@ fn update_colors(
         if scene_manager.instance_is_ready(**instance) {
             // println!("Recoloring");
 
-            let material_uses =
-                q_material_uses.iter_many(scene_manager.iter_instance_entities(**instance));
+            let all_descendants = q_descendants.iter_descendants(e);
+
+            let material_uses = q_material_uses.iter_many(all_descendants);
+
+            // let material_uses =
+            //     q_material_uses.iter_many(scene_manager.iter_instance_entities(**instance));
 
             for (entity, material_handle) in material_uses {
                 if tnted_store.origs.get(&entity).is_none() {
