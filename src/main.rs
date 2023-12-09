@@ -3,9 +3,9 @@ mod conf;
 mod debugeditor;
 mod game;
 mod graphics;
-use bevy::window::PresentMode;
 #[allow(unused_imports)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{log::LogPlugin, window::PresentMode};
 
 // use game::train::TrainPlugin;
 // use graphics::{
@@ -14,17 +14,14 @@ use bevy::{asset::AssetMetaCheck, prelude::*};
 // };
 
 fn main() {
-    App::new()
-        .insert_resource(AssetMetaCheck::Never)
+    let mut app = App::new();
+    app.insert_resource(AssetMetaCheck::Never)
         // outside
         .add_plugins(
-            DefaultPlugins, //     .set(WindowPlugin {
-                            //     primary_window: Some(Window {
-                            //         present_mode: PresentMode::AutoNoVsync,
-                            //         ..default()
-                            //     }),
-                            //     ..default()
-                            // })
+            #[cfg(not(feature = "graph"))]
+            DefaultPlugins,
+            #[cfg(feature = "graph")]
+            DefaultPlugins.build().disable::<LogPlugin>(),
         )
         // .insert_resource(Time::<Fixed>::from_seconds(0.1))
         // .add_plugins(bevy::pbr::wireframe::WireframePlugin)
@@ -59,11 +56,18 @@ fn main() {
             graphics::flyingvoxel::FlyingVoxelPlugin,
             game::voxelmailbox::VoxelMailboxPlugin,
             graphics::debug3d::Debug3dPlugin,
-        ))
-        // .add_plugins(graphics::voxels::VoxelsPlugin)
-        // .add_plugins(graphics::positions::IntegerPositionedPlugin)
-        // .add_plugins(TrainPlugin)
-        // .add_systems(Startup, (setup_camera, ui::setup))
-        // .add_systems(Update, (mouse_button_input, ui::check_config_changed))
-        .run()
+        ));
+    // .add_plugins(graphics::voxels::VoxelsPlugin)
+    // .add_plugins(graphics::positions::IntegerPositionedPlugin)
+    // .add_plugins(TrainPlugin)
+    // .add_systems(Startup, (setup_camera, ui::setup))
+    // .add_systems(Update, (mouse_button_input, ui::check_config_changed))
+
+    #[cfg(feature = "graph")]
+    {
+        bevy_mod_debugdump::print_schedule_graph(&mut app, Update);
+        return;
+    }
+
+    app.run();
 }

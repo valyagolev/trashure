@@ -102,8 +102,8 @@ fn fly_voxel(
 
         tr.translation = real_pos;
 
-        debug3d::draw_gizmos(1.0, move |gz| {
-            gz.sphere(real_pos, Quat::IDENTITY, 0.1, Color::RED);
-        });
+        // debug3d::draw_gizmos(1.0, move |gz| {
+        //     gz.sphere(real_pos, Quat::IDENTITY, 0.1, Color::RED);
+        // });
     }
 }

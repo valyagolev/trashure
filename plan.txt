@@ -1,3 +1,6 @@
+1. fix the "a" value for the flying voxel!
+
+
 1. DONE Fix the voxel spawning algo, they spawn too far away from where they originate
     it interferes with the speed of clearing up, we need to get that fixed
 
@@ -13,7 +16,7 @@
 game stages:
 
 5. DONE you build a "Plower" to send more stuff in the way of the Recycler
-6. "Plower" has to move when it can
+6. "Plower" has to move when it can (and update forbidden columns)
 
 6. - "Plower" needs "red" maintenance, so you send it back
 7. - then you wanna build something to send it to the "Plower" ("Relay"?)
@@ -34,13 +37,16 @@ visuals/ui:
 6. FAILED. remodel mesh (doesn't help)
 
 nice to have
-1. fix the "a" value for the flying voxel
-2. investigate why we run in 30fps
+2. DONE. investigate why we run in 30fps (vsync on my screen)
 
 refactorings (probably useless)
 1. events instead of voxelmailbox?
 2. use SceneInstanceReady instead of guessing systems
 3. investigate Archetypes...
+
 4. ignore events when "egui wants mouse/keyboard"
+    https://github.com/search?q=repo%3Ajohanhelsing%2Fbevy_pancam%20bevy_egui&type=code
+
 5. turn on "ambiguity detector"
+    https://docs.rs/bevy_ecs/latest/bevy_ecs/schedule/struct.ScheduleBuildSettings.html#structfield.ambiguity_detection
 6. show/hide dbg stuff on a button?
