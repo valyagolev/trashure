@@ -1,5 +1,5 @@
 pub use bevy::prelude::*;
-use bevy::tasks::ParallelIterator;
+use bevy::{ecs::query::WorldQuery, tasks::ParallelIterator};
 use itertools::Itertools;
 use rand::{seq::SliceRandom, Rng};
 
@@ -12,6 +12,12 @@ pub enum BlockState {
     Empty,
     Full(GameMaterial),
     Forbidden,
+}
+
+impl BlockState {
+    pub fn is_full(&self) -> bool {
+        matches!(self, BlockState::Full(_))
+    }
 }
 
 pub struct WholeBlockWorld<'qres, 'qq, 'world, 'state> {

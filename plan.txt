@@ -1,4 +1,4 @@
-1. fix the "a" value for the flying voxel!
+1. DONE. fix the "a" value for the flying voxel!
 
 
 1. DONE Fix the voxel spawning algo, they spawn too far away from where they originate

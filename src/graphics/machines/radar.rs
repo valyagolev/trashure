@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use super::{DebugCube, MachineResources};
+use super::{DebugCube, MachineResources, MyMachine};
 
 pub struct RadarPlugin;
 
@@ -113,7 +113,7 @@ fn setup_radars(
 fn radar_search(
     time: Res<Time>,
     mut q_radars: Query<(&mut Radar, &Parent, &GlobalTransform)>,
-    q_parent_dirs: Query<&Direction2D, With<Children>>,
+    q_parent_machines: Query<(&Direction2D, &MyMachine), With<Children>>,
     lazyworld: Res<LazyWorld>,
     q_blocks: Query<&VoxelBlock>,
 ) {
@@ -124,7 +124,7 @@ fn radar_search(
             continue;
         }
 
-        let rpardir = q_parent_dirs.get(**rpar).unwrap();
+        let (rpardir, machine) = q_parent_machines.get(**rpar).unwrap();
 
         // println!("checking radar: {:?}", r);
 
@@ -140,7 +140,6 @@ fn radar_search(
         let mut candidates = vec![];
 
         for (bigblock_pos, ent) in lazyworld.lookup_around(radar_ipos, dist) {
-            // dbg!(bigblock_pos, ent);
             let Ok(voxel_block) = q_blocks.get(ent) else {
                 continue;
             };
@@ -148,31 +147,16 @@ fn radar_search(
             let local_pos = radar_ipos - bigblock_pos * VOXEL_BLOCK_SIZE;
 
             for col in voxel_block.closest_columns(local_pos, dist) {
-                // dbg!(col);
                 for (mat, pos) in voxel_block.material_in_col(col, r.material_mask) {
                     if let Some(dir) = r.direction {
                         let radar_local_pos = (bigblock_pos * VOXEL_BLOCK_SIZE) - radar_ipos + col;
 
-                        // println!("radar_local_pos={:?} ent={ent:?}", radar_local_pos);
-                        if !(dir * *rpardir).within_cone(radar_local_pos) {
-                            // println!("not within cone");
+                        if !(dir * *rpardir).within_cone(radar_local_pos, machine.dims) {
                             continue;
                         }
                     }
 
                     let full_pos = (bigblock_pos * VOXEL_BLOCK_SIZE).extend(0).xzy() + pos;
-
-                    // r.found_voxel = Some((mat, full_pos));
-
-                    // let real_dist =
-                    //     (full_pos.xz().as_vec2() - radar_ipos.as_vec2()).length_squared();
-
-                    // println!(
-                    //     "found voxel: {:?} dist={dist} real_dist={real_dist} radar_local_pos={local_pos} found_local_pos={col}",
-                    //     r.found_voxel
-                    // );
-
-                    // continue 'radars;
 
                     candidates.push((mat, full_pos));
                 }

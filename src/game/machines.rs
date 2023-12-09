@@ -22,7 +22,7 @@ pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (consume_radars, consume_mailbox));
+        app.add_systems(Update, (consume_radars, consume_mailbox, move_machines));
     }
 }
 
@@ -207,7 +207,7 @@ fn consume_mailbox(
                 let mut found = None;
 
                 for i in 1.. {
-                    let target = mm.pos + back_dir.random_in_cone(i / 5 + 1, rand);
+                    let target = mm.pos + back_dir.random_in_cone(i / 5 + 1, mm.dims, rand);
 
                     let (block_p, local_p) =
                         VoxelBlock::normalize_pos(IVec2::ZERO, target.extend(0).xzy());
@@ -239,6 +239,35 @@ fn consume_mailbox(
                 //     gizmos.sphere(rp, Quat::IDENTITY, 3.0, Color::RED);
                 // });
             }
+        }
+    }
+}
+
+fn move_machines(
+    lazy_world: Res<LazyWorld>,
+    mut q_machines: Query<(
+        // Entity,
+        &BuiltMachine,
+        &mut MyMachine,
+        &Direction2D,
+    )>,
+    blocks: Query<'_, '_, &mut VoxelBlock, ()>,
+) {
+    let mut wbw = WholeBlockWorld {
+        lazy_world: lazy_world,
+        blocks,
+    };
+
+    for (bm, mut mm, dir) in q_machines.iter_mut() {
+        if matches!(bm.0, GameMachineSettings::Recycler { .. }) {
+            continue;
+        }
+
+        if !dir
+            .line_in_direction(mm.pos, mm.dims)
+            .any(|p| wbw.get_block_value(p.extend(0).xzy()).is_full())
+        {
+            mm.pos += Into::<IVec2>::into(*dir);
         }
     }
 }

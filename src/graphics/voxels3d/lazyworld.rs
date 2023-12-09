@@ -129,8 +129,11 @@ fn generate_part(
     commands.spawn(bundle).id()
 }
 
+#[derive(Component)]
+pub struct WorldGenTrigger(pub IVec2);
+
 fn handle_camera(
-    q_camera: Query<&GlobalTransform, With<MainCamera>>,
+    // q_camera: Query<&GlobalTransform, With<MainCamera>>,
     mut lazy_world: ResMut<LazyWorld>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -139,7 +142,7 @@ fn handle_camera(
 ) {
     let camera = q_camera.single();
 
-    let center = ((camera.translation() - CAMERA_OFFSET).xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
+    // let center = ((camera.translation() - CAMERA_OFFSET).xz() / VOXEL_BLOCK_SIZE as f32).as_ivec2();
 
     let all_around = AROUND_2D
         .iter()
