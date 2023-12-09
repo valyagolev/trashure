@@ -57,6 +57,7 @@ fn main() {
             game::voxelmailbox::VoxelMailboxPlugin,
             graphics::debug3d::Debug3dPlugin,
             graphics::scenerenderlayer::SceneRenderLayersPlugin,
+            graphics::sceneobjectfinder::SceneObjectFinderPlugin,
         ));
     // .add_plugins(graphics::voxels::VoxelsPlugin)
     // .add_plugins(graphics::positions::IntegerPositionedPlugin)

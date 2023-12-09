@@ -81,7 +81,7 @@ fn update_colors(
         }
 
         if scene_manager.instance_is_ready(**instance) {
-            println!("Recoloring");
+            // println!("Recoloring");
 
             let material_uses =
                 q_material_uses.iter_many(scene_manager.iter_instance_entities(**instance));
@@ -99,7 +99,7 @@ fn update_colors(
 
                 if let Some(color) = tnted.color {
                     if let Some(custom) = custom_materials.0.get(&(id, color.as_rgba_u8())) {
-                        println!("Using existing recolor");
+                        // println!("Using existing recolor");
                         // cmds.entity(entity).insert(custom.clone());
                         new_material = custom.clone();
                     }
@@ -108,7 +108,7 @@ fn update_colors(
                         continue;
                     };
 
-                    println!("New recolor");
+                    // println!("New recolor");
 
                     let mut new_material_m = material.clone();
                     // new_material_m.base_color += color;

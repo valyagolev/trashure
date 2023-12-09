@@ -3,6 +3,7 @@
 // pub mod camera;
 pub mod camera3d;
 pub mod cursor;
+pub mod sceneobjectfinder;
 pub mod scenerenderlayer;
 // pub mod positions;
 // pub mod trash;

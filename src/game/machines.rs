@@ -10,6 +10,7 @@ use crate::graphics::{
         targets::Target,
         BuiltMachine, MyMachine,
     },
+    sceneobjectfinder::SceneObjectFinder,
     voxels3d::{
         changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
         VOXEL_BLOCK_SIZE,
@@ -45,6 +46,11 @@ impl GameMachineSettings {
                     .id();
 
                 commands.entity(ghost).add_child(recycling_radar);
+
+                commands.entity(ghost).insert(SceneObjectFinder::new([
+                    "RecycledOrigin",
+                    "RecyclingTarget",
+                ]));
 
                 GameMachineSettings::Recycler { recycling_radar }
             }
