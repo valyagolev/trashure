@@ -132,7 +132,9 @@ fn consume_voxel(
         return;
     };
 
-    let mat = whole_world.steal_block(vc, blockchanges, rand);
+    let Some(mat) = whole_world.steal_block(vc, blockchanges, rand) else {
+        return;
+    };
 
     // todo: check the material?
 

@@ -12,6 +12,10 @@
 
 4. DONE let's have "red" as "golden", stop spawning it in the beginning
 
+---
+
+5. make a component to make Scenes inherit render layers
+6. make a list of buildings
 
 game stages:
 

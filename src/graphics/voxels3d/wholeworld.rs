@@ -83,17 +83,12 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
         global_pos: IVec3,
         change_collector: &mut VoxelBlockChanges,
         rand: &mut impl Rng,
-    ) -> GameMaterial {
-        let (mut block, local_pos) = self
-            .get_voxel_block_for_pos(global_pos)
-            .expect("must be initialized");
+    ) -> Option<GameMaterial> {
+        let (mut block, local_pos) = self.get_voxel_block_for_pos(global_pos)?;
 
         let block_pos = block.pos;
 
-        let mt = block
-            ._take_block(local_pos)
-            .take()
-            .expect("Stealing an empty block");
+        let mt = block._take_block(local_pos).take()?;
 
         let mut mats = vec![];
 
@@ -117,7 +112,7 @@ impl<'qres, 'qq, 'world, 'state> WholeBlockWorld<'qres, 'qq, 'world, 'state> {
             }
         }
 
-        mt
+        Some(mt)
     }
 
     pub fn push_block(

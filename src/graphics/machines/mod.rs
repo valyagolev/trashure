@@ -220,5 +220,5 @@ fn rotate_selected_machine(
 
     *m = m.rotate();
 
-    dbg!(&m);
+    // dbg!(&m);
 }
