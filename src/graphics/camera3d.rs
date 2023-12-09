@@ -161,7 +161,7 @@ static KEY_TO_DIRECTION: &[(KeyCode, Vec3)] = &[
 fn handle_camera_move(
     keys: Res<Input<KeyCode>>,
     conf: Res<Configuration>,
-    mut camera: Query<(&mut Transform, With<Camera3d>)>,
+    mut camera: Query<(&mut Transform, (With<Camera3d>, Without<Parent>))>,
     time: Res<Time>,
 ) {
     for (key, dir) in KEY_TO_DIRECTION.iter() {

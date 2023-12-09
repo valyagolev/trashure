@@ -54,7 +54,6 @@ impl MachineGhost {
                 VoxelMailbox(default()),
                 Into::<Tinted>::into(MachineRecolor::Ghost),
                 WorldGenTrigger(Vec2::ZERO),
-                Selectable,
                 // BuiltMachine,
                 MyMachine {
                     tp,
@@ -151,7 +150,7 @@ fn place_ghost(
     if cursor.just_released(MouseButton::Left) {
         commands
             .entity(ghost)
-            .insert((Tinted::empty(), VisibilityBundle::default()));
+            .insert((Tinted::empty(), VisibilityBundle::default(), Selectable));
 
         GameMachineSettings::instantiate(ghost, &mut commands, m);
 

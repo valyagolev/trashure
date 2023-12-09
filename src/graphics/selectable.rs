@@ -1,14 +1,18 @@
 use bevy::prelude::*;
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
-use super::{cursor::CursorOver, recolor::Tinted};
+use super::{
+    cursor::CursorOver,
+    gamemenu::{GameMenu, GameMenuState},
+    recolor::Tinted,
+};
 
 pub struct SelectablePlugin;
 
 impl Plugin for SelectablePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(CurrentlySelected(None))
-            .add_systems(Update, handle_selection);
+            .add_systems(Update, (handle_selection, recolor_selection));
     }
 }
 
@@ -18,16 +22,27 @@ pub struct Selectable;
 #[derive(Resource, Deref, Reflect)]
 pub struct CurrentlySelected(pub Option<Entity>);
 
+fn recolor_selection(
+    mut q_targets: Query<(Entity, &mut Tinted), With<Selectable>>,
+    currently_selected: Res<CurrentlySelected>,
+) {
+    for (ent, mut tpl) in q_targets.iter_mut() {
+        if Some(ent) == currently_selected.0 {
+            *tpl = Tinted::new(Color::rgb(0.0, 0.0, 0.1));
+        } else {
+            *tpl = Tinted::empty();
+        }
+    }
+}
+
 fn handle_selection(
     mut raycast: Raycast,
-    mut q_targets: Query<
-        (Entity, &GlobalTransform, &ViewVisibility, &mut Tinted),
-        With<Selectable>,
-    >,
+    q_targets: Query<(Entity, &GlobalTransform, &ViewVisibility), With<Selectable>>,
     mouse: Res<CursorOver>,
     parent_query: Query<&Parent>,
     mouse_inp: Res<Input<MouseButton>>,
     mut currently_selected: ResMut<CurrentlySelected>,
+    mut menu: ResMut<GameMenu>,
 ) {
     let valid_entities = q_targets
         .iter()
@@ -55,29 +70,17 @@ fn handle_selection(
         )
         .get(0);
 
-    let hovered_inst = hit.and_then(|hit| {
+    let Some(hovered_inst) = hit.and_then(|hit| {
         parent_query
             .iter_ancestors(hit.0)
             .find(|anc| valid_entities.contains(&anc))
-    });
+    }) else {
+        return;
+    };
 
-    for t in valid_entities {
-        let mut tpl = q_targets.get_mut(t).unwrap();
+    if mouse_inp.just_pressed(MouseButton::Left) {
+        currently_selected.0 = Some(hovered_inst);
 
-        if hovered_inst == Some(t) {
-            *tpl.3 = Tinted::new(Color::rgb(0.3, 0.0, 0.1));
-        } else {
-            *tpl.3 = Tinted::empty();
-        }
+        menu.0 = GameMenuState::SelectedMachine;
     }
-
-    // if mouse_inp.pressed(MouseButton::Left) {
-    //     if let Some(hovered_inst) = hovered_inst {
-    //         let tpl = q_targets.get(hovered_inst).unwrap();
-
-    //         let delta = mouse.ground - tpl.1.translation().xz();
-
-    //         target_being_moved.0 = Some((tpl.3 .0, delta));
-    //     }
-    // }
 }

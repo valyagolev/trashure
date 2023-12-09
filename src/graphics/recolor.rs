@@ -1,6 +1,5 @@
 use bevy::{prelude::*, scene::SceneInstance, utils::HashMap};
 
-
 pub struct RecolorPlugin;
 
 impl Plugin for RecolorPlugin {
@@ -114,9 +113,19 @@ fn update_colors(
                     let mut new_material_m = material.clone();
                     // new_material_m.base_color += color;
 
-                    new_material_m.base_color = Color::from(
-                        Vec4::from(color).lerp(Vec4::from(new_material_m.base_color), 0.5),
-                    );
+                    // new_material_m.base_color = Color::from(
+                    //     Vec4::from(color).lerp(Vec4::from(new_material_m.base_color), 0.5),
+                    // );
+
+                    let mut bc = Vec4::from(color) + Vec4::from(new_material_m.base_color);
+                    let max_comp = bc.max_element();
+
+                    if max_comp >= 1.0 {
+                        bc /= max_comp;
+                    };
+
+                    new_material_m.base_color = bc.into();
+
                     // new_material_m.base_color.set_a(color.a());
                     new_material_m.specular_transmission = color.a();
                     new_material_m.diffuse_transmission = color.a();

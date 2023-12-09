@@ -152,6 +152,9 @@ impl TargetsPlugin {
         mut target_being_moved: ResMut<TargetBeingMoved>,
     ) {
         if target_being_moved.is_some() {
+            if !mouse_inp.pressed(MouseButton::Left) {
+                target_being_moved.0 = None;
+            }
             return;
         }
 
