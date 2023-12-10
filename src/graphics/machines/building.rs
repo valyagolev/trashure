@@ -86,6 +86,7 @@ impl MachineGhost {
                     max_fuel: machine_type.max_fuel,
                     needed_maintenance: 0,
                     still_building: 0,
+                    useful_ish_work_done: 0.0,
                 },
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),

@@ -19,7 +19,8 @@ pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (consume_mailbox, move_machines, toggle_radars));
+        app.add_systems(Update, (consume_mailbox, move_machines, toggle_radars))
+            .add_systems(FixedUpdate, add_maintenance);
     }
 }
 
@@ -195,6 +196,8 @@ fn consume_mailbox(
                     VOXEL_BLOCK_SIZE
                 };
 
+                mm.useful_ish_work_done += 1.0;
+
                 commands.spawn(FlyingVoxel {
                     origin: mm.pos.extend(3).xzy().as_vec3(),
                     target: target.extend(y).xzy().as_vec3(),
@@ -243,6 +246,8 @@ fn consume_mailbox(
                 // println!("sending recycled to: {:?}", block_e);
                 let tp = VoxelBlock::real_pos(block_p, local_p).as_ivec3() + IVec3::new(0, 3, 0);
 
+                mm.useful_ish_work_done += 1.0;
+
                 commands.spawn(FlyingVoxel {
                     origin: rec_exit.unwrap_or_else(|| mm.pos.extend(3).xzy().as_vec3()),
                     target: tp.as_vec3(),
@@ -289,6 +294,8 @@ fn move_machines(
             .any(|p| wbw.get_block_value(p.extend(0).xzy()).is_full())
         {
             mm.pos += Into::<IVec2>::into(*dir);
+
+            mm.useful_ish_work_done += 10.0;
         }
     }
 }
@@ -308,16 +315,40 @@ fn toggle_radars(
                 continue;
             };
 
-            radar.paused = match radar.tp {
-                RadarType::Fuel => mm.fuel >= mm.max_fuel,
+            let must_pause = match radar.tp {
+                RadarType::Fuel => mm.needed_maintenance > 0 || mm.fuel >= mm.max_fuel,
                 RadarType::Work => mm.needed_maintenance > 0 || mm.fuel == 0,
                 RadarType::Maintenance => mm.needed_maintenance == 0,
                 RadarType::Building => mm.still_building == 0,
             };
 
+            if must_pause && !radar.paused {
+                radar.watch.reset();
+            }
+
+            radar.paused = must_pause;
+
             if radar.tp == RadarType::Work {
                 radar.speed = (mm.fuel as f32 / mm.max_fuel as f32) * mt.work_radar_speed;
             }
+        }
+    }
+}
+
+fn add_maintenance(fixed_time: Res<Time<Fixed>>, mut q_machines: Query<&mut MyMachine>) {
+    let rand = &mut rand::thread_rng();
+    for mut mm in q_machines.iter_mut() {
+        if mm.needed_maintenance > 0 {
+            continue;
+        }
+
+        mm.useful_ish_work_done += fixed_time.delta_seconds();
+
+        if mm.useful_ish_work_done > 150.0
+            && (rand.gen_range(0..1000) as f32) < mm.useful_ish_work_done
+        {
+            mm.useful_ish_work_done = 0.0;
+            mm.needed_maintenance += rand.gen_range(1..5);
         }
     }
 }

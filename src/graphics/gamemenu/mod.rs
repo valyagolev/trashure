@@ -134,6 +134,12 @@ fn redraw_menu(
                 format!("{}/{}", mm.fuel, mm.max_fuel),
                 None,
             );
+            textref.update(
+                &mut q_texts,
+                "maintenance",
+                format!("{}", mm.needed_maintenance),
+                None,
+            );
         }
         _ => {}
     }

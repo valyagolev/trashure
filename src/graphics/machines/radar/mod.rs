@@ -75,7 +75,7 @@ pub struct RadarFoundVoxel {
 pub struct Radar {
     pub tp: RadarType,
     material_mask: u8,
-    watch: Stopwatch,
+    pub watch: Stopwatch,
     scene: Option<Entity>,
 
     pub direction: Option<Direction2D>,

@@ -76,6 +76,8 @@ pub struct MyMachine {
     pub max_fuel: u8,
     pub needed_maintenance: u8,
     pub still_building: u8,
+
+    pub useful_ish_work_done: f32,
 }
 
 impl MyMachine {

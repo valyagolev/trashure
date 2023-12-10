@@ -225,6 +225,22 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                             ..default()
                         },
                     },
+                    TextSection {
+                        value: "\nMaintenance needed: ".into(),
+                        style: TextStyle {
+                            font_size: 20.0,
+                            color: Color::WHITE,
+                            ..default()
+                        },
+                    },
+                    TextSection {
+                        value: "?".into(),
+                        style: TextStyle {
+                            font_size: 20.0,
+                            color: HIGHLIGHTED_TEXT_COLOR,
+                            ..default()
+                        },
+                    },
                 ]),
                 ..Default::default()
             },
@@ -234,7 +250,8 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
     commands.entity(selected_building_text).insert(
         TextRefs::new()
             .with("name", selected_building_text, 1)
-            .with("fuel", selected_building_text, 3),
+            .with("fuel", selected_building_text, 3)
+            .with("maintenance", selected_building_text, 5),
     );
 
     selected_building_text
