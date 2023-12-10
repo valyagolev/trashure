@@ -39,5 +39,11 @@
     [profile.dev.package."bevy-inspector-egui"]
         opt-level = 1
 
+[profile.release]
+    lto           = true
+    codegen-units = 1
+    opt-level     = 'z'
+
+
     [profile.release.package."bevy-inspector-egui"]
         opt-level = 1

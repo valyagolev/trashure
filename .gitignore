@@ -1,2 +1,4 @@
 /target
 /trace*.json
+out/
+.DS_Store

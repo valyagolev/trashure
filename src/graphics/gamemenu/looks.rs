@@ -307,7 +307,7 @@ fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
                 text: Text::from_sections([TextSection {
                     value: "".into(),
                     style: TextStyle {
-                        font_size: 20.0,
+                        font_size: 18.0,
                         color: Color::WHITE,
                         ..default()
                     },
