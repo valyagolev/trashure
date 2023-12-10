@@ -3,10 +3,10 @@ use bevy::prelude::*;
 use crate::graphics::{
     camera3d::CAMERA_OFFSET,
     gamemenu::{GameMenu, GameMenuState},
-    selectable::CurrentlySelected,
+    selectable::{CurrentlySelected, Selectable},
 };
 
-use super::BuiltMachine;
+use super::{BuiltMachine, MyMachine};
 
 pub struct MachineListPlugin;
 
@@ -66,7 +66,7 @@ impl MachineListPlugin {
         mut commands: Commands,
         q_root: Query<Entity, With<MachineListUiRoot>>,
         // q_existing_nodes: Query<&MachineListUiMachine>,
-        q_machines: Query<(Entity, &Name), Added<BuiltMachine>>,
+        q_machines: Query<(Entity, &Name), Added<Selectable>>,
     ) {
         let root = q_root.single();
         // let existing = q_existing_nodes.iter().map(|e| e.0).collect_vec();
@@ -133,23 +133,44 @@ impl MachineListPlugin {
     fn redraw_ui_nodes(
         q_nodes: Query<(&MachineListUiMachine, &Children)>,
         mut q_text_nodes: Query<&mut Text, With<Parent>>,
-        q_machines: Query<(Entity, &Name, &GlobalTransform), With<BuiltMachine>>,
+        q_machines: Query<(Entity, &Name, &GlobalTransform, &MyMachine), With<Selectable>>,
         selected: Res<CurrentlySelected>,
     ) {
         for (mach, children) in q_nodes.iter() {
-            let (ent, name, tr) = q_machines.get(mach.0).unwrap();
+            let (ent, name, tr, mm) = q_machines.get(mach.0).unwrap();
+
+            // if bm.is_none() && mm.still_building == 0 {
+            //     continue;
+            // }
 
             for ch in children.iter() {
                 let Ok(mut text) = q_text_nodes.get_mut(*ch) else {
                     continue;
                 };
 
-                text.sections[0].value = name.into();
+                let status = if mm.still_building > 0 {
+                    " (still constructing)"
+                } else if mm.needed_maintenance > 0 {
+                    " (needs maintenance)"
+                } else if mm.fuel < 2 {
+                    " (low fuel)"
+                } else if mm
+                    .last_slow_work
+                    .is_some_and(|t| t.elapsed().as_secs_f32() < 3.0)
+                {
+                    " (work is far)"
+                } else {
+                    ""
+                };
+
+                text.sections[0].value = format!("{name}{status}");
 
                 text.sections[2].value = format!("{:.1}", tr.translation().length());
 
                 text.sections[0].style.color = if selected.0 == Some(ent) {
                     Color::GREEN
+                } else if status != "" {
+                    Color::RED
                 } else {
                     Color::WHITE
                 };
@@ -159,7 +180,7 @@ impl MachineListPlugin {
 
     fn handle_click(
         q_nodes: Query<(&MachineListUiMachine, &Interaction)>,
-        q_machines: Query<&GlobalTransform, With<BuiltMachine>>,
+        q_machines: Query<&GlobalTransform, With<Selectable>>,
         mut selected: ResMut<CurrentlySelected>,
         mut menu_state: ResMut<GameMenu>,
         mut camera: Query<&mut Transform, (With<Camera3d>, Without<Parent>)>,

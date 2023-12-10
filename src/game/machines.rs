@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::Instant};
 use rand::prelude::Rng;
 use strum::EnumDiscriminants;
 
@@ -165,7 +165,7 @@ fn consume_mailbox(
             continue;
         };
 
-        println!("got {:?}", vc);
+        // println!("got {:?}", vc);
 
         if vc == GameMaterial::Blueish && mm.fuel < mm.max_fuel {
             mm.fuel += 1;
@@ -305,11 +305,11 @@ fn move_machines(
 }
 
 fn toggle_radars(
-    q_machines: Query<(&MyMachine, &Children)>,
+    mut q_machines: Query<(&mut MyMachine, &Children)>,
     mut q_radars: Query<&mut Radar>,
     q_types: Query<&MachineType>,
 ) {
-    for (mm, children) in q_machines.iter() {
+    for (mut mm, children) in q_machines.iter_mut() {
         let Ok(mt) = q_types.get(mm.tp) else {
             continue;
         };
@@ -334,6 +334,10 @@ fn toggle_radars(
 
             if radar.tp == RadarType::Work {
                 radar.speed = (mm.fuel as f32 / mm.max_fuel as f32) * mt.work_radar_speed;
+            }
+
+            if radar.dist() > radar.fast_distance {
+                mm.last_slow_work = Some(Instant::now());
             }
         }
     }

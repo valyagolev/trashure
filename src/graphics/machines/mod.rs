@@ -1,6 +1,9 @@
 use std::borrow::Cow;
 
-use bevy::prelude::{shape::Plane, *};
+use bevy::{
+    prelude::{shape::Plane, *},
+    utils::Instant,
+};
 
 use crate::game::{
     machines::{GameMachineSettings, GameMachineSettingsDiscriminants},
@@ -78,6 +81,7 @@ pub struct MyMachine {
     pub still_building: u8,
 
     pub useful_ish_work_done: f32,
+    pub last_slow_work: Option<Instant>,
 }
 
 impl MyMachine {

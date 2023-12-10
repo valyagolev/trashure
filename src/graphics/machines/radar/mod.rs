@@ -81,7 +81,7 @@ pub struct Radar {
     pub direction: Option<Direction2D>,
     pub paused: bool,
     pub speed: f32,
-    fast_distance: f32,
+    pub fast_distance: f32,
 }
 
 #[derive(Component, Reflect)]
@@ -107,9 +107,15 @@ impl Radar {
         }
     }
 
-    fn dist(&self) -> f32 {
+    pub fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
-        self.watch.elapsed().as_secs_f32() * 5.0 * 3.0 * self.speed
+        let d = self.watch.elapsed().as_secs_f32() * 5.0 * 3.0 * self.speed;
+
+        if d <= self.fast_distance {
+            d
+        } else {
+            self.fast_distance + (d - self.fast_distance) / 3.0
+        }
     }
 }
 

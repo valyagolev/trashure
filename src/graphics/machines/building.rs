@@ -90,6 +90,7 @@ impl MachineGhost {
                     needed_maintenance: 0,
                     still_building: 20,
                     useful_ish_work_done: 0.0,
+                    last_slow_work: None,
                 },
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
