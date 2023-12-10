@@ -7,7 +7,7 @@ use super::{
     TutorialNode,
 };
 
-static EVENTS: [(&'static str, AtomicBool, &'static str); 7] = [
+static EVENTS: [(&'static str, AtomicBool, &'static str); 6] = [
     ("recycler_placed", AtomicBool::new(false), "Welcome to Trashure: a game about recycling a massive (endless actually) landfill. You can look around using arrow keys.\n\n\nThen, start by building a recycler."),
     ("recycler_finished", AtomicBool::new(false), "Machines consume green material to be built. Wait for that to finish."),
     ("recycler_selected", AtomicBool::new(false), "Select the recycler by clicking on it. You'll see the radars.\n\nBlue radar looks for fuel, brownish radar looks for work.\n\nRecycler's work is to recycle trash into fuel (blue), building material (green), and precious maintenance (red) that doesn't occur by itself."),
@@ -25,7 +25,11 @@ pub fn mark_tutorial_event(name: &'static str) {
         }
     }
 
-    panic!("Unknown tutorial event: {}", name);
+    if name == "plower_maintained" {
+        return;
+    }
+
+    warn!("Unknown tutorial event: {}", name);
 }
 
 fn earliest_event() -> Option<(&'static str, &'static str)> {

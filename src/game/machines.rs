@@ -356,6 +356,10 @@ fn add_maintenance(fixed_time: Res<Time<Fixed>>, mut q_machines: Query<&mut MyMa
             continue;
         }
 
+        if mm.gmt == GameMachineSettingsDiscriminants::Recycler {
+            continue;
+        }
+
         mm.useful_ish_work_done += fixed_time.delta_seconds();
 
         if mm.useful_ish_work_done > 150.0

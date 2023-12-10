@@ -1,0 +1,14 @@
+https://crates.io/crates/bevy_tweening
+https://crates.io/crates/bevy_easings
+
+https://crates.io/crates/bevy_mod_picking
+
+https://crates.io/crates/bevy_prototype_lyon
+
+https://github.com/Jondolf/bevy_xpbd
+
+https://github.com/iiYese/aery
+
+---
+
+https://github.com/d-bucur/awesome-bevy
