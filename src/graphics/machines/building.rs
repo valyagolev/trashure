@@ -133,7 +133,7 @@ fn move_ghost(
 fn place_ghost(
     mut commands: Commands,
     mut mghost: ResMut<MachineGhost>,
-    q_machines: Query<(&MyMachine, &SceneObjectsFound), Without<BuiltMachine>>,
+    q_machines: Query<(&MyMachine, &SceneObjectsFound, &Children), Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
 
     mut selected: ResMut<CurrentlySelected>,
@@ -142,6 +142,7 @@ fn place_ghost(
     q_found_transforms: Query<&Transform, With<SceneFoundObject>>,
 
     mut machine_counter: ResMut<MachineCounter>,
+    q_floors: Query<Entity, With<GhostMachineFloor>>,
 ) {
     if !mghost.1 {
         return;
@@ -155,7 +156,7 @@ fn place_ghost(
         return;
     };
 
-    let Ok((m, scob)) = q_machines.get(ghost) else {
+    let Ok((m, scob, children)) = q_machines.get(ghost) else {
         return;
     };
 
@@ -175,6 +176,10 @@ fn place_ghost(
         ));
 
         GameMachineSettings::instantiate(ghost, &mut commands, m, scob, &q_found_transforms);
+
+        q_floors
+            .iter_many(children)
+            .for_each(|e| commands.entity(e).despawn_recursive());
 
         mghost.0 = None;
 

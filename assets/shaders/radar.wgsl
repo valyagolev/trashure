@@ -120,7 +120,7 @@ fn vertex(vertex_no_morph: Vertex) -> VertexOutput {
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
-    return vec4<f32>(0.3, 0.8, 0.4, 0.2);
+    return vec4<f32>(0.3, 0.8, 0.4, in.local_position.x);
     // var r2 = in.local_position.x*in.local_position.x + in.local_position.z*in.local_position.z;
 
     // if r2 >= 0.9 && abs(in.local_position.x) < 0.6 && in.local_position.z < 0.0 {
