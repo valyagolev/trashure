@@ -83,7 +83,7 @@ impl MachineGhost {
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
                 VisibilityBundle::default(),
-                // TransformBundle::default(),
+                TransformBundle::default(),
             ))
             .with_children(|b| {
                 b.spawn((
