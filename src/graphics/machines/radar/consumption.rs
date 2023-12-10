@@ -11,7 +11,7 @@ use super::RadarFoundVoxel;
 
 pub struct RadarConsumptionPlugin;
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct RadarConsumer {
     pub flying_target: Option<Vec3>,
     pub target_mailbox: Entity,

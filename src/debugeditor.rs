@@ -3,6 +3,7 @@ use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_inspector_egui::quick::{FilterQueryInspectorPlugin, ResourceInspectorPlugin};
 
 use crate::graphics::gamemenu::GameMenuButton;
+use crate::graphics::machines::radar::Radar;
 use crate::graphics::machines::targets::TargetInst;
 use crate::graphics::machines::{MachineType, MyMachine};
 use crate::graphics::recolor::Tinted;
@@ -20,7 +21,7 @@ impl Plugin for DebugEditorPlugin {
             // .add_plugins(FilterQueryInspectorPlugin::<
             //     Or<(With<MyMachine>, With<MachineType>)>,
             // >::default())
-            .add_plugins(FilterQueryInspectorPlugin::<With<TargetInst>>::default());
+            .add_plugins(FilterQueryInspectorPlugin::<With<Radar>>::default());
         // .add_systems(Update, edit_stuff)
     }
 }

@@ -11,17 +11,21 @@ use self::consumption::RadarConsumer;
 use super::MyMachine;
 
 pub mod consumption;
-mod graphics;
+mod graphics_shader;
 pub struct RadarPlugin;
 
 impl Plugin for RadarPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             consumption::RadarConsumptionPlugin,
-            graphics::RadarGraphicsPlugin,
+            graphics_shader::RadarGraphicsPlugin,
         ))
         .add_systems(FixedUpdate, radar_search)
-        .add_event::<RadarFoundVoxel>();
+        .add_event::<RadarFoundVoxel>()
+        .register_type::<Radar>()
+        .register_type::<RadarConsumer>()
+        .register_type::<RadarFoundVoxel>()
+        .register_type::<RadarScene>();
     }
 }
 
@@ -48,14 +52,14 @@ impl RadarBundle {
     }
 }
 
-#[derive(Event)]
+#[derive(Event, Reflect)]
 pub struct RadarFoundVoxel {
     pub radar: Entity,
     pub material: GameMaterial,
     pub pos: IVec3,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct Radar {
     material_mask: u8,
     watch: Stopwatch,
@@ -65,7 +69,7 @@ pub struct Radar {
     pub paused: bool,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct RadarScene;
 
 impl Radar {
@@ -81,7 +85,7 @@ impl Radar {
 
     fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
-        self.watch.elapsed().as_secs_f32() * 5.0 * 6.0
+        self.watch.elapsed().as_secs_f32() * 5.0 * 6.0 / 10.0
     }
 }
 
