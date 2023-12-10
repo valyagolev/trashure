@@ -4,7 +4,10 @@ use rand::prelude::Rng;
 use crate::game::{material::GameMaterial, voxelmailbox::VoxelMailbox};
 
 use super::{
-    machines::MachineResources,
+    machines::{
+        radar::{Radar, RadarType},
+        MachineResources,
+    },
     voxels3d::{VoxelResources, VOXEL_BLOCK_SIZE},
 };
 
@@ -21,7 +24,7 @@ pub struct FlyingVoxel {
     pub target: Vec3,
     pub target_mailbox: Entity,
     pub material: GameMaterial,
-    pub payload: (IVec3, usize),
+    pub payload: (IVec3, RadarType),
 }
 
 #[derive(Debug, Component)]

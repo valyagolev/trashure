@@ -55,7 +55,6 @@ impl GameMachineSettings {
                         flying_target: None,
                         // target_mailbox: None,
                         target_mailbox: Some(ghost),
-                        paiload_ix: 3,
                     },
                     0.5,
                     10.0,
@@ -65,7 +64,28 @@ impl GameMachineSettings {
             ))
             .id();
 
-        commands.entity(ghost).add_child(fuel_radar);
+        let maintenance_radar = commands
+            .spawn((
+                Name::new("maintenance radar"),
+                RadarBundle::new(
+                    &[GameMaterial::Reddish],
+                    None,
+                    RadarConsumer {
+                        flying_target: None,
+                        // target_mailbox: None,
+                        target_mailbox: Some(ghost),
+                    },
+                    0.5,
+                    10.0,
+                    RadarType::Fuel,
+                ),
+                VoxelMailbox(default()),
+            ))
+            .id();
+
+        commands
+            .entity(ghost)
+            .push_children(&[fuel_radar, maintenance_radar]);
 
         let set = match mc.gmt {
             GameMachineSettingsDiscriminants::Recycler => {
@@ -82,7 +102,6 @@ impl GameMachineSettings {
                                     .and_then(|e| q_found_transforms.get(*e).ok())
                                     .map(|t| t.translation),
                                 target_mailbox: Some(ghost),
-                                paiload_ix: 1,
                             },
                             2.0,
                             6.0,
@@ -105,7 +124,6 @@ impl GameMachineSettings {
                             RadarConsumer {
                                 flying_target: None,
                                 target_mailbox: Some(ghost),
-                                paiload_ix: 2,
                             },
                             1.0,
                             3.0,
@@ -178,7 +196,7 @@ fn consume_mailbox(
                     target: target.extend(y).xzy().as_vec3(),
                     target_mailbox: block_e,
                     material: vc,
-                    payload: (target.extend(y).xzy(), 0),
+                    payload: (target.extend(y).xzy(), RadarType::Work),
                 });
             }
             GameMachineSettings::Recycler { .. } => {
@@ -228,7 +246,7 @@ fn consume_mailbox(
                     target: tp.as_vec3(),
                     target_mailbox: block_e,
                     material: vc,
-                    payload: (tp, 0),
+                    payload: (tp, RadarType::Work),
                 });
 
                 // let rp = VoxelBlock::real_pos(block_p, local_p);

@@ -68,6 +68,7 @@ pub struct RadarFoundVoxel {
     pub radar: Entity,
     pub material: GameMaterial,
     pub pos: IVec3,
+    tp: RadarType,
 }
 
 #[derive(Component, Reflect)]
@@ -171,6 +172,7 @@ fn radar_search(
                 radar: e,
                 material: winner.0,
                 pos: winner.1,
+                tp: r.tp,
             });
 
             r.watch.reset();

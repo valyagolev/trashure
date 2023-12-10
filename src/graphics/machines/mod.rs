@@ -126,7 +126,7 @@ pub fn load_machines(
         // dims: IVec2 { x: 7, y: 12 },
 
         // always square for now
-        dims: IVec2 { x: 12, y: 12 },
+        dims: IVec2 { x: 10, y: 10 },
         max_fuel: 10,
     });
 

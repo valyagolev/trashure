@@ -7,7 +7,7 @@ use crate::graphics::{
     },
 };
 
-use super::RadarFoundVoxel;
+use super::{RadarFoundVoxel, RadarType};
 
 pub struct RadarConsumptionPlugin;
 
@@ -16,7 +16,6 @@ pub struct RadarConsumer {
     pub flying_target: Option<Vec3>,
     // self by default
     pub target_mailbox: Option<Entity>,
-    pub paiload_ix: usize,
 }
 
 impl Plugin for RadarConsumptionPlugin {
@@ -60,7 +59,7 @@ impl RadarConsumptionPlugin {
                 target,
                 target_mailbox: cons.target_mailbox.unwrap_or(e),
                 material: ev.material,
-                payload: (ev.pos, cons.paiload_ix),
+                payload: (ev.pos, ev.tp),
             });
         }
     }
