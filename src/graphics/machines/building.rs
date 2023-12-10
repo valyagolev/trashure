@@ -15,7 +15,7 @@ use crate::{
     },
     graphics::{
         cursor::CursorOver,
-        gamemenu::{GameMenu, GameMenuState},
+        gamemenu::{tutorial::mark_tutorial_event, GameMenu, GameMenuState},
         recolor::Tinted,
         sceneobjectfinder::{SceneFoundObject, SceneObjectFinder, SceneObjectsFound},
         scenerenderlayer::SceneRenderLayers,
@@ -171,6 +171,10 @@ fn place_ghost(
     };
 
     if cursor.just_released(MouseButton::Left) {
+        if m.gmt == GameMachineSettingsDiscriminants::Recycler {
+            mark_tutorial_event("recycler_placed");
+        }
+
         let v = machine_counter
             .0
             .entry(m.gmt)
@@ -235,6 +239,14 @@ fn finish_building(
         };
 
         if mm.still_building == 0 {
+            if mm.gmt == GameMachineSettingsDiscriminants::Recycler {
+                mark_tutorial_event("recycler_finished");
+            }
+
+            if mm.gmt == GameMachineSettingsDiscriminants::Plower {
+                mark_tutorial_event("plower_built");
+            }
+
             commands.entity(ghost).insert((Tinted::empty(),));
 
             GameMachineSettings::instantiate(

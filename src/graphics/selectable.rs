@@ -1,10 +1,15 @@
 use bevy::{prelude::*, render::view::RenderLayers};
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
+use crate::game::machines::GameMachineSettingsDiscriminants;
+
 use super::{
     cursor::CursorOver,
-    gamemenu::{GameMenu, GameMenuState},
-    machines::radar::{Radar, RadarScene},
+    gamemenu::{tutorial::mark_tutorial_event, GameMenu, GameMenuState},
+    machines::{
+        radar::{Radar, RadarScene},
+        MyMachine,
+    },
     recolor::Tinted,
     scenerenderlayer::SceneRenderLayers,
 };
@@ -63,7 +68,15 @@ fn recolor_selection(
 
 fn handle_selection(
     mut raycast: Raycast,
-    q_targets: Query<(Entity, &GlobalTransform, &ViewVisibility), With<Selectable>>,
+    q_targets: Query<
+        (
+            Entity,
+            &GlobalTransform,
+            &ViewVisibility,
+            Option<&MyMachine>,
+        ),
+        With<Selectable>,
+    >,
     mouse: Res<CursorOver>,
     parent_query: Query<&Parent>,
     mouse_inp: Res<Input<MouseButton>>,
@@ -107,5 +120,11 @@ fn handle_selection(
         currently_selected.0 = Some(hovered_inst);
 
         menu.0 = GameMenuState::SelectedMachine;
+
+        if let Ok((_, _, _, Some(m))) = q_targets.get(hovered_inst) {
+            if m.gmt == GameMachineSettingsDiscriminants::Recycler {
+                mark_tutorial_event("recycler_selected");
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ use strum::EnumDiscriminants;
 
 use crate::graphics::{
     flyingvoxel::FlyingVoxel,
+    gamemenu::tutorial::mark_tutorial_event,
     machines::{
         radar::{consumption::RadarConsumer, Radar, RadarBundle, RadarType},
         targets::Target,
@@ -99,7 +100,7 @@ impl GameMachineSettings {
                                 target_mailbox: Some(ghost),
                             },
                             mt.work_radar_speed,
-                            6.0,
+                            10.0,
                             RadarType::Work,
                         ),
                     ))
@@ -173,6 +174,11 @@ fn consume_mailbox(
         }
         if vc == GameMaterial::Reddish && mm.needed_maintenance > 0 {
             mm.needed_maintenance -= 1;
+
+            if mm.needed_maintenance == 0 && mm.gmt == GameMachineSettingsDiscriminants::Plower {
+                mark_tutorial_event("plower_maintained");
+            }
+
             continue;
         }
         if vc == GameMaterial::Greenish && mm.still_building > 0 {
@@ -357,6 +363,10 @@ fn add_maintenance(fixed_time: Res<Time<Fixed>>, mut q_machines: Query<&mut MyMa
         {
             mm.useful_ish_work_done = 0.0;
             mm.needed_maintenance += rand.gen_range(1..5);
+
+            if mm.gmt == GameMachineSettingsDiscriminants::Plower {
+                mark_tutorial_event("plower_wants_maintenance");
+            }
         }
     }
 }

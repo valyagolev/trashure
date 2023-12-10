@@ -10,7 +10,7 @@ use super::{
 
 pub struct GameMenuPlugin;
 mod looks;
-mod textref;
+pub mod textref;
 pub mod tutorial;
 
 impl Plugin for GameMenuPlugin {

@@ -69,6 +69,7 @@ pub fn setup_menu(
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,
                     min_width: Val::Px(400.0),
+                    max_width: Val::Px(400.0),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -276,8 +277,10 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
 }
 
 fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
+    println!("Making tutorial root");
     let tutorial_root = commands
         .spawn((
+            Name::new("ui_tutorial_root"),
             GameMenuNode,
             NodeBundle {
                 background_color: BackgroundColor(Color::BLACK.with_a(0.8)),
@@ -287,6 +290,8 @@ fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
                     padding: UiRect::all(Val::Px(4.0)),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,
+                    min_width: Val::Px(400.0),
+                    max_width: Val::Px(400.0),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -296,6 +301,7 @@ fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
 
     let text = commands
         .spawn((
+            Name::new("ui_tutorial_node"),
             TutorialNode,
             TextBundle {
                 text: Text::from_sections([TextSection {
