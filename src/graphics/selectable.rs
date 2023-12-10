@@ -4,6 +4,7 @@ use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 use super::{
     cursor::CursorOver,
     gamemenu::{GameMenu, GameMenuState},
+    machines::radar::{Radar, RadarScene},
     recolor::Tinted,
     scenerenderlayer::SceneRenderLayers,
 };
@@ -30,16 +31,32 @@ pub struct Selectable;
 pub struct CurrentlySelected(pub Option<Entity>);
 
 fn recolor_selection(
-    mut q_targets: Query<(Entity, &mut Tinted, &mut SceneRenderLayers), With<Selectable>>,
+    mut q_targets: Query<
+        (Entity, &mut Tinted, &mut SceneRenderLayers, &Children),
+        With<Selectable>,
+    >,
     currently_selected: Res<CurrentlySelected>,
+    mut q_radars: Query<&mut Visibility, With<Radar>>,
 ) {
-    for (ent, mut tpl, mut layers) in q_targets.iter_mut() {
+    for (ent, mut tpl, mut layers, children) in q_targets.iter_mut() {
         if Some(ent) == currently_selected.0 {
             *tpl = Tinted::new(Color::rgb(0.0, 0.0, 0.1));
             *layers = SceneRenderLayers(RenderLayers::layer(6))
         } else {
             *tpl = Tinted::empty();
             *layers = SceneRenderLayers(RenderLayers::default())
+        }
+
+        for child in children {
+            let Ok(mut child) = q_radars.get_mut(*child) else {
+                continue;
+            };
+
+            if Some(ent) == currently_selected.0 {
+                *child = Visibility::Visible;
+            } else {
+                *child = Visibility::Hidden;
+            }
         }
     }
 }

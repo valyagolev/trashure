@@ -62,6 +62,8 @@ fn setup(
     let colors = [
         (RadarType::Work, Color::rgba(0.3, 0.9, 0.4, 0.8)),
         (RadarType::Fuel, Color::rgba(0.4, 0.5, 0.8, 0.9)),
+        (RadarType::Maintenance, Color::rgba(0.9, 0.4, 0.3, 0.9)),
+        (RadarType::Building, Color::rgba(0.5, 0.8, 0.4, 0.9)),
     ];
     commands.insert_resource(RadarResources {
         materials: colors
