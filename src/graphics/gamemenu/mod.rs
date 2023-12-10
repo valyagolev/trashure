@@ -11,10 +11,12 @@ use super::{
 pub struct GameMenuPlugin;
 mod looks;
 mod textref;
+pub mod tutorial;
 
 impl Plugin for GameMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(GameMenu(GameMenuState::ToPickBuilding))
+        app.add_plugins(tutorial::TutorialPlugin)
+            .insert_resource(GameMenu(GameMenuState::ToPickBuilding))
             .add_systems(Update, looks::setup_menu)
             .add_systems(
                 Update,

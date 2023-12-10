@@ -299,7 +299,7 @@ fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
             TutorialNode,
             TextBundle {
                 text: Text::from_sections([TextSection {
-                    value: "tutorial".into(),
+                    value: "".into(),
                     style: TextStyle {
                         font_size: 20.0,
                         color: Color::WHITE,
@@ -310,6 +310,10 @@ fn make_tutorial_root(commands: &mut Commands<'_, '_>) -> Entity {
             },
         ))
         .id();
+
+    commands
+        .entity(text)
+        .insert(TextRefs::new().with("text", text, 0));
 
     commands.entity(tutorial_root).push_children(&[text]);
     tutorial_root
