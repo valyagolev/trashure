@@ -62,6 +62,7 @@ pub struct MachineType {
     scene: Handle<Scene>,
     pub dims: IVec2,
     pub max_fuel: u8,
+    pub work_radar_speed: f32,
 }
 
 #[derive(Debug, Component, Reflect)]
@@ -73,6 +74,8 @@ pub struct MyMachine {
     pub dims: IVec2,
     pub fuel: u8,
     pub max_fuel: u8,
+    pub needed_maintenance: u8,
+    pub still_building: u8,
 }
 
 impl MyMachine {
@@ -128,6 +131,7 @@ pub fn load_machines(
         // always square for now
         dims: IVec2 { x: 10, y: 10 },
         max_fuel: 10,
+        work_radar_speed: 2.0,
     });
 
     commands.spawn(MachineType {
@@ -140,6 +144,7 @@ pub fn load_machines(
         // always square for now
         dims: IVec2 { x: 6, y: 6 },
         max_fuel: 5,
+        work_radar_speed: 1.0,
     });
 }
 

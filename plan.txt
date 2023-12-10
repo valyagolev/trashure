@@ -16,7 +16,7 @@ final steps:
 
 7. DONE "fuel" mechanics (will also limit the machines' speed)
 
-8. we'll need a separate radar for fuel (unlimited in range, but slow)
+8. DONE we'll need a separate radar for fuel (unlimited in range, but slow)
 
 9. "maintenance" mechanics
 
@@ -24,7 +24,7 @@ final steps:
 
 ----
 
-10. radar looks??
+10. DONE radar looks??
 
 ========================
 

@@ -73,14 +73,14 @@ pub struct RadarFoundVoxel {
 
 #[derive(Component, Reflect)]
 pub struct Radar {
-    tp: RadarType,
+    pub tp: RadarType,
     material_mask: u8,
     watch: Stopwatch,
     scene: Option<Entity>,
 
     pub direction: Option<Direction2D>,
     pub paused: bool,
-    speed: f32,
+    pub speed: f32,
     fast_distance: f32,
 }
 

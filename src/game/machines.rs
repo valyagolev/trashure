@@ -7,7 +7,7 @@ use crate::graphics::{
     machines::{
         radar::{consumption::RadarConsumer, Radar, RadarBundle, RadarType},
         targets::Target,
-        BuiltMachine, MyMachine,
+        BuiltMachine, MachineType, MyMachine,
     },
     sceneobjectfinder::{SceneFoundObject, SceneObjectsFound},
     voxels3d::{lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
@@ -19,14 +19,7 @@ pub struct MachinesPlugin;
 
 impl Plugin for MachinesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (
-                // consume_radars,
-                consume_mailbox,
-                move_machines,
-            ),
-        );
+        app.add_systems(Update, (consume_mailbox, move_machines, toggle_radars));
     }
 }
 
@@ -44,6 +37,7 @@ impl GameMachineSettings {
         mc: &MyMachine,
         scob: &SceneObjectsFound,
         q_found_transforms: &Query<&Transform, With<SceneFoundObject>>,
+        mt: &MachineType,
     ) {
         let fuel_radar = commands
             .spawn((
@@ -75,9 +69,9 @@ impl GameMachineSettings {
                         // target_mailbox: None,
                         target_mailbox: Some(ghost),
                     },
-                    0.5,
+                    0.1,
                     10.0,
-                    RadarType::Fuel,
+                    RadarType::Maintenance,
                 ),
                 VoxelMailbox(default()),
             ))
@@ -103,7 +97,7 @@ impl GameMachineSettings {
                                     .map(|t| t.translation),
                                 target_mailbox: Some(ghost),
                             },
-                            2.0,
+                            mt.work_radar_speed,
                             6.0,
                             RadarType::Work,
                         ),
@@ -125,7 +119,7 @@ impl GameMachineSettings {
                                 flying_target: None,
                                 target_mailbox: Some(ghost),
                             },
-                            1.0,
+                            mt.work_radar_speed,
                             3.0,
                             RadarType::Work,
                         ),
@@ -170,8 +164,18 @@ fn consume_mailbox(
             continue;
         };
 
+        println!("got: {:?}", pl);
+
         if vc == GameMaterial::Blueish && mm.fuel < mm.max_fuel {
             mm.fuel += 1;
+            continue;
+        }
+        if vc == GameMaterial::Reddish && mm.needed_maintenance > 0 {
+            mm.needed_maintenance -= 1;
+            continue;
+        }
+        if vc == GameMaterial::Brownish && mm.still_building > 0 {
+            mm.still_building -= 1;
             continue;
         }
 
@@ -200,8 +204,6 @@ fn consume_mailbox(
                 });
             }
             GameMachineSettings::Recycler { .. } => {
-                // assert!(pl == 1);
-
                 let rec_exit = q_scene_object_finder
                     .get(e)
                     .ok()
@@ -287,6 +289,35 @@ fn move_machines(
             .any(|p| wbw.get_block_value(p.extend(0).xzy()).is_full())
         {
             mm.pos += Into::<IVec2>::into(*dir);
+        }
+    }
+}
+
+fn toggle_radars(
+    q_machines: Query<(&MyMachine, &Children)>,
+    mut q_radars: Query<&mut Radar>,
+    q_types: Query<&MachineType>,
+) {
+    for (mm, children) in q_machines.iter() {
+        let Ok(mt) = q_types.get(mm.tp) else {
+            continue;
+        };
+
+        for ch in children {
+            let Ok(mut radar) = q_radars.get_mut(*ch) else {
+                continue;
+            };
+
+            radar.paused = match radar.tp {
+                RadarType::Fuel => mm.fuel >= mm.max_fuel,
+                RadarType::Work => mm.needed_maintenance > 0 || mm.fuel == 0,
+                RadarType::Maintenance => mm.needed_maintenance == 0,
+                RadarType::Building => mm.still_building == 0,
+            };
+
+            if radar.tp == RadarType::Work {
+                radar.speed = (mm.fuel as f32 / mm.max_fuel as f32) * mt.work_radar_speed;
+            }
         }
     }
 }

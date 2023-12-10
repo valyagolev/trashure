@@ -84,7 +84,8 @@ impl MachineGhost {
                     pos: cursor.block.xz(),
                     fuel: 0,
                     max_fuel: machine_type.max_fuel,
-                    // fuel_radar,
+                    needed_maintenance: 0,
+                    still_building: 0,
                 },
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
@@ -149,6 +150,8 @@ fn place_ghost(
 
     mut machine_counter: ResMut<MachineCounter>,
     q_floors: Query<Entity, With<GhostMachineFloor>>,
+
+    q_types: Query<&MachineType>,
 ) {
     if !mghost.1 {
         return;
@@ -163,6 +166,10 @@ fn place_ghost(
     };
 
     let Ok((m, scob, children)) = q_machines.get(ghost) else {
+        return;
+    };
+
+    let Ok(mt) = q_types.get(m.tp) else {
         return;
     };
 
@@ -181,7 +188,7 @@ fn place_ghost(
             SceneRenderLayers(RenderLayers::default().with(6)),
         ));
 
-        GameMachineSettings::instantiate(ghost, &mut commands, m, scob, &q_found_transforms);
+        GameMachineSettings::instantiate(ghost, &mut commands, m, scob, &q_found_transforms, &mt);
 
         q_floors
             .iter_many(children)
