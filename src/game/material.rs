@@ -40,10 +40,10 @@ impl GameMaterial {
     }
 
     pub fn random_recycle(rng: &mut impl Rng) -> Self {
-        match rng.gen_range(0..=6) {
+        match rng.gen_range(0..=7) {
             // 0 => Self::Golden,
-            0 => Self::Reddish,
-            1..=2 => Self::Greenish,
+            0..=1 => Self::Reddish,
+            2..=4 => Self::Greenish,
             _ => Self::Blueish,
         }
     }

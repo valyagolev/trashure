@@ -16,8 +16,9 @@ pub mod voxels3d;
 pub mod machines;
 
 pub mod dbgtext;
-pub mod fps;
+// pub mod fps;
 pub mod gamemenu;
+pub mod stats;
 
 pub mod recolor;
 pub mod selectable;

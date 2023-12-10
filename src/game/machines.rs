@@ -11,6 +11,7 @@ use crate::graphics::{
         BuiltMachine, MachineType, MyMachine,
     },
     sceneobjectfinder::{SceneFoundObject, SceneObjectsFound},
+    stats::StatsValues,
     voxels3d::{lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
 };
 
@@ -72,7 +73,7 @@ impl GameMachineSettings {
                         target_mailbox: Some(ghost),
                     },
                     0.1,
-                    30.0,
+                    80.0,
                     RadarType::Maintenance,
                 ),
                 // VoxelMailbox(default()),
@@ -159,6 +160,7 @@ fn consume_mailbox(
     q_blocks: Query<&VoxelBlock>,
     q_scene_object_finder: Query<&SceneObjectsFound>,
     q_scene_object_transforms: Query<&GlobalTransform, (Without<Radar>, Without<VoxelBlock>)>,
+    mut stats: ResMut<StatsValues>,
 ) {
     let rand = &mut rand::thread_rng();
     for (e, mut mailbox, bm, mut mm, dir) in q_machines.iter_mut() {
@@ -174,6 +176,8 @@ fn consume_mailbox(
         }
         if vc == GameMaterial::Reddish && mm.needed_maintenance > 0 {
             mm.needed_maintenance -= 1;
+
+            stats.inc_n("Maintained", 1);
 
             if mm.needed_maintenance == 0 && mm.gmt == GameMachineSettingsDiscriminants::Plower {
                 mark_tutorial_event("plower_maintained");
@@ -258,6 +262,8 @@ fn consume_mailbox(
 
                 mm.useful_ish_work_done += 1.0;
 
+                stats.inc_n("Recycled", 1);
+
                 commands.spawn(FlyingVoxel {
                     origin: rec_exit.unwrap_or_else(|| mm.pos.extend(3).xzy().as_vec3()),
                     target: tp.as_vec3(),
@@ -285,6 +291,7 @@ fn move_machines(
         &Direction2D,
     )>,
     blocks: Query<'_, '_, &mut VoxelBlock, ()>,
+    mut stats: ResMut<StatsValues>,
 ) {
     let mut wbw = WholeBlockWorld { lazy_world, blocks };
 
@@ -298,6 +305,8 @@ fn move_machines(
         }
 
         mm.fuel -= mm.max_fuel;
+
+        stats.inc_n("Fuel Consumed", mm.max_fuel as usize);
 
         if !dir
             .line_in_direction(mm.pos, mm.dims)
@@ -362,11 +371,11 @@ fn add_maintenance(fixed_time: Res<Time<Fixed>>, mut q_machines: Query<&mut MyMa
 
         mm.useful_ish_work_done += fixed_time.delta_seconds();
 
-        if mm.useful_ish_work_done > 150.0
+        if mm.useful_ish_work_done > 250.0
             && (rand.gen_range(0..1000) as f32) < mm.useful_ish_work_done
         {
             mm.useful_ish_work_done = 0.0;
-            mm.needed_maintenance += rand.gen_range(1..5);
+            mm.needed_maintenance += rand.gen_range(1..4);
 
             if mm.gmt == GameMachineSettingsDiscriminants::Plower {
                 mark_tutorial_event("plower_wants_maintenance");

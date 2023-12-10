@@ -88,8 +88,8 @@ fn generate_part(
     if center == IVec3::ZERO {
         //     bdl.1.material = voxel_resources.debug_voxel_material.clone();
 
-        for x in 0..15 {
-            for z in 0..15 {
+        for x in 0..23 {
+            for z in 0..23 {
                 bundle.voxel_block.forbid_column(IVec2::new(x, z));
             }
         }

@@ -12,3 +12,16 @@ https://github.com/iiYese/aery
 ---
 
 https://github.com/d-bucur/awesome-bevy
+
+------
+
+for next time:
+- figure out automated itch uploads
+- figure out saving menu into text file or something
+- start with more granular schedules to add menu more easily
+- don't use Esc key so it works with itch fullscreen
+- try to start with a specific palette, always helpful
+
+and in code
+- find a library for color mixing
+- think about the linting idea (this component requires that, etc)

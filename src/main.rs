@@ -45,8 +45,9 @@ fn main() {
         // .add_plugins(graphics::pieces::PiecesPlugin)
         .add_plugins(graphics::voxels3d::lazyworld::LazyWorldPlugin)
         .add_plugins((
-            graphics::fps::FpsPlugin,
+            // graphics::fps::FpsPlugin,
             // graphics::dbgtext::DbgTextPlugin
+            graphics::stats::StatsPlugin,
         ))
         .add_plugins((
             game::GameUtilsPlugin,

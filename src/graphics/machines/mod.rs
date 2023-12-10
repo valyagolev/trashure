@@ -10,6 +10,8 @@ use crate::game::{
     Direction2D,
 };
 
+use self::radar::Radar;
+
 use super::selectable::CurrentlySelected;
 
 // use self::recolor::RecoloredScenes;
@@ -211,8 +213,9 @@ fn update_colors(
 
 fn rotate_selected_machine(
     selected: Res<CurrentlySelected>,
-    mut q_machines: Query<&mut Direction2D, With<BuiltMachine>>,
+    mut q_machines: Query<(&mut Direction2D, &Children), With<BuiltMachine>>,
     keyb: Res<Input<KeyCode>>,
+    mut q_radars: Query<&mut Radar>,
 ) {
     if !keyb.just_released(KeyCode::R) {
         return;
@@ -222,11 +225,17 @@ fn rotate_selected_machine(
         return;
     };
 
-    let Ok(mut m) = q_machines.get_mut(mid) else {
+    let Ok((mut m, children)) = q_machines.get_mut(mid) else {
         return;
     };
 
     *m = m.rotate();
 
     // dbg!(&m);
+
+    for ch in children {
+        if let Ok(mut r) = q_radars.get_mut(*ch) {
+            r.watch.reset();
+        }
+    }
 }
