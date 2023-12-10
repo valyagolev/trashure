@@ -36,7 +36,7 @@ fn recolor_selection(
     for (ent, mut tpl, mut layers) in q_targets.iter_mut() {
         if Some(ent) == currently_selected.0 {
             *tpl = Tinted::new(Color::rgb(0.0, 0.0, 0.1));
-            *layers = SceneRenderLayers(RenderLayers::default().with(6))
+            *layers = SceneRenderLayers(RenderLayers::layer(6))
         } else {
             *tpl = Tinted::empty();
             *layers = SceneRenderLayers(RenderLayers::default())

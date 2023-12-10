@@ -50,7 +50,10 @@ impl Plugin for MachinesPlugin {
 // }
 
 #[derive(Debug, Component, Reflect)]
-pub struct BuiltMachine(pub GameMachineSettings);
+pub struct BuiltMachine {
+    pub settings: GameMachineSettings,
+    pub fuel_radar: Entity,
+}
 
 #[derive(Debug, Component, Reflect)]
 pub struct MachineType {

@@ -14,7 +14,8 @@ pub struct RadarConsumptionPlugin;
 #[derive(Component, Reflect)]
 pub struct RadarConsumer {
     pub flying_target: Option<Vec3>,
-    pub target_mailbox: Entity,
+    // self by default
+    pub target_mailbox: Option<Entity>,
     pub paiload_ix: usize,
 }
 
@@ -28,7 +29,7 @@ impl RadarConsumptionPlugin {
     fn consume_radars(
         mut commands: Commands,
         mut q_events: EventReader<RadarFoundVoxel>,
-        q_radar_consumers: Query<(&RadarConsumer, &GlobalTransform)>,
+        q_radar_consumers: Query<(Entity, &RadarConsumer, &GlobalTransform)>,
         lazy_world: Res<LazyWorld>,
         blocks: Query<&mut VoxelBlock>,
         mut blockchanges: ResMut<VoxelBlockChanges>,
@@ -41,7 +42,7 @@ impl RadarConsumptionPlugin {
         let rand = &mut rand::thread_rng();
 
         for ev in q_events.read() {
-            let (cons, tr) = q_radar_consumers.get(ev.radar).unwrap();
+            let (e, cons, tr) = q_radar_consumers.get(ev.radar).unwrap();
 
             let target = tr.transform_point(cons.flying_target.unwrap_or_default());
 
@@ -57,7 +58,7 @@ impl RadarConsumptionPlugin {
             commands.spawn(FlyingVoxel {
                 origin: ev.pos.as_vec3(),
                 target,
-                target_mailbox: cons.target_mailbox,
+                target_mailbox: cons.target_mailbox.unwrap_or(e),
                 material: ev.material,
                 payload: (ev.pos, cons.paiload_ix),
             });

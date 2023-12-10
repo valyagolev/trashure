@@ -3,9 +3,10 @@ use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     scene::SceneInstanceReady,
+    utils::HashMap,
 };
 
-use super::Radar;
+use super::{Radar, RadarType};
 
 pub struct RadarGraphicsPlugin;
 
@@ -22,7 +23,7 @@ impl Plugin for RadarGraphicsPlugin {
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct RadarMaterial {
-    #[uniform(1, visibility(fragment))]
+    #[uniform(9, visibility(fragment))]
     color: Color,
     // #[texture(2, visibility(fragment))]
     // color_texture: Option<Handle<Image>>,
@@ -46,7 +47,8 @@ impl Material for RadarMaterial {
 
 #[derive(Resource)]
 pub struct RadarResources {
-    pub material: Handle<RadarMaterial>,
+    pub materials: HashMap<RadarType, Handle<RadarMaterial>>,
+
     // pub mesh: Handle<Mesh>,
     pub round_scene: Handle<Scene>,
     pub sector_scene: Handle<Scene>,
@@ -55,20 +57,16 @@ pub struct RadarResources {
 fn setup(
     mut commands: Commands,
     mut materials: ResMut<Assets<RadarMaterial>>,
-    // mut meshes: ResMut<Assets<Mesh>>,
     ass: Res<AssetServer>,
-    // spawner: Res<SceneSpawner>,
 ) {
-    // let scene = ;
+    let colors = [
+        (RadarType::Work, Color::rgba(0.3, 0.9, 0.4, 0.8)),
+        (RadarType::Fuel, Color::rgba(0.4, 0.5, 0.8, 0.9)),
+    ];
     commands.insert_resource(RadarResources {
-        material: materials.add(
-            RadarMaterial {
-                color: Color::rgba(0.7, 0.3, 0.3, 0.9),
-                // color_texture: None,
-                // alpha_mode: AlphaMode::Blend,
-            }
+        materials: colors
+            .map(|(t, color)| (t, materials.add(RadarMaterial { color })))
             .into(),
-        ),
         // mesh: ,
         round_scene: ass.load("objects/radar_round.glb#Scene0"),
         sector_scene: ass.load("objects/radar_sector.glb#Scene0"),
@@ -76,7 +74,7 @@ fn setup(
 }
 
 #[derive(Component)]
-pub struct RadarScene;
+pub struct RadarScene(RadarType);
 
 fn setup_radars_graphics(
     mut commands: Commands,
@@ -86,7 +84,7 @@ fn setup_radars_graphics(
     for (e, mut r) in q_radars.iter_mut() {
         let radar_e = commands
             .spawn((
-                RadarScene,
+                RadarScene(r.tp),
                 NotShadowCaster,
                 SceneBundle {
                     // mesh: rres.mesh.clone(),
@@ -116,7 +114,7 @@ fn update_radar_material(
 ) {
     for ev in er.read() {
         // println!("radar scene ready: {:?}", ev.parent);
-        if let Ok(_) = q_scenes.get(ev.parent) {
+        if let Ok(rs) = q_scenes.get(ev.parent) {
             let all_descendants = q_descendants.iter_descendants(ev.parent);
 
             let material_uses = q_material_uses.iter_many(all_descendants);
@@ -126,7 +124,7 @@ fn update_radar_material(
 
                 commands
                     .entity(m)
-                    .insert((NotShadowCaster, rres.material.clone()));
+                    .insert((NotShadowCaster, rres.materials[&rs.0].clone()));
             }
         }
     }

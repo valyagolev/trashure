@@ -29,6 +29,14 @@ impl Plugin for RadarPlugin {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+pub enum RadarType {
+    Fuel,
+    Work,
+    Maintenance,
+    Building,
+}
+
 #[derive(Bundle)]
 pub struct RadarBundle {
     radar: Radar,
@@ -43,9 +51,11 @@ impl RadarBundle {
         direction: Option<Direction2D>,
         radar_consumer: RadarConsumer,
         speed: f32,
+        fast_distance: f32,
+        tp: RadarType,
     ) -> Self {
         RadarBundle {
-            radar: Radar::new(mats, direction, speed),
+            radar: Radar::new(mats, direction, speed, fast_distance, tp),
             transform_bundle: TransformBundle::default(),
             visibility_bundle: VisibilityBundle::default(),
             radar_consumer,
@@ -62,6 +72,7 @@ pub struct RadarFoundVoxel {
 
 #[derive(Component, Reflect)]
 pub struct Radar {
+    tp: RadarType,
     material_mask: u8,
     watch: Stopwatch,
     scene: Option<Entity>,
@@ -69,13 +80,20 @@ pub struct Radar {
     pub direction: Option<Direction2D>,
     pub paused: bool,
     speed: f32,
+    fast_distance: f32,
 }
 
 #[derive(Component, Reflect)]
 pub struct RadarScene;
 
 impl Radar {
-    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>, speed: f32) -> Self {
+    pub fn new(
+        mats: &[GameMaterial],
+        direction: Option<Direction2D>,
+        speed: f32,
+        fast_distance: f32,
+        tp: RadarType,
+    ) -> Self {
         Radar {
             material_mask: GameMaterial::any_of_mask(mats),
             watch: Stopwatch::new(),
@@ -83,6 +101,8 @@ impl Radar {
             direction,
             paused: false,
             speed,
+            fast_distance,
+            tp,
         }
     }
 

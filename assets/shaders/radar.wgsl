@@ -1,5 +1,6 @@
 #import bevy_pbr::{
-    mesh_functions,     skinning,
+    mesh_functions,
+    skinning,
     view_transformations::position_world_to_clip,
 }
 
@@ -15,7 +16,7 @@
 // we can import items from shader modules in the assets folder with a quoted path
 // #import "shaders/custom_material_import.wgsl"::COLOR_MULTIPLIER
 
-@group(2) @binding(0) var<uniform> my_material_color: vec4<f32>;
+@group(1) @binding(9) var<uniform> my_material_color: vec4<f32>;
 // @group(2) @binding(2) var material_color_texture: texture_2d<f32>;
 // @group(2) @binding(3) var material_color_sampler: sampler;
 
@@ -120,7 +121,8 @@ fn vertex(vertex_no_morph: Vertex) -> VertexOutput {
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
-    return vec4<f32>(0.3, 0.8, 0.4, in.local_position.x);
+    // return vec4<f32>(0.3, 0.8, 0.4, in.local_position.y);
+    return my_material_color;
     // var r2 = in.local_position.x*in.local_position.x + in.local_position.z*in.local_position.z;
 
     // if r2 >= 0.9 && abs(in.local_position.x) < 0.6 && in.local_position.z < 0.0 {

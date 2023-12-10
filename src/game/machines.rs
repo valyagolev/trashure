@@ -5,7 +5,7 @@ use strum::EnumDiscriminants;
 use crate::graphics::{
     flyingvoxel::FlyingVoxel,
     machines::{
-        radar::{consumption::RadarConsumer, Radar, RadarBundle},
+        radar::{consumption::RadarConsumer, Radar, RadarBundle, RadarType},
         targets::Target,
         BuiltMachine, MyMachine,
     },
@@ -45,6 +45,28 @@ impl GameMachineSettings {
         scob: &SceneObjectsFound,
         q_found_transforms: &Query<&Transform, With<SceneFoundObject>>,
     ) {
+        let fuel_radar = commands
+            .spawn((
+                Name::new("fuel radar"),
+                RadarBundle::new(
+                    &[GameMaterial::Blueish],
+                    None,
+                    RadarConsumer {
+                        flying_target: None,
+                        // target_mailbox: None,
+                        target_mailbox: Some(ghost),
+                        paiload_ix: 3,
+                    },
+                    0.5,
+                    10.0,
+                    RadarType::Fuel,
+                ),
+                VoxelMailbox(default()),
+            ))
+            .id();
+
+        commands.entity(ghost).add_child(fuel_radar);
+
         let set = match mc.gmt {
             GameMachineSettingsDiscriminants::Recycler => {
                 let recycling_radar = commands
@@ -59,10 +81,12 @@ impl GameMachineSettings {
                                     .get("RecyclingTarget")
                                     .and_then(|e| q_found_transforms.get(*e).ok())
                                     .map(|t| t.translation),
-                                target_mailbox: ghost,
+                                target_mailbox: Some(ghost),
                                 paiload_ix: 1,
                             },
                             2.0,
+                            6.0,
+                            RadarType::Work,
                         ),
                     ))
                     .id();
@@ -80,10 +104,12 @@ impl GameMachineSettings {
                             Some(Direction2D::Forward),
                             RadarConsumer {
                                 flying_target: None,
-                                target_mailbox: ghost,
+                                target_mailbox: Some(ghost),
                                 paiload_ix: 2,
                             },
                             1.0,
+                            3.0,
+                            RadarType::Work,
                         ),
                     ))
                     .id();
@@ -98,7 +124,10 @@ impl GameMachineSettings {
             }
         };
 
-        commands.entity(ghost).insert(BuiltMachine(set));
+        commands.entity(ghost).insert(BuiltMachine {
+            settings: set,
+            fuel_radar,
+        });
     }
 }
 
@@ -128,7 +157,7 @@ fn consume_mailbox(
             continue;
         }
 
-        match bm.0 {
+        match bm.settings {
             GameMachineSettings::Plower { .. } => {
                 let target = targets.get(e).unwrap();
                 let target = target.global_pos;
@@ -153,7 +182,7 @@ fn consume_mailbox(
                 });
             }
             GameMachineSettings::Recycler { .. } => {
-                assert!(pl == 1);
+                // assert!(pl == 1);
 
                 let rec_exit = q_scene_object_finder
                     .get(e)
@@ -225,7 +254,7 @@ fn move_machines(
     let mut wbw = WholeBlockWorld { lazy_world, blocks };
 
     for (bm, mut mm, dir) in q_machines.iter_mut() {
-        if matches!(bm.0, GameMachineSettings::Recycler { .. }) {
+        if matches!(bm.settings, GameMachineSettings::Recycler { .. }) {
             continue;
         }
 

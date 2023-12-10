@@ -7,6 +7,7 @@ use bevy::{
 use crate::{
     game::{
         machines::{GameMachineSettings, GameMachineSettingsDiscriminants},
+        material::GameMaterial,
         voxelmailbox::VoxelMailbox,
         Direction2D,
     },
@@ -22,7 +23,11 @@ use crate::{
     },
 };
 
-use super::{colors::MachineRecolor, BuiltMachine, MachineResources, MachineType, MyMachine};
+use super::{
+    colors::MachineRecolor,
+    radar::{consumption::RadarConsumer, RadarBundle},
+    BuiltMachine, MachineResources, MachineType, MyMachine,
+};
 
 pub struct MachinesBuildingPlugin;
 
@@ -79,6 +84,7 @@ impl MachineGhost {
                     pos: cursor.block.xz(),
                     fuel: 0,
                     max_fuel: machine_type.max_fuel,
+                    // fuel_radar,
                 },
                 Direction2D::Backward,
                 SceneObjectFinder::new(["RecycledOrigin", "RecyclingTarget"]),
@@ -183,8 +189,10 @@ fn place_ghost(
 
         mghost.0 = None;
 
-        selected.0 = Some(ghost);
-        menu_state.0 = GameMenuState::SelectedMachine;
+        // selected.0 = Some(ghost);
+        // menu_state.0 = GameMenuState::SelectedMachine;
+        selected.0 = None;
+        menu_state.0 = GameMenuState::ToPickBuilding;
     }
 }
 
