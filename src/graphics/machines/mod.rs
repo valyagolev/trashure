@@ -157,7 +157,7 @@ fn update_machines(
         let trans = Transform::from_translation(machine.pos.extend(0).xzy().as_vec3())
             .with_rotation(dir.into());
 
-        match scene_exists.and_then(|_| spawn) {
+        match scene_exists.and(spawn) {
             None => {
                 let tp = q_machinetypes.get(machine.tp).unwrap();
 

@@ -1,19 +1,14 @@
-use std::f32::consts::PI;
-
 use bevy::{prelude::*, time::Stopwatch};
 use rand::{seq::SliceRandom, Rng};
 
 use crate::{
     game::{material::GameMaterial, Direction2D},
-    graphics::{
-        recolor::Tinted,
-        voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
-    },
+    graphics::voxels3d::{lazyworld::LazyWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
 };
 
 use self::consumption::RadarConsumer;
 
-use super::{DebugCube, MachineResources, MyMachine};
+use super::MyMachine;
 
 pub mod consumption;
 mod graphics;

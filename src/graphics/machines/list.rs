@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use itertools::Itertools;
 
 use crate::graphics::{
     camera3d::CAMERA_OFFSET,
@@ -7,7 +6,7 @@ use crate::graphics::{
     selectable::CurrentlySelected,
 };
 
-use super::{BuiltMachine, MyMachine};
+use super::BuiltMachine;
 
 pub struct MachineListPlugin;
 
@@ -89,7 +88,7 @@ impl MachineListPlugin {
                     parent.spawn(TextBundle {
                         text: Text::from_sections([
                             TextSection::new(
-                                &*n,
+                                n,
                                 TextStyle {
                                     font_size: 18.0,
                                     color: Color::WHITE,

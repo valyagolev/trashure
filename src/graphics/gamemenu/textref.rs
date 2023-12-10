@@ -3,7 +3,7 @@ use bevy::{prelude::*, utils::HashMap};
 pub struct TextRefPlugin;
 
 impl Plugin for TextRefPlugin {
-    fn build(&self, app: &mut App) {}
+    fn build(&self, _app: &mut App) {}
 }
 
 pub type QueryTexts<'a, 'b, 'c> = Query<'a, 'b, &'c mut Text>;

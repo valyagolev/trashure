@@ -9,11 +9,8 @@ use crate::graphics::{
         targets::Target,
         BuiltMachine, MyMachine,
     },
-    sceneobjectfinder::{SceneFoundObject, SceneObjectFinder, SceneObjectsFound},
-    voxels3d::{
-        changes::VoxelBlockChanges, lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock,
-        VOXEL_BLOCK_SIZE,
-    },
+    sceneobjectfinder::{SceneFoundObject, SceneObjectsFound},
+    voxels3d::{lazyworld::LazyWorld, wholeworld::WholeBlockWorld, VoxelBlock, VOXEL_BLOCK_SIZE},
 };
 
 use super::{material::GameMaterial, voxelmailbox::VoxelMailbox, Direction2D};

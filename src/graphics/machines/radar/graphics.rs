@@ -1,18 +1,10 @@
 use std::f32::consts::PI;
 
-use bevy::{prelude::*, time::Stopwatch};
-use rand::Rng;
+use bevy::prelude::*;
 
-use crate::{
-    game::Direction2D,
-    graphics::{
-        machines::{DebugCube, MachineResources, MyMachine},
-        recolor::Tinted,
-        voxels3d::{lazyworld::LazyWorld, VoxelBlock},
-    },
-};
+use crate::graphics::{machines::MachineResources, recolor::Tinted};
 
-use super::{Radar, RadarFoundVoxel};
+use super::Radar;
 
 pub struct RadarGraphicsPlugin;
 

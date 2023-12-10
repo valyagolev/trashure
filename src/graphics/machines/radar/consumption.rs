@@ -45,7 +45,7 @@ impl RadarConsumptionPlugin {
 
             let target = tr.transform_point(cons.flying_target.unwrap_or_default());
 
-            let Some(mat) = whole_world.steal_block(ev.pos, &mut blockchanges, rand) else {
+            let Some(_mat) = whole_world.steal_block(ev.pos, &mut blockchanges, rand) else {
                 continue;
             };
 
