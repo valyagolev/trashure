@@ -42,9 +42,10 @@ impl RadarBundle {
         mats: &[GameMaterial],
         direction: Option<Direction2D>,
         radar_consumer: RadarConsumer,
+        speed: f32,
     ) -> Self {
         RadarBundle {
-            radar: Radar::new(mats, direction),
+            radar: Radar::new(mats, direction, speed),
             transform_bundle: TransformBundle::default(),
             visibility_bundle: VisibilityBundle::default(),
             radar_consumer,
@@ -67,25 +68,27 @@ pub struct Radar {
 
     pub direction: Option<Direction2D>,
     pub paused: bool,
+    speed: f32,
 }
 
 #[derive(Component, Reflect)]
 pub struct RadarScene;
 
 impl Radar {
-    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>) -> Self {
+    pub fn new(mats: &[GameMaterial], direction: Option<Direction2D>, speed: f32) -> Self {
         Radar {
             material_mask: GameMaterial::any_of_mask(mats),
             watch: Stopwatch::new(),
             scene: None,
             direction,
             paused: false,
+            speed,
         }
     }
 
     fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
-        self.watch.elapsed().as_secs_f32() * 5.0 * 6.0 / 10.0
+        self.watch.elapsed().as_secs_f32() * 5.0 * 3.0 * self.speed
     }
 }
 

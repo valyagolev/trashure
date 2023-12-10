@@ -62,6 +62,7 @@ impl GameMachineSettings {
                                 target_mailbox: ghost,
                                 paiload_ix: 1,
                             },
+                            2.0,
                         ),
                     ))
                     .id();
@@ -82,6 +83,7 @@ impl GameMachineSettings {
                                 target_mailbox: ghost,
                                 paiload_ix: 2,
                             },
+                            1.0,
                         ),
                     ))
                     .id();
