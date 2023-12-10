@@ -6,7 +6,7 @@ final steps:
 
 2. DONE show list of machines
 
-3. highlight taken floor when building a machine
+3. DONE highlight taken floor when building a machine
 
 4. DONE refactor radar consupmtion
 

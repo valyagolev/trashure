@@ -16,22 +16,17 @@ use self::consumption::RadarConsumer;
 use super::{DebugCube, MachineResources, MyMachine};
 
 pub mod consumption;
-
+mod graphics;
 pub struct RadarPlugin;
 
 impl Plugin for RadarPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(consumption::RadarConsumptionPlugin)
-            .add_systems(
-                Update,
-                (
-                    setup_radars,
-                    // radar_search.after(setup_radars),
-                    redraw_radars.after(radar_search),
-                ),
-            )
-            .add_systems(FixedUpdate, radar_search)
-            .add_event::<RadarFoundVoxel>();
+        app.add_plugins((
+            consumption::RadarConsumptionPlugin,
+            graphics::RadarGraphicsPlugin,
+        ))
+        .add_systems(FixedUpdate, radar_search)
+        .add_event::<RadarFoundVoxel>();
     }
 }
 
@@ -92,28 +87,6 @@ impl Radar {
     fn dist(&self) -> f32 {
         // 30.0 * ((self.watch.elapsed().as_secs_f32() / 5.0).sin()).abs()
         self.watch.elapsed().as_secs_f32() * 5.0 * 6.0
-    }
-}
-
-fn setup_radars(
-    mut commands: Commands,
-    mut q_radars: Query<(Entity, &mut Radar), Added<Radar>>,
-    res: Res<MachineResources>,
-) {
-    for (e, mut r) in q_radars.iter_mut() {
-        let radar_e = commands
-            .spawn((
-                RadarScene,
-                SceneBundle {
-                    transform: Transform::from_rotation(Quat::from_rotation_y(-PI / 4.0)),
-                    scene: res.radar.clone(),
-                    ..Default::default()
-                },
-                Tinted::new(Color::rgba(0.7, 0.3, 0.3, 0.2)).alpha(),
-            ))
-            .id();
-        r.scene = Some(radar_e);
-        commands.entity(e).add_child(radar_e);
     }
 }
 
@@ -180,20 +153,5 @@ fn radar_search(
 
             r.watch.reset();
         }
-    }
-}
-
-fn redraw_radars(
-    q_radars: Query<&Radar>,
-    mut q_scenes: Query<&mut Transform, (With<RadarScene>, Without<DebugCube>)>,
-) {
-    for r in q_radars.iter() {
-        let Some(mut t) = r.scene.and_then(|e| q_scenes.get_mut(e).ok()) else {
-            continue;
-        };
-
-        let dist = r.dist();
-
-        t.scale = Vec3::splat(dist * 2.0);
     }
 }
