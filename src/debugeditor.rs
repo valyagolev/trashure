@@ -21,7 +21,7 @@ impl Plugin for DebugEditorPlugin {
             // .add_plugins(FilterQueryInspectorPlugin::<
             //     Or<(With<MyMachine>, With<MachineType>)>,
             // >::default())
-            .add_plugins(FilterQueryInspectorPlugin::<With<BuiltMachine>>::default())
+            .add_plugins(FilterQueryInspectorPlugin::<With<MyMachine>>::default())
             .add_plugins(FilterQueryInspectorPlugin::<With<Radar>>::default());
         // .add_systems(Update, edit_stuff)
     }

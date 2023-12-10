@@ -210,7 +210,8 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                         },
                     },
                     TextSection {
-                        value: "\nPress R to rotate.\nPress Esc to deselect.\n\nFuel: ".into(),
+                        value: "\nPress R to rotate.\nPress Esc to deselect.\n\nFuel (blue): "
+                            .into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,
@@ -226,7 +227,23 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
                         },
                     },
                     TextSection {
-                        value: "\nMaintenance needed: ".into(),
+                        value: "\nMaintenance needed (red): ".into(),
+                        style: TextStyle {
+                            font_size: 20.0,
+                            color: Color::WHITE,
+                            ..default()
+                        },
+                    },
+                    TextSection {
+                        value: "?".into(),
+                        style: TextStyle {
+                            font_size: 20.0,
+                            color: HIGHLIGHTED_TEXT_COLOR,
+                            ..default()
+                        },
+                    },
+                    TextSection {
+                        value: "\nBuild resources needed (green): ".into(),
                         style: TextStyle {
                             font_size: 20.0,
                             color: Color::WHITE,
@@ -251,7 +268,8 @@ fn selected_building(commands: &mut Commands<'_, '_>) -> Entity {
         TextRefs::new()
             .with("name", selected_building_text, 1)
             .with("fuel", selected_building_text, 3)
-            .with("maintenance", selected_building_text, 5),
+            .with("maintenance", selected_building_text, 5)
+            .with("build", selected_building_text, 7),
     );
 
     selected_building_text

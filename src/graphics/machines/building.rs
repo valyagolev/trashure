@@ -1,3 +1,5 @@
+use std::hash::BuildHasher;
+
 use bevy::{
     prelude::*,
     render::view::RenderLayers,
@@ -25,7 +27,7 @@ use crate::{
 
 use super::{
     colors::MachineRecolor,
-    radar::{consumption::RadarConsumer, RadarBundle},
+    radar::{consumption::RadarConsumer, RadarBundle, RadarType},
     BuiltMachine, MachineResources, MachineType, MyMachine,
 };
 
@@ -41,6 +43,7 @@ impl Plugin for MachinesBuildingPlugin {
                 check_placement,
                 place_ghost.after(check_placement),
                 handle_esc,
+                finish_building,
             ),
         )
         .insert_resource(MachineGhost(
@@ -85,7 +88,7 @@ impl MachineGhost {
                     fuel: 0,
                     max_fuel: machine_type.max_fuel,
                     needed_maintenance: 0,
-                    still_building: 0,
+                    still_building: 20,
                     useful_ish_work_done: 0.0,
                 },
                 Direction2D::Backward,
@@ -141,18 +144,14 @@ fn move_ghost(
 fn place_ghost(
     mut commands: Commands,
     mut mghost: ResMut<MachineGhost>,
-    q_machines: Query<(&MyMachine, &SceneObjectsFound, &Children), Without<BuiltMachine>>,
+    q_machines: Query<(&MyMachine, &Children), Without<BuiltMachine>>,
     cursor: Res<Input<MouseButton>>, // keyb: Res<Input<KeyCode>>,
 
     mut selected: ResMut<CurrentlySelected>,
     mut menu_state: ResMut<GameMenu>,
 
-    q_found_transforms: Query<&Transform, With<SceneFoundObject>>,
-
     mut machine_counter: ResMut<MachineCounter>,
     q_floors: Query<Entity, With<GhostMachineFloor>>,
-
-    q_types: Query<&MachineType>,
 ) {
     if !mghost.1 {
         return;
@@ -166,11 +165,7 @@ fn place_ghost(
         return;
     };
 
-    let Ok((m, scob, children)) = q_machines.get(ghost) else {
-        return;
-    };
-
-    let Ok(mt) = q_types.get(m.tp) else {
+    let Ok((m, children)) = q_machines.get(ghost) else {
         return;
     };
 
@@ -183,13 +178,34 @@ fn place_ghost(
 
         commands.entity(ghost).insert((
             Name::new(format!("{:?} ({})", m.gmt, v)),
-            Tinted::empty(),
+            Tinted::new(Color::rgb(0.0, 0.1, 0.0)),
             VisibilityBundle::default(),
             Selectable,
-            SceneRenderLayers(RenderLayers::default().with(6)),
+            SceneRenderLayers(
+                RenderLayers::default(), // .with(6)
+            ),
         ));
 
-        GameMachineSettings::instantiate(ghost, &mut commands, m, scob, &q_found_transforms, &mt);
+        let build_radar = commands
+            .spawn((
+                Name::new("build radar"),
+                RadarBundle::new(
+                    &[GameMaterial::Greenish],
+                    None,
+                    RadarConsumer {
+                        flying_target: None,
+                        // target_mailbox: None,
+                        target_mailbox: Some(ghost),
+                    },
+                    2.0,
+                    10.0,
+                    RadarType::Building,
+                ),
+                // VoxelMailbox(default()),
+            ))
+            .id();
+
+        commands.entity(ghost).push_children(&[build_radar]);
 
         q_floors
             .iter_many(children)
@@ -201,6 +217,34 @@ fn place_ghost(
         // menu_state.0 = GameMenuState::SelectedMachine;
         selected.0 = None;
         menu_state.0 = GameMenuState::ToPickBuilding;
+    }
+}
+
+fn finish_building(
+    mut commands: Commands,
+    q_machines: Query<(Entity, &MyMachine, &SceneObjectsFound), Without<BuiltMachine>>,
+
+    q_found_transforms: Query<&Transform, With<SceneFoundObject>>,
+
+    q_types: Query<&MachineType>,
+) {
+    for (ghost, mm, scob) in q_machines.iter() {
+        let Ok(mt) = q_types.get(mm.tp) else {
+            continue;
+        };
+
+        if mm.still_building == 0 {
+            commands.entity(ghost).insert((Tinted::empty(),));
+
+            GameMachineSettings::instantiate(
+                ghost,
+                &mut commands,
+                mm,
+                scob,
+                &q_found_transforms,
+                &mt,
+            );
+        }
     }
 }
 

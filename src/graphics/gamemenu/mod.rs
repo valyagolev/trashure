@@ -140,6 +140,12 @@ fn redraw_menu(
                 format!("{}", mm.needed_maintenance),
                 None,
             );
+            textref.update(
+                &mut q_texts,
+                "build",
+                format!("{}", mm.still_building),
+                None,
+            );
         }
         _ => {}
     }

@@ -55,7 +55,7 @@ impl GameMachineSettings {
                     10.0,
                     RadarType::Fuel,
                 ),
-                VoxelMailbox(default()),
+                // VoxelMailbox(default()),
             ))
             .id();
 
@@ -74,7 +74,7 @@ impl GameMachineSettings {
                     10.0,
                     RadarType::Maintenance,
                 ),
-                VoxelMailbox(default()),
+                // VoxelMailbox(default()),
             ))
             .id();
 
@@ -150,7 +150,7 @@ fn consume_mailbox(
     mut q_machines: Query<(
         Entity,
         &mut VoxelMailbox,
-        &BuiltMachine,
+        Option<&BuiltMachine>,
         &mut MyMachine,
         &Direction2D,
     )>,
@@ -161,11 +161,11 @@ fn consume_mailbox(
 ) {
     let rand = &mut rand::thread_rng();
     for (e, mut mailbox, bm, mut mm, dir) in q_machines.iter_mut() {
-        let Some((_, mut vc, pl)) = mailbox.0.pop_front() else {
+        let Some((_, mut vc, _)) = mailbox.0.pop_front() else {
             continue;
         };
 
-        println!("got: {:?}", pl);
+        println!("got {:?}", vc);
 
         if vc == GameMaterial::Blueish && mm.fuel < mm.max_fuel {
             mm.fuel += 1;
@@ -175,10 +175,14 @@ fn consume_mailbox(
             mm.needed_maintenance -= 1;
             continue;
         }
-        if vc == GameMaterial::Brownish && mm.still_building > 0 {
+        if vc == GameMaterial::Greenish && mm.still_building > 0 {
             mm.still_building -= 1;
             continue;
         }
+
+        let Some(bm) = bm else {
+            continue;
+        };
 
         match bm.settings {
             GameMachineSettings::Plower { .. } => {
