@@ -72,7 +72,7 @@ impl GameMachineSettings {
                         target_mailbox: Some(ghost),
                     },
                     0.1,
-                    10.0,
+                    30.0,
                     RadarType::Maintenance,
                 ),
                 // VoxelMailbox(default()),

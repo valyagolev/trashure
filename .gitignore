@@ -2,3 +2,4 @@
 /trace*.json
 out/
 .DS_Store
+out.zip

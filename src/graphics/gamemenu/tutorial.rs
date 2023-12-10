@@ -7,13 +7,14 @@ use super::{
     TutorialNode,
 };
 
-static EVENTS: [(&'static str, AtomicBool, &'static str); 6] = [
+static EVENTS: [(&'static str, AtomicBool, &'static str); 7] = [
     ("recycler_placed", AtomicBool::new(false), "Welcome to Trashure: a game about recycling a massive (endless actually) landfill. You can look around using arrow keys.\n\n\nThen, start by building a recycler."),
     ("recycler_finished", AtomicBool::new(false), "Machines consume green material to be built. Wait for that to finish."),
     ("recycler_selected", AtomicBool::new(false), "Select the recycler by clicking on it. You'll see the radars.\n\nBlue radar looks for fuel, brownish radar looks for work.\n\nRecycler's work is to recycle trash into fuel (blue), building material (green), and precious maintenance (red) that doesn't occur by itself."),
-    ("plower_built", AtomicBool::new(false), "Blue radar looks for fuel, brownish radar looks for work.\n\nWait for the recycler to clear out a bit of space to build your plower – then build it.\n\nRecycler's work is to recycle trash into flue (blue), building material (green), and precious maintenance (red) that doesn't occur by itself."),
-    ("plower_wants_maintenance", AtomicBool::new(false), "Plower's work is to send resources to another place, which is handy because the recycler will work very slowly if it doesn't have any resources in front of it. It also consumes a lot of fuel when moving."),
-    ("plower_maintained", AtomicBool::new(false), "Plower has stopped, because it needs maintenance, which is provided by the precious red materials. Those do not occur by themselves, and need the recycler to be obtained. Plower will use its radar to find maintenance."),
+    ("plower_built", AtomicBool::new(false), "Blue radar looks for fuel, brownish radar looks for work.\n\nWait for the recycler to clear out a bit of space to build your plower, then build it.\n\nRecycler's work is to recycle trash into flue (blue), building material (green), and precious maintenance (red) that doesn't occur by itself."),
+    ("plower_target_moved", AtomicBool::new(false), "Plower's work is to send resources to another place, which is handy because the recycler will work very slowly if it doesn't have any resources in front of it. It also consumes a lot of fuel when moving.\n\nIf you select the Plower, you'll see its Target – move it closer to the recycler's input."),
+    ("plower_wants_maintenance", AtomicBool::new(false), "Good job. Now enjoy the view for a bit.\n\nPlower's work is to send resources to another place, which is handy because the recycler will work very slowly if it doesn't have any resources in front of it. It also consumes a lot of fuel when moving."),
+    // ("plower_maintained", AtomicBool::new(false), "Plower has stopped, because it needs maintenance, which is provided by the precious red materials. Those do not occur by themselves, and need the recycler to be obtained. Plower will use its radar to find maintenance."),
 ];
 
 pub fn mark_tutorial_event(name: &'static str) {
@@ -53,7 +54,7 @@ impl TutorialPlugin {
 
         let txt = earliest_event()
             .map(|a| a.1)
-            .unwrap_or("You have finished the tutorial. Good luck with your plowing!");
+            .unwrap_or("Plower has stopped, because it needs maintenance, which is provided by the precious red materials. Those do not occur by themselves, and need the recycler to be obtained. Plower will use its radar to find maintenance.\n\nYou have finished the tutorial. Good luck with your plowing! And maybe try to figure out how to redirect precious maintenance to your plower as it drives away into distance.");
 
         tutorial.update(&mut q_texts, "text", txt, None);
     }

@@ -2,8 +2,8 @@ use bevy::{prelude::*, render::view::RenderLayers};
 use bevy_mod_raycast::immediate::{Raycast, RaycastSettings, RaycastVisibility};
 
 use crate::graphics::{
-    cursor::CursorOver, recolor::Tinted, scenerenderlayer::SceneRenderLayers,
-    selectable::CurrentlySelected,
+    cursor::CursorOver, gamemenu::tutorial::mark_tutorial_event, recolor::Tinted,
+    scenerenderlayer::SceneRenderLayers, selectable::CurrentlySelected,
 };
 pub struct TargetsPlugin;
 
@@ -154,6 +154,8 @@ impl TargetsPlugin {
         if target_being_moved.is_some() {
             if !mouse_inp.pressed(MouseButton::Left) {
                 target_being_moved.0 = None;
+
+                mark_tutorial_event("plower_target_moved");
             }
             return;
         }
